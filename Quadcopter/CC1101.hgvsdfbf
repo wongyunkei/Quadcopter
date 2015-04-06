@@ -1,0 +1,259 @@
+/*
+ * CC1101.h
+ *
+ *  Created on: 2014¦~8¤ë7¤é
+ *      Author: YunKei
+ */
+
+#ifndef CC1101_H_
+#define CC1101_H_
+
+#include <AdditionalTools.h>
+
+namespace Communication{
+
+#define	SRES									0x30
+#define	SFSTXON									0x31
+#define	SXOFF									0x32
+#define	SCAL									0x33
+#define	SRX										0x34
+#define	STX										0x35
+#define	SIDLE									0x36
+#define	SWOR									0x38
+#define	SPWD									0x39
+#define	SFRX									0x3a
+#define	SFTX									0x3b
+#define	SWORRST									0x3c
+#define	SNOP									0x3d
+
+#define	IOCFG2									0x00
+#define	IOCFG1									0x01
+#define	IOCFG0									0x02
+#define	FIFOTHR									0x03
+#define	SYNC1									0x04
+#define	SYNC0									0x05
+#define	PKTLEN									0x06
+#define	PKTCTRL1								0x07
+#define	PKTCTRL0								0x08
+#define	ADDR									0x09
+#define	CHANNR									0x0a
+#define	FSCTRL1									0x0b
+#define	FSCTRL0									0x0c
+#define	FREQ2									0x0d
+#define	FREQ1									0x0e
+#define	FREQ0									0x0f
+#define	MDMCFG4									0x10
+#define	MDMCFG3									0x11
+#define	MDMCFG2									0x12
+#define	MDMCFG1									0x13
+#define	MDMCFG0									0x14
+#define	DEVIATN									0x15
+#define	MCSM2									0x16
+#define	MCSM1									0x17
+#define	MCSM0									0x18
+#define	FOCCFG									0x19
+#define	BSCFG									0x1a
+#define	AGCTRL2									0x1b
+#define	AGCTRL1									0x1c
+#define	AGCTRL0									0x1d
+#define	WOREVT1									0x1e
+#define	WOREVT0									0x1f
+#define	WORCTRL									0x20
+#define	FREND1									0x21
+#define	FREND0									0x22
+#define	FSCAL3									0x23
+#define	FSCAL2									0x24
+#define	FSCAL1									0x25
+#define	FSCAL0									0x26
+#define	RCCTRL1									0x27
+#define	RCCTRL0									0x28
+#define	FSTEST									0x29
+#define	PTEST									0x2a
+#define	AGCTEST									0x2b
+#define	TEST2									0x2c
+#define	TEST1									0x2d
+#define	TEST0									0x2e
+
+#define	PARTNUM									0xf0
+#define	VERSION									0xf1
+#define	FREQEST									0xf2
+#define	LQI										0xf3
+#define	RSSI									0xf4
+#define	MARCSTATE								0xf5
+#define	WORTIME1								0xf6
+#define	WORTIME0								0xf7
+#define	PKTSTATUS								0xf8
+#define	VCO_VC_DAC								0xf9
+#define	TXBYTES									0xfa
+#define	RXBYTES									0xfb
+#define	RCCTRL1_STATUS							0xfc
+#define	RCCTRL0_STATUS							0xfd
+
+#define FIFOTHR_CLOSE_IN_RX_0dB											0
+#define FIFOTHR_CLOSE_IN_RX_6dB											_BV(4)
+#define FIFOTHR_CLOSE_IN_RX_12dB										_BV(5)
+#define FIFOTHR_CLOSE_IN_RX_18dB										(_BV(5) | _BV(4))
+#define FIFOTHR_TX_61_RX_4												0
+#define FIFOTHR_TX_57_RX_8												1
+#define FIFOTHR_TX_53_RX_12												2
+#define FIFOTHR_TX_49_RX_16												3
+#define FIFOTHR_TX_45_RX_20												4
+#define FIFOTHR_TX_41_RX_24												5
+#define FIFOTHR_TX_37_RX_28												6
+#define FIFOTHR_TX_33_RX_32												7
+#define FIFOTHR_TX_29_RX_36												8
+#define FIFOTHR_TX_25_RX_40												9
+#define FIFOTHR_TX_21_RX_44												10
+#define FIFOTHR_TX_17_RX_48												11
+#define FIFOTHR_TX_13_RX_52												12
+#define FIFOTHR_TX_9_RX_56												13
+#define FIFOTHR_TX_5_RX_60												14
+#define FIFOTHR_TX_1_RX_64												15
+
+#define	PKTCTRL1_ADR_CHK_NO_CHECK										0
+#define	PKTCTRL1_ADR_CHK_NO_BROADCAST									1
+#define	PKTCTRL1_ADR_CHK_00_BROADCAST									2
+#define	PKTCTRL1_ADR_CHK_00_AND_FF_BROADCAST							3
+
+#define	PKTCTRL0_PKT_FORMAT_NORMAL										0
+#define	PKTCTRL0_PKT_FORMAT_SYNC_SERIAL									_BV(4)
+#define	PKTCTRL0_PKT_FORMAT_RANDOM_TX									_BV(5)
+#define	PKTCTRL0_PKT_FORMAT_ASYNC_SERIAL								(_BV(5) | _BV(4))
+
+#define	PKTCTRL0_LENGTH_CONFIG_FIX_LENGTH								0
+#define	PKTCTRL0_LENGTH_CONFIG_VAR_LENGTH								1
+#define	PKTCTRL0_LENGTH_CONFIG_INT_LENGTH								2
+
+#define MDMCFG2_MOD_FORMAT_2FSK											0
+#define MDMCFG2_MOD_FORMAT_GFSK											_BV(4)
+#define MDMCFG2_MOD_FORMAT_ASK_OOK										(_BV(5) | _BV(4))
+#define MDMCFG2_MOD_FORMAT_4FSK											_BV(6)
+#define MDMCFG2_MOD_FORMAT_MSK											(_BV(6) | _BV(5) | _BV(4))
+
+#define MDMCFG2_SYNC_MODE_NO_PREAM_SYNC									0
+#define MDMCFG2_SYNC_MODE_15_16_SYNC_WORD								1
+#define MDMCFG2_SYNC_MODE_16_16_SYNC_WORD								2
+#define MDMCFG2_SYNC_MODE_30_32_SYNC_WORD								3
+#define MDMCFG2_SYNC_MODE_NO_PREA_SYNC_CA_SEN							4
+#define MDMCFG2_SYNC_MODE_15_16_SYNC_CA_SEN								5
+#define MDMCFG2_SYNC_MODE_16_16_SYNC_CA_SEN								6
+#define MDMCFG2_SYNC_MODE_30_32_SYNC_CA_SEN								7
+
+#define MDMCFG1_NUM_PREAMBLE_2											0
+#define MDMCFG1_NUM_PREAMBLE_3											_BV(4)
+#define MDMCFG1_NUM_PREAMBLE_4											_BV(5)
+#define MDMCFG1_NUM_PREAMBLE_6											(_BV(5) | _BV(4))
+#define MDMCFG1_NUM_PREAMBLE_8											_BV(6)
+#define MDMCFG1_NUM_PREAMBLE_12											(_BV(6) | _BV(4))
+#define MDMCFG1_NUM_PREAMBLE_16											(_BV(6) | _BV(5))
+#define MDMCFG1_NUM_PREAMBLE_24											(_BV(6) | _BV(5) | _BV(4))
+
+#define MCSM1_CCA_MODE_ALWAYS											0
+#define MCSM1_CCA_MODE_RSSI_BELOW_THRESHOLD								_BV(4)
+#define MCSM1_CCA_MODE_RECEIVING_PACKET									_BV(5)
+#define MCSM1_CCA_MODE_RSSI_BELOW_THRESHOLD_RECEIVING_PACKET			(_BV(5) | _BV(4))
+
+#define MCSM1_RXOFF_MODE_IDLE											0
+#define MCSM1_RXOFF_MODE_FSTXON											_BV(2)
+#define MCSM1_RXOFF_MODE_TX												_BV(3)
+#define MCSM1_RXOFF_MODE_STAY_RX										(_BV(3) | _BV(2))
+
+#define MCSM1_TXOFF_MODE_IDLE											0
+#define MCSM1_TXOFF_MODE_FSTXON											1
+#define MCSM1_TXOFF_MODE_STAY_TX										2
+#define MCSM1_TXOFF_MODE_RX												3
+
+#define MCSM0_FS_AUTOCAL_NEVER											0
+#define MCSM0_FS_AUTOCAL_IDLE_TO_RX_TX									_BV(4)
+#define MCSM0_FS_AUTOCAL_RX_TX_TO_IDLE_AUTO								_BV(5)
+#define MCSM0_FS_AUTOCAL_4_RX_TX_TO_IDLE_AUTO							(_BV(5) | _BV(4))
+
+#define MCSM0_PO_TIMEOUT_EXPIRE_COUNT_1									0
+#define MCSM0_PO_TIMEOUT_EXPIRE_COUNT_16								_BV(2)
+#define MCSM0_PO_TIMEOUT_EXPIRE_COUNT_64								_BV(3)
+#define MCSM0_PO_TIMEOUT_EXPIRE_COUNT_256								(_BV(3) | _BV(2))
+
+#define FOCCFG_FOC_PRE_K												0
+#define FOCCFG_FOC_PRE_2K												_BV(3)
+#define FOCCFG_FOC_PRE_3K												_BV(4)
+#define FOCCFG_FOC_PRE_4K												(_BV(4) | _BV(3))
+
+#define FOCCFG_FOC_LIMIT_0												0
+#define FOCCFG_FOC_LIMIT_BW_8											1
+#define FOCCFG_FOC_LIMIT_BW_4											2
+#define FOCCFG_FOC_LIMIT_BW_2											3
+
+#define BSCFG_BS_PRE_KI_K												0
+#define BSCFG_BS_PRE_KI_2K												_BV(6)
+#define BSCFG_BS_PRE_KI_3K												_BV(7)
+#define BSCFG_BS_PRE_KI_4K												(_BV(7) | _BV(6))
+
+#define BSCFG_BS_PRE_KP_K												0
+#define BSCFG_BS_PRE_KP_2K												_BV(4)
+#define BSCFG_BS_PRE_KP_3K												_BV(5)
+#define BSCFG_BS_PRE_KP_4K												(_BV(5) | _BV(4))
+
+#define BSCFG_BS_LIMIT_0												0
+#define BSCFG_BS_LIMIT_3_125											1
+#define BSCFG_BS_LIMIT_6_25												2
+#define BSCFG_BS_LIMIT_12_5												3
+
+#define AGCCTRL2_MAX_DVGA_GAIN_ALL										0
+#define AGCCTRL2_MAX_DVGA_GAIN_1										_BV(6)
+#define AGCCTRL2_MAX_DVGA_GAIN_2										_BV(7)
+#define AGCCTRL2_MAX_DVGA_GAIN_3										(_BV(7) | _BV(6))
+
+#define AGCCTRL2_MAX_LNA_GAIN_ALL										0
+#define AGCCTRL2_MAX_LNA_GAIN_2_6_dB									_BV(3)
+#define AGCCTRL2_MAX_LNA_GAIN_6_1_dB									_BV(4)
+#define AGCCTRL2_MAX_LNA_GAIN_7_4_dB									(_BV(4) | _BV(3))
+#define AGCCTRL2_MAX_LNA_GAIN_9_2_dB									_BV(5)
+#define AGCCTRL2_MAX_LNA_GAIN_11_5_dB									(_BV(5) | _BV(3))
+#define AGCCTRL2_MAX_LNA_GAIN_14_6_dB									(_BV(5) | _BV(4))
+#define AGCCTRL2_MAX_LNA_GAIN_17_1_dB									(_BV(5) | _BV(4) | _BV(3))
+
+#define AGCCTRL2_MAGN_TARGET_24_dB										0
+#define AGCCTRL2_MAGN_TARGET_27_dB										1
+#define AGCCTRL2_MAGN_TARGET_30_dB										2
+#define AGCCTRL2_MAGN_TARGET_33_dB										3
+#define AGCCTRL2_MAGN_TARGET_36_dB										4
+#define AGCCTRL2_MAGN_TARGET_38_dB										5
+#define AGCCTRL2_MAGN_TARGET_40_dB										6
+#define AGCCTRL2_MAGN_TARGET_42_dB										7
+
+
+#define AGCCTRL1_CARRIER_SENSE_REL_THR_DISABLE							0
+#define AGCCTRL1_CARRIER_SENSE_REL_THR_6_dB								_BV(4)
+#define AGCCTRL1_CARRIER_SENSE_REL_THR_10_dB							_BV(5)
+#define AGCCTRL1_CARRIER_SENSE_REL_THR_14_dB							(_BV(5) | _BV(4))
+
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_DISABLE							_BV(3)
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_7_dB							(_BV(3) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_6_dB							(_BV(3) | _BV(1))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_5_dB							(_BV(3) | _BV(1) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_4_dB							(_BV(3) | _BV(2))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_3_dB							(_BV(3) | _BV(2) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_2_dB							(_BV(3) | _BV(2) | _BV(1))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_NEG_1_dB							(_BV(3) | _BV(2) | _BV(1) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_0_dB								0
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_1_dB							_BV(0)
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_2_dB							_BV(1)
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_3_dB							(_BV(1) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_4_dB							_BV(2)
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_5_dB							(_BV(2) | _BV(0))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_6_dB							(_BV(2) | _BV(1))
+#define AGCCTRL1_CARRIER_SENSE_ABS_THR_POS_7_dB							(_BV(2) | _BV(1) | _BV(0))
+
+	class CC1101{
+
+		public:
+
+			CC1101();
+
+		private:
+	};
+};
+
+using namespace Communication;
+
+#endif /* CC1101_H_ */

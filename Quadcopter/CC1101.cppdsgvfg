@@ -1,0 +1,329 @@
+/*
+ * CC1101.cpp
+ *
+ *  Created on: 2014¦~8¤ë7¤é
+ *      Author: YunKei
+ */
+
+#include <stdio.h>
+#include <CC1101.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <Leds.h>
+#include <stm32f4xx_rcc.h>
+#include <stm32f4xx.h>
+#include <stm32f4xx_it.h>
+#include <stm32f4xx_syscfg.h>
+#include <stm32f4xx_exti.h>
+#include <stm32f4xx_gpio.h>
+#include <Delay.h>
+#include <Ticks.h>
+#include <stm32f4xx_rcc.h>
+
+#define	CC1101_SPI				SPI2
+#define GPIO0_RCC				RCC_AHB1Periph_GPIOC
+#define GPIO0_PORT				GPIOC
+#define GPIO0_PIN				GPIO_Pin_0
+#define EXTI_PinSource 			EXTI_PinSource0
+#define EXTI_Line_CH			EXTI_Line0
+#define EXTI_IRQ_CH				EXTI0_IRQn
+#define EXTI_PortSource			EXTI_PortSourceGPIOC
+
+#define READ				_BV(7)
+#define READ_STATUS(X)		((0x70 & X) >> 4)
+#define READ_AVAIL_BYTES(X)	(0x0f & X)
+#define CHIP_READY(X)		(((0x80 & X) > 0) ? 0 : 1)
+#define READ_CS(X)			((0x40 & X) >> 6)
+#define READ_SFD(X)			((0x08 & X) >> 3)
+#define READ_GPIO0(X)		(0x01 & X)
+#define MAX_LENGTH			63
+
+uint8_t buffer[256];
+int buffer_length = 0;
+
+int READ_RSSI(uint8_t X){
+	int value = X;
+	return ((value > 127) ? (value - 256) : value) - 74;
+}
+
+int BYTES_IN_FIFO(uint8_t X){
+	int value = (0x7f & X);
+	return ((value > 63) ? (value - 128) : value);
+}
+
+CC1101* _mCC1101;
+
+void CC1101::setReceivedInterrupt(bool useInterrupt){
+
+	EXTI_InitTypeDef EXTI_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
+
+	EXTI_InitStructure.EXTI_Line = EXTI_Line_CH;
+	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+
+	NVIC_InitStructure.NVIC_IRQChannel = EXTI_IRQ_CH;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0;
+
+
+
+	if(useInterrupt){
+
+		EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	}
+	else{
+		EXTI_InitStructure.EXTI_LineCmd = DISABLE;
+		NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;
+	}
+	EXTI_Init(&EXTI_InitStructure);
+	NVIC_Init(&NVIC_InitStructure);
+}
+
+CC1101::CC1101(uint8_t channel, uint8_t addr, uint16_t syncword) : IsTxMode(false) {
+
+	printf("\nCC1101 Initialization Start.\r\n");
+	_mCC1101 = this;
+
+	GPIO_InitTypeDef GPIO_InitStructure;
+
+	RCC_AHB1PeriphClockCmd(GPIO0_RCC, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;;
+	GPIO_InitStructure.GPIO_Pin = GPIO0_PIN;
+	GPIO_Init(GPIO0_PORT, &GPIO_InitStructure);
+
+	SYSCFG_EXTILineConfig(EXTI_PortSource, EXTI_PinSource);
+
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+
+	Strobe(SRES);
+
+	uint8_t status;
+	Ticks::getInstance()->setTimeout(5);
+	do{
+		status = READ_STATUS(Strobe(SNOP));
+		if(Ticks::getInstance()->Timeout()){
+			CC1101(0, 0x00, 0x1987);
+			return;
+		}
+	}while(status != IDLE);
+
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::IOCFG0, 0x06);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FSCTRL1, 0x0c);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FREQ2, 0x10);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FREQ1, 0xb1);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FREQ0, 0x3b);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::MDMCFG4, 0x2d);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::MDMCFG3, 0x3b);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::MDMCFG2, 0x13);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::DEVIATN, 0x62);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::MCSM0, 0x18);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FOCCFG, 0x1d);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::BSCFG, 0x1c);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::AGCTRL2, 0xc7);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::AGCTRL1, 0x00);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::AGCTRL0, 0xb0);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::WORCTRL, 0xfb);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FREND1, 0xb6);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FSCAL3, 0xea);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FSCAL2, 0x2a);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FSCAL1, 0x00);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FSCAL0, 0x1f);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::TEST0, 0x09);
+
+
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::FIFOTHR, FIFOTHR_CLOSE_IN_RX_18dB | FIFOTHR_TX_33_RX_32);
+	Spi::getInstance(CC1101_SPI)->WriteCmd( REG::CHANNR, channel);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::ADDR, addr);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::SYNC1, (syncword & 0xff00) >> 8);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::SYNC0, (syncword & 0x00ff));
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::PATABLE, 0xc0);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::PKTLEN, MAX_LENGTH);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::PKTCTRL1, PKTCTRL1_CRC_AUTOFLUSH | PKTCTRL1_ADR_CHK_NO_CHECK);
+	Spi::getInstance(CC1101_SPI)->WriteCmd(REG::PKTCTRL0, PKTCTRL0_WHITE_DATA | PKTCTRL0_CRC_EN | PKTCTRL0_LENGTH_CONFIG_VAR_LENGTH);
+
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+
+	Strobe(SFRX);
+	Strobe(SFTX);
+
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	setReceived();
+	printf("\nCC1101 Initialization End.\r\n");
+}
+
+CC1101* CC1101::getInstance(){
+	return _mCC1101;
+}
+
+void CC1101::Send(const char* format, ...){
+
+	uint8_t str[256];
+	uint8_t length;
+	va_list arg;
+	va_start (arg, format);
+	length = vsprintf ((char*)str, format, arg);
+	va_end (arg);
+
+	uint8_t status;
+
+	setIsTxMode(true);
+
+	setReceivedInterrupt(false);
+
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+
+	Strobe(SIDLE);
+	Ticks::getInstance()->setTimeout(2);
+	do{
+		status = READ_STATUS(Strobe(SNOP));
+		if(Ticks::getInstance()->Timeout()){
+			CC1101(0, 0x00, 0x1987);
+			return;
+		}
+	}while(status != IDLE);
+
+	SingleWrite(SINGLE_BYTE_TX_FIFO, length);
+	BurstWrite(MULTI_BYTE_TX_FIFO, length, str);
+
+	Strobe(STX);
+
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	setReceivedInterrupt(true);
+
+}
+
+int CC1101::Read(uint8_t* buf){
+
+	uint8_t length = buffer_length;
+	for(int i = 0; i < length; i++){
+		buf[i] = buffer[i];
+	}
+	buf[length] = '\0';
+	buffer_length = 0;
+	return length;
+}
+
+void CC1101::setReceived(){
+
+	uint8_t status;
+
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+
+	Strobe(SIDLE);
+
+	Ticks::getInstance()->setTimeout(2);
+	do{
+		status = READ_STATUS(Strobe(SNOP));
+		if(Ticks::getInstance()->Timeout()){
+			CC1101(0, 0x00, 0x1987);
+			return;
+		}
+	}while(status != IDLE);
+	Strobe(SRX);
+
+	Ticks::getInstance()->setTimeout(2);
+	do{
+		status = READ_STATUS(Strobe(SNOP));
+		if(Ticks::getInstance()->Timeout()){
+			CC1101(0, 0x00, 0x1987);
+			return;
+		}
+	}while(status != RX);
+
+
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	setReceivedInterrupt(true);
+}
+void CC1101::Receive(){
+
+	uint8_t length = 0;
+
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+	if(BYTES_IN_FIFO(SingleRead(RXBYTES)) <= 0){
+		CC1101(0, 0x00, 0x1987);
+		return;
+	}
+
+	length = SingleRead(SINGLE_BYTE_RX_FIFO);
+	SingleRead(SINGLE_BYTE_RX_FIFO);
+	if(length > MAX_LENGTH){
+		Strobe(SFRX);
+		length = 0;
+	}
+	if(length > 0){
+
+		BurstRead(MULTI_BYTE_RX_FIFO, length - 2, &buffer[buffer_length]);
+		Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+
+	}
+	buffer_length += length - 2;
+	setReceived();
+}
+
+void CC1101::setIsTxMode(bool value){
+
+	IsTxMode = value;
+}
+
+bool CC1101::getIsTxMode(){
+
+	return IsTxMode;
+}
+
+//void EXTI0_IRQHandler(void){
+//
+//	if(EXTI_GetITStatus(EXTI_Line_CH) != RESET){
+//		EXTI_ClearITPendingBit(EXTI_Line_CH);
+//		if(CC1101::getInstance()->getIsTxMode()){
+//			CC1101::getInstance()->setIsTxMode(false);
+//			CC1101::getInstance()->setReceived();
+//		}
+//		else{
+//			CC1101::getInstance()->Receive();
+//		}
+//	}
+//}
+
+uint8_t CC1101::Strobe(REG reg){
+
+	return Spi::getInstance(CC1101_SPI)->Byte(reg);
+}
+
+void CC1101::SingleWrite(REG reg, uint8_t data){
+
+	Spi::getInstance(CC1101_SPI)->Byte(reg);
+	Spi::getInstance(CC1101_SPI)->Byte(data);
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+}
+
+uint8_t CC1101::SingleRead(REG reg){
+
+	uint8_t value = Spi::getInstance(CC1101_SPI)->Byte(reg);
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+	return value;
+}
+
+void CC1101::BurstWrite(REG reg, uint8_t length, uint8_t* buf){
+
+	Spi::getInstance(CC1101_SPI)->_WriteNBytes(reg, length, buf);
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+}
+
+void CC1101::BurstRead(REG reg, uint8_t length, uint8_t* buf){
+
+	Spi::getInstance(CC1101_SPI)->_ReadNBytes(reg, length, buf);
+	Spi::getInstance(CC1101_SPI)->ChipDeSelect();
+	Spi::getInstance(CC1101_SPI)->ChipSelect();
+}
