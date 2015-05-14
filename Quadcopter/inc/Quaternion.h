@@ -9,6 +9,7 @@
 #define QUATERNION_H_
 
 #include <Kalman.h>
+#include <UKF.h>
 #include <Pid.h>
 
 namespace Math{
@@ -16,7 +17,6 @@ namespace Math{
 	class Quaternion{
 
 		public:
-
 			Quaternion(double);
 			static Quaternion* getInstance();
 			void Update();
@@ -28,14 +28,14 @@ namespace Math{
 			void QuaternionToMatrix(double*, double[3][3]);
 			double getInitAngles(int index);
 			Kalman* getKalman(int index);
-			double temp1[3];
-			double temp2[3];
+			Vector3d temp;
 
 		private:
 
 			double Interval;
 			double _Quaternion[4];
 			Kalman* _EulerKalman[3];
+			UKF* _EulerUKF;
 			double _Euler[3];
 			double InitAngles[2];
 			double PreAcc[3];

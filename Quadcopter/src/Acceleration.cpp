@@ -15,9 +15,9 @@
 Acceleration* _mAcceleration;
 
 Acceleration::Acceleration(){
-	accMovingAverage[0] = new MovingWindowAverageFilter(10);
-	accMovingAverage[1] = new MovingWindowAverageFilter(10);
-	accMovingAverage[2] = new MovingWindowAverageFilter(10);
+	accMovingAverage[0] = new MovingWindowAverageFilter(50);
+	accMovingAverage[1] = new MovingWindowAverageFilter(50);
+	accMovingAverage[2] = new MovingWindowAverageFilter(50);
 	_mAcceleration = this;
 
 //	double R[3][2] = {{0.001, -1},

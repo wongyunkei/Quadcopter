@@ -29,93 +29,6 @@ Communicating* Communicating::getInstant(){
 	return _mCommunicating;
 }
 
-//void Communicating::CommunicatingPoll(){
-//	int length;
-//	if(isRF){
-//		length = NRF905::getInstance()->getBufferCount();
-//		NRF905::getInstance()->Read(Buffer, length);
-//	}else{
-//		length = Usart::getInstance(Com)->getBufferCount();
-//		Usart::getInstance(Com)->Read(Buffer, length);
-//	}
-//	BufferCount += length;
-//
-//	for(int i = 0; i < length; i++){
-//		if(Buffer[i] == '$'){
-//			isToken = true;
-//			if(length - i >= 4){
-//				isToken = false;
-//				for(int j = 0; j < 3; j++){
-//					Bytes[j] = Buffer[i + j + 1];
-//				}
-//					int cmd, value;
-//					uint16_t raw_data = (uint16_t)((Bytes[0] << 8) | Bytes[1]);
-//					cmd = (raw_data & 0xf800) >> 11;
-//					value = (raw_data & 0x07ff);
-//					value -= 1024;
-//					printf("%x,%x,%x,%x,%x\n", Buffer[i],Buffer[i + 1],Buffer[i + 2],Buffer[i + 3],Buffer[i + 4]);
-//					printf("%x,%x\n", Bytes[0],Bytes[1]);
-//					printf("%x\n", raw_data);
-//					Execute(cmd, value);
-//					BufferCount -= i + 1;
-//					break;
-//			}
-//		}
-//	}
-//	if(isToken){
-//		BufferCount = 0;
-//	}
-//	if(length > 0){
-//		for(int i = 0; i < BufferCount; i++){
-//			if(Buffer[i] == '$'){
-//				isToken = true;
-//				if(BufferCount - i >= 4){
-//					isToken = false;
-//					for(int j = 1; j < 4; j++){
-//						if(j < BufferCount){
-//							Bytes[j - 1] = Buffer[i + j];
-//						}
-//					}
-//					if(Bytes[2] == '\n'){
-//						int cmd, value;
-//						uint16_t raw_data = (uint16_t)((Bytes[0] << 8) | Bytes[1]);
-//						cmd = (raw_data & 0xf800) >> 11;
-//						value = (raw_data & 0x07ff);
-//						value -= 1024;
-//						printf("%x,%x,%x,%x,%x\n", Buffer[i],Buffer[i + 1],Buffer[i + 2],Buffer[i + 3],Buffer[i + 4]);
-//						printf("%x,%x\n", Bytes[0],Bytes[1]);
-//						printf("%x\n", raw_data);
-//						Execute(cmd, value);
-//					}
-//					for(int j = 0; j < BufferCount - i - 4; j++){
-//						Buffer[j] = Buffer[i + j + 4];
-//					}
-//					BufferCount -= 4 + i;
-//				}
-//			}
-//		}
-//		if(!isToken){
-//			BufferCount = 0;
-//		}
-//	}
-//
-//	if(txBufferCount > 0){
-//		unsigned char D[5];
-//		D[0] = '$';
-//		for(int i = 0; i < 2; i++){
-//			D[i + 1] = txBuffer[i];
-//		}
-//		D[3] = '\n';
-//		D[4] = '\0';
-//		if(NRF905::getInstance()->Write("%s", D)){
-//			txBufferCount -= 4;
-//			for(int i = 0; i < txBufferCount; i++){
-//				txBuffer[i] = txBuffer[i + 4];
-//			}
-//		}
-//	}
-//}
-
 void Communicating::ReceivePoll(){
 	int length;
 	if(isRF){
@@ -189,6 +102,7 @@ void Communicating::Execute(int cmd, float data){
 			}
 			break;
 		case CMD::POWER:
+
 			for(int i = 0; i < 4; i++){
 				PWM::getInstant()->Control(i, Controlling::getInstant()->RPM2PWM(i, data));
 			}
@@ -198,6 +112,7 @@ void Communicating::Execute(int cmd, float data){
 			else{
 				Usart::getInstance(USART1)->Print("RPM:%g\n", data);
 			}
+			Usart::getInstance(USART1)->Print("RPM:%d\n", (uint16_t)data);
 			break;
 		case CMD::START:
 			Controlling::getInstant()->Starting();
@@ -344,7 +259,7 @@ void Communicating::Execute(int cmd, float data){
 			}
 			break;
 		case CMD::PRINT_MODE:
-			if(PrintType++ == 5){
+			if(PrintType++ == 8){
 				PrintType = 0;
 			}
 			if(isRF){
@@ -388,48 +303,48 @@ void Communicating::Execute(int cmd, float data){
 			for(int i = 0; i < 4; i++){
 				switch(i){
 					case 0:
-						TIM_SetCompare1(TIM8, 2400);
+						TIM_SetCompare1(TIM8, PWM::getInstant()->getUpperLimit());
 						break;
 					case 1:
-						TIM_SetCompare2(TIM8, 2400);
+						TIM_SetCompare2(TIM8, PWM::getInstant()->getUpperLimit());
 						break;
 					case 2:
-						TIM_SetCompare3(TIM8, 2400);
+						TIM_SetCompare3(TIM8, PWM::getInstant()->getUpperLimit());
 						break;
 					case 3:
-						TIM_SetCompare4(TIM8, 2400);
+						TIM_SetCompare4(TIM8, PWM::getInstant()->getUpperLimit());
 						break;
 				}
 			}
 			if(isRF){
 			}
 			else{
-				printf("Max\n", data);
 			}
+			printf("Max\n");
 			break;
 		case CMD::LOW:
 
 			for(int i = 0; i < 4; i++){
 				switch(i){
 					case 0:
-						TIM_SetCompare1(TIM8, 700);
+						TIM_SetCompare1(TIM8, PWM::getInstant()->getLowerLimit());
 						break;
 					case 1:
-						TIM_SetCompare2(TIM8, 700);
+						TIM_SetCompare2(TIM8, PWM::getInstant()->getLowerLimit());
 						break;
 					case 2:
-						TIM_SetCompare3(TIM8, 700);
+						TIM_SetCompare3(TIM8, PWM::getInstant()->getLowerLimit());
 						break;
 					case 3:
-						TIM_SetCompare4(TIM8, 700);
+						TIM_SetCompare4(TIM8, PWM::getInstant()->getLowerLimit());
 						break;
 				}
 			}
 			if(isRF){
 			}
 			else{
-				printf("Min\n", data);
 			}
+			printf("Min\n");
 			break;
 		case CMD::INTIAL_POWER:
 			for(int i = 0; i < 4; i++){
@@ -463,7 +378,7 @@ void Communicating::Execute(int cmd, float data){
 		case CMD::YAW_KD:
 
 			Pid::getInstance(19)->setPid(data, 0, 0);
-//			Pid::getInstance(5)->setPid(Pid::getInstance(5)->getPid(0) + data, Pid::getInstance(5)->getPid(1), Pid::getInstance(5)->getPid(2));
+//			Pid::getInstance(2)->setPid(Pid::getInstance(2)->getPid(0) + data, Pid::getInstance(2)->getPid(1), Pid::getInstance(2)->getPid(2));
 			if(isRF){
 				Communicating::getInstant()->RFSend(4, data);
 			}

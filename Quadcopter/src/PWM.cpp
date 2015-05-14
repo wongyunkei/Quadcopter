@@ -27,7 +27,7 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
 
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 ;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
@@ -52,7 +52,7 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	TIM_OCInitStructure.TIM_Pulse = LowerLimit;
 
 	TIM_OC1Init(PWM_TIM, &TIM_OCInitStructure);
-	TIM_OC1PreloadConfig(TIM3, TIM_OCPreload_Enable);
+	TIM_OC1PreloadConfig(PWM_TIM, TIM_OCPreload_Enable);
 	TIM_OC2Init(PWM_TIM, &TIM_OCInitStructure);
 	TIM_OC2PreloadConfig(PWM_TIM, TIM_OCPreload_Enable);
 	TIM_OC3Init(PWM_TIM, &TIM_OCInitStructure);
@@ -63,12 +63,11 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	TIM_ARRPreloadConfig(PWM_TIM, ENABLE);
 	TIM_Cmd(PWM_TIM, ENABLE);
 	TIM_CtrlPWMOutputs(PWM_TIM, ENABLE);
-
 }
 
 void PWM::Control(int index, double dutyCycle){
 	uint16_t value = LowerLimit;
-	if(dutyCycle > 10000 || dutyCycle < 0.0){
+	if(dutyCycle > 10000 || dutyCycle < 0){
 		return;
 	}
 

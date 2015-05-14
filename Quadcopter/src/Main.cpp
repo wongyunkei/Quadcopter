@@ -35,6 +35,8 @@
 #include <Sonic.h>
 #include <PhasesMonitoring.h>
 #include <Math.h>
+#include <stm32f4xx_it.h>
+#include <Buzzer.h>
 
 void TestMotorTask(){
 	static double pwm;
@@ -65,22 +67,34 @@ void InterruptPrint(){
 int printfCount;
 
 void RFOutput(){
+
 	switch(Communicating::getInstant()->getPrintType()){
 		case 0:
-			Communicating::getInstant()->RFSend(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))));
-			Communicating::getInstant()->RFSend(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))));
+			Communicating::getInstant()->RFSend(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))));
+			Communicating::getInstant()->RFSend(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))));
 			Communicating::getInstant()->RFSend(2, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2))));
 			break;
 		case 1:
-			Communicating::getInstant()->RFSend(0, (float)PhasesMonitoring::getInstance()->getRPM(0));
-			Communicating::getInstant()->RFSend(1, (float)PhasesMonitoring::getInstance()->getRPM(1));
-			Communicating::getInstant()->RFSend(2, (float)PhasesMonitoring::getInstance()->getRPM(2));
-			Communicating::getInstant()->RFSend(3, (float)PhasesMonitoring::getInstance()->getRPM(3));
+
+			Communicating::getInstant()->RFSend(0, Pid::getInstance(0)->getPid(0));
+			Communicating::getInstant()->RFSend(1, Pid::getInstance(1)->getPid(0));
+			Communicating::getInstant()->RFSend(2, Pid::getInstance(2)->getPid(0));
+//			Communicating::getInstant()->RFSend(4, Fuzzy::getInstance(0)->u);
+//			Communicating::getInstant()->RFSend(0, (float)MathTools::RadianToDegree(Quaternion::getInstance()->getInitAngles(0)));
+//			Communicating::getInstant()->RFSend(1, (float)MathTools::RadianToDegree(Quaternion::getInstance()->getInitAngles(1)));
+//			Communicating::getInstant()->RFSend(0, (float)PhasesMonitoring::getInstance()->getRPM(0));
+//			Communicating::getInstant()->RFSend(1, (float)PhasesMonitoring::getInstance()->getRPM(1));
+//			Communicating::getInstant()->RFSend(2, (float)PhasesMonitoring::getInstance()->getRPM(2));
+//			Communicating::getInstant()->RFSend(3, (float)PhasesMonitoring::getInstance()->getRPM(3));
 			break;
 		case 2:
-			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getAcc(0));
-			Communicating::getInstant()->RFSend(1, (float)Acceleration::getInstance()->getAcc(1));
-			Communicating::getInstant()->RFSend(2, (float)Acceleration::getInstance()->getAcc(2));
+
+			Communicating::getInstant()->RFSend(0, Pid::getInstance(17)->getPid(0));
+			Communicating::getInstant()->RFSend(1, Pid::getInstance(18)->getPid(0));
+			Communicating::getInstant()->RFSend(2, Pid::getInstance(19)->getPid(0));
+//			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getAcc(0));
+//			Communicating::getInstant()->RFSend(1, (float)Acceleration::getInstance()->getAcc(1));
+//			Communicating::getInstant()->RFSend(2, (float)Acceleration::getInstance()->getAcc(2));
 			break;
 		case 3:
 			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getMovingAverageFilter(0)->getAverage());
@@ -96,6 +110,22 @@ void RFOutput(){
 			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getFilteredAngle(0));
 			Communicating::getInstant()->RFSend(1, (float)Acceleration::getInstance()->getFilteredAngle(1));
 			break;
+		case 6:
+			Communicating::getInstant()->RFSend(0, (float)Controlling::getInstant()->getErrRPY(0));
+			Communicating::getInstant()->RFSend(1, (float)Controlling::getInstant()->getErrRPY(1));
+			Communicating::getInstant()->RFSend(2, (float)Controlling::getInstant()->getErrRPY(2));
+			break;
+		case 7:
+			Communicating::getInstant()->RFSend(4, (float)Controlling::getInstant()->watchDogCount);
+			break;
+		case 8:
+			double a[3];
+			a[0] = Acceleration::getInstance()->getMovingAverageFilter(0)->getAverage();
+			a[1] = Acceleration::getInstance()->getMovingAverageFilter(1)->getAverage();
+			a[2] = Acceleration::getInstance()->getMovingAverageFilter(2)->getAverage();
+			double mag = MathTools::Sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) / GRAVITY - 1.0;
+			Communicating::getInstant()->RFSend(0, (float)mag);
+			break;
 	}
 }
 
@@ -104,7 +134,11 @@ void BatteryPrint(){
 }
 
 void Output(){
-
+	for(int i = 0; i < Task::getInstance()->TasksNum; i++){
+		Task::getInstance()->printDeration(i);
+	}
+	//Usart::getInstance(USART1)->Print("\n\nUpdtate:%d\nControl:%d\nRX:%d\nTX:%d\n\n\n", t[1] - t[0], t[3] - t[2], t[5] - t[4], t[7] - t[6]);
+//	Usart::getInstance(USART1)->Print("%d\n", );
 //	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
 //			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
 //			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)),
@@ -115,35 +149,34 @@ void Output(){
 //	Usart::getInstance(USART1)->Print("$,%g,%g\n", MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(0)),
 //			MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(1)));
 
-
-	switch(Communicating::getInstant()->getPrintType()){
-		case 0:
-			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
-					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
-					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)));
-			break;
-		case 1:
-			Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g\n", PhasesMonitoring::getInstance()->getRPM(0),
-					PhasesMonitoring::getInstance()->getRPM(1),
-					PhasesMonitoring::getInstance()->getRPM(2),
-					PhasesMonitoring::getInstance()->getRPM(3));
-			break;
-		case 2:
-			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
-					Acceleration::getInstance()->getAcc(1),
-					Acceleration::getInstance()->getAcc(2));
-			break;
-		case 3:
-			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
-					Acceleration::getInstance()->getMovingAverageFilter(1)->getAverage(),
-					Acceleration::getInstance()->getMovingAverageFilter(2)->getAverage());
-			break;
-		case 4:
-				Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Omega::getInstance()->getOmega(0),
-				Omega::getInstance()->getOmega(1),
-				Omega::getInstance()->getOmega(2));
-			break;
-	}
+//	switch(Communicating::getInstant()->getPrintType()){
+//		case 0:
+//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
+//					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
+//					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)));
+//			break;
+//		case 1:
+//			Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g\n", PhasesMonitoring::getInstance()->getRPM(0),
+//					PhasesMonitoring::getInstance()->getRPM(1),
+//					PhasesMonitoring::getInstance()->getRPM(2),
+//					PhasesMonitoring::getInstance()->getRPM(3));
+//			break;
+//		case 2:
+//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
+//					Acceleration::getInstance()->getAcc(1),
+//					Acceleration::getInstance()->getAcc(2));
+//			break;
+//		case 3:
+//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
+//					Acceleration::getInstance()->getMovingAverageFilter(1)->getAverage(),
+//					Acceleration::getInstance()->getMovingAverageFilter(2)->getAverage());
+//			break;
+//		case 4:
+//				Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Omega::getInstance()->getOmega(0),
+//				Omega::getInstance()->getOmega(1),
+//				Omega::getInstance()->getOmega(2));
+//			break;
+//	}
 
 
 //	printf("$,%g,%g,%g,", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
@@ -217,12 +250,10 @@ void initUpdate(){
 }
 
 void ReceiveTask(){
-
 	Communicating::getInstant()->ReceivePoll();
 }
 
 void SendTask(){
-
 	Communicating::getInstant()->SendPoll();
 }
 
@@ -309,7 +340,7 @@ void Test(){
 	//Usart::getInstance(USART1)->Print("Plot:%g,%g,%g\n", Quaternion::getInstance()->getEuler(0), Quaternion::getInstance()->getEuler(1), Quaternion::getInstance()->getEuler(2));
 	//Usart::getInstance(USART1)->Print("BatteryLevel:%g\n", Battery::getInstance()->getBatteryLevel());
 	//Usart::getInstance(USART1)->Print("%d\n", Ticks::getInstance()->getTicks());
-	Usart::getInstance(USART1)->Print("Plot:%g,%g,%g,%g\n", Controlling::getInstant()->getFzPWM() * 3600 / K / CT);//,
+//	Usart::getInstance(USART1)->Print("Plot:%g,%g,%g,%g\n", Controlling::getInstant()->getFzPWM() * 3600 / K / CT);//,
 //			Controlling::getInstant()->getRotorPWM(1),
 //			Controlling::getInstant()->getRotorPWM(2),
 //			Controlling::getInstant()->getRotorPWM(3));
@@ -330,7 +361,7 @@ int main1(){
 	rfBufferCount = 0;
 	mLeds.Blink(100, Leds::LED1, true);
 	mTask.Attach(20, 0, UartTask, true, -1);
-	mTask.Attach(20, 0, RFTask, true, -1);
+	mTask.Attach(20, 11, RFTask, true, -1);
 	mTask.Run();
 }
 
@@ -339,12 +370,12 @@ void SonicUpdateTask(){
 }
 
 void Sampling(){
-	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g,%g\n", Quaternion::getInstance()->temp1[0],
-			Quaternion::getInstance()->temp1[1],
-			Quaternion::getInstance()->temp1[2],
-			Quaternion::getInstance()->temp2[0],
-			Quaternion::getInstance()->temp2[1],
-			Quaternion::getInstance()->temp2[2]);
+//	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g,%g\n", Quaternion::getInstance()->temp1[0],
+//			Quaternion::getInstance()->temp1[1],
+//			Quaternion::getInstance()->temp1[2],
+//			Quaternion::getInstance()->temp2[0],
+//			Quaternion::getInstance()->temp2[1],
+//			Quaternion::getInstance()->temp2[2]);
 }
 
 void Testing(){
@@ -352,48 +383,54 @@ void Testing(){
 }
 
 int main(){
+	Delay::DelayMS(500);
+	Task* mTask = new Task();
+	Leds* mLeds = new Leds();
+	Buzzer* mBuzzer = new Buzzer();
+	Battery* mBattery = new Battery();
+	Usart* mUsart1 = new Usart(USART1, 256000);
 
-	Delay::DelayMS(100);
-	Task mTask;
-	Leds mLeds;
-	Battery mBattery;
-
-	Controlling mControlling;
-//	Usart mUsart1(USART1, 256000);
-	Usart mUsart1(USART1, 115200);
-	mTask.Attach(100, 0, Testing, true, -1);
-	mTask.Run();
 	uint8_t txAddress[4] = {0x01, 0x09, 0x08, 0x07};
 	uint8_t rxAddress[4] = {0x01, 0x00, 0x00, 0x08};
-	NRF905 mNRF905(8, NRF905::FREQ_433M, NRF905::PWR_POS_10dBM, NRF905::RX_NORMAL_PWR, NRF905::NO_RETRAN, rxAddress, txAddress, 8, 8);
-	Communicating mCommunicating(USART1, true);
-	I2C mI2C2(I2C2, I2C::SPEED_400K);
-	MPU6050 mMPU6050(0.002);
-	Acceleration mAcceleration;
-	Omega mOmega;
-	Quaternion mQuaternion(0.002);
-	PhasesMonitoring mPhasesMonitoring;
+	NRF905* mNRF905 = new NRF905(8, NRF905::FREQ_433M, NRF905::PWR_POS_10dBM, NRF905::RX_NORMAL_PWR, NRF905::NO_RETRAN, rxAddress, txAddress, 8, 8);
+
+	Delay::DelayMS(500);
+
+	Controlling* mControlling = new Controlling();
+	Communicating* mCommunicating = new Communicating(USART1, true);
+	I2C* mI2C2 = new I2C(I2C2, I2C::SPEED_400K);
+	MPU6050* mMPU6050 = new MPU6050(0.002);
+	Acceleration* mAcceleration = new Acceleration();
+	Omega* mOmega = new Omega();
+//	PhasesMonitoring* mPhasesMonitoring = new PhasesMonitoring();
 
 	Delay::DelayMS(100);
-	mLeds.Blink(100, Leds::LED1, true);
-	mTask.Attach(2, 0, initUpdate, false, 128);
-	mTask.Run();
+	mLeds->Blink(100, Leds::LED1, true);
+	mTask->Attach(2, 0, initUpdate, false, 1024);
+	mTask->Run();
+	Quaternion* mQuaternion = new Quaternion(0.002);
 //	Sonic mSonic;
+//	mUsart1->Print("Volage:%g\n", mBattery->getBatteryLevel());
 
-	Usart::getInstance(USART1)->Print("V:%g\n", Battery::getInstance()->getBatteryLevel());
 	printfCount = 0;
-	mTask.Attach(2, 0, Update, true, -1);
-//	mTask.Attach(60, 0, SonicUpdateTask, true, -1);
-	mTask.Attach(2, 0, ControlTask, true, -1);
-	mTask.Attach(20, 0, ReceiveTask, true, -1);
-	mTask.Attach(20, 10, SendTask, true, -1);
-//	mTask.Attach(100, 50, Output, true, -1);
-	mTask.Attach(100, 50, RFOutput, true, -1);
-//	mTask.Attach(100, 50, Sampling, true, -1);
-	mTask.Attach(5000, 120, BatteryPrint, true, -1);
-//	mTask.Attach(1000, 0, InterruptPrint, true, -1);
-//	mTask.Attach(2000, 0, Test, true, -1);
-	mTask.Run();
+	mTask->Attach(2, 0, Update, true, -1);
+//	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
+	mTask->Attach(2, 1, ControlTask, true, -1);
+	mTask->Attach(20, 3, ReceiveTask, true, -1);
+	mTask->Attach(20, 11, SendTask, true, -1);
+	mTask->Attach(150, 50, RFOutput, true, -1);
+	mTask->Attach(100, 50, Output, true, -1);
+//	mTask->Attach(100, 50, Sampling, true, -1);
+	mTask->Attach(5000, 120, BatteryPrint, true, -1);
+	if(mBattery->getBatteryLevel() > 12.0){
+		mBuzzer->Frequency(10, 1000, true);
+	}
+	else{
+		mBuzzer->Frequency(80, 1000, true);
+	}
+//	mTask->Attach(1000, 0, InterruptPrint, true, -1);
+//	mTask->Attach(2000, 0, Test, true, -1);
+	mTask->Run();
 
 	return 0;
 }

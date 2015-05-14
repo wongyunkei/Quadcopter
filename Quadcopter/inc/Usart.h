@@ -33,7 +33,7 @@ namespace Communication{
 		private:
 
 			char Buffer[2048];
-			char txBuffer[64];
+			char txBuffer[32];
 			char rxBuffer[7];
 			bool isDmaBusy;
 			char* pBuffer;

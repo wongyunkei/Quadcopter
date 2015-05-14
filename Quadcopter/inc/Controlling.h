@@ -11,22 +11,23 @@
 #include <PWM.h>
 #include <Pid.h>
 #include <Acceleration.h>
+#include <Fuzzy.h>
 
 namespace Control{
 
 	class Controlling{
 		public:
-			#define WATCHDOGCOUNT_LIMIT	500
+			#define WATCHDOGCOUNT_LIMIT	1000
 			#define JX	0.047387
 			#define JY	0.047387
 			#define JZ	0.07438
-			#define M	1.68
-			#define R	0.275
+			#define __M	1.68
+			#define __R	0.275
 			#define CT	0.12
 			#define CD	0.05
-			#define K	23
-			#define INIT_PWM		2500.0f
-			#define INIT_RPM		3000.0f
+			#define __K	23
+			#define INIT_PWM		3500.0f
+			#define INIT_RPM		3500.0f
 			#define MAX_RPM			7000.0f
 			Controlling();
 			static Controlling* getInstant();
@@ -66,9 +67,10 @@ namespace Control{
 			void setMotorValue(int index, double value);
 			void setMotorTarget(int index, double value);
 			double getMotorTarget(int index);
-
+			int watchDogCount;
 		private:
 			PWM* ControlPWM;
+			Fuzzy* FuzzyRPY[3];
 			Pid* RPYPid[3];
 			Pid* MotorPid[4];
 			double MotorTarget[4];
@@ -87,11 +89,11 @@ namespace Control{
 			bool started;
 			bool starting;
 			bool stopping;
-			int watchDogCount;
 			double initPWM;
 			double initRPM;
 			double FzPWM;
 			double cosRollcosPitch;
+			double** fuzzyTable;
 
 	};
 };

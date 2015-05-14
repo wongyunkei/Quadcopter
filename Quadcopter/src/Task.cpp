@@ -63,6 +63,10 @@ void Task::DeAttach(pTask fn){
 	}
 }
 
+void Task::printDeration(int index){
+	printf("Task %d Duration: %d\n", index, duration[index][1] - duration[index][0]);
+}
+
 void Task::Run(){
 
 	uint16_t ticksImg = 0;
@@ -77,7 +81,9 @@ void Task::Run(){
 			for(int i = 0; i < TasksNum; i++){
 
 				if(pTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
+					duration[i][0] = pTicks->getTicks();
 					mTask[i]();
+					duration[i][1] = pTicks->getTicks();
 					if(!IsPeriodic[i]){
 						if(_BreakCout == 1){
 							DeAttach(mTask[i]);

@@ -26,8 +26,10 @@ namespace Time{
 			void DeAttach(pTask);
 			void Run();
 			void resetBreakCount();
+			void printDeration(int index);
 
 			uint16_t TasksNum;
+			int duration[MAX_TASKS_NUM][2];
 
 		private:
 

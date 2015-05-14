@@ -24,23 +24,31 @@ MPU6050::MPU6050(double interval) : Interval(interval), inited(0){
 
 	_mMPU6050 = this;
 
-	RawAccOffset[0] = 0.26;
-	RawAccOffset[1] = 0.26;
-	RawAccOffset[2] = 0.528387534;
-	RawAccScale[0] = 0.986367685;
-	RawAccScale[1] = 0.982351206;
-	RawAccScale[2] = 0.960433939;
+
+	RawAccOffset[0] = 0.0;
+	RawAccOffset[1] = 0.0;
+	RawAccOffset[2] = 0.0;
+	RawAccScale[0] = 1.0;
+	RawAccScale[1] = 1.0;
+	RawAccScale[2] = 1.0;
+
+//	RawAccOffset[0] = 0.26;
+//	RawAccOffset[1] = 0.26;
+//	RawAccOffset[2] = 0.528387534;
+//	RawAccScale[0] = 0.986367685;
+//	RawAccScale[1] = 0.982351206;
+//	RawAccScale[2] = 0.960433939;
 
 	FastInitialization();
 
-//	Task::getInstance()->Attach(interval * 1000, 0, UpdateTask, false, 512);
+//	Task::getInstance()->Attach(interval * 1000, 0, UpdateTask, false, 1024);
 //	Task::getInstance()->Run();
-
+//
 //	while(!GyroCal());
 
-	RawOmegaOffset[0] = 0;
-	RawOmegaOffset[1] = 4.8;
-	RawOmegaOffset[2] = 1.33;
+	RawOmegaOffset[0] = 2.75;
+	RawOmegaOffset[1] = 5.7;//4.8;
+	RawOmegaOffset[2] = -0.4;//1.33;
 	inited = 1;
 	Task::getInstance()->Attach(2, 0, UpdateTask, false, 32);
 	Task::getInstance()->Run();
@@ -48,8 +56,8 @@ MPU6050::MPU6050(double interval) : Interval(interval), inited(0){
 
 void MPU6050::FastInitialization(){
 
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_PWR_MGMT_1,0x03));
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_SMPLRT_DIV,0x01));
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_PWR_MGMT_1,0x00));
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_SMPLRT_DIV,0x07));
 	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_CONFIG,0x00));
 	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_GYRO_CONFIG,0x18));
 	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_ACCEL_CONFIG,0x18));
@@ -73,12 +81,13 @@ bool MPU6050::GyroCal(){
 	RawOmegaOffset[0] = 0;
 	RawOmegaOffset[1] = 0;
 	RawOmegaOffset[2] = 0;
-	Task::getInstance()->Attach(Interval * 1000, 0, GyroCalTask, false, 512);
+	Task::getInstance()->Attach(Interval * 1000, 0, GyroCalTask, false, 10000);
 	Task::getInstance()->Run();
 	for(int i = 0; i < 3; i++){
-		setRawOmegaOffset(i, getRawOmegaOffset(i) / 512);
+		setRawOmegaOffset(i, getRawOmegaOffset(i) / 10000.0);
 	}
-	printf("OmegaOffset:%f,%f,%f\r\n", getRawOmegaOffset(0), getRawOmegaOffset(1), getRawOmegaOffset(2));
+	float offset[3] = {(float)getRawOmegaOffset(0), (float)getRawOmegaOffset(1), (float)getRawOmegaOffset(2)};
+	printf("OmegaOffset:%g,%g,%g\r\n", offset[0], offset[1], offset[2]);
 	return true;
 }
 
@@ -118,7 +127,7 @@ bool MPU6050::Update(){
 		RawAcc[i] *= RawAccScale[i];
 		RawAcc[i] -= RawAccOffset[i];
 		RawOmega[i] -= inited * RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 5.0);
+		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 0.5);
 	}
 
 	return true;
