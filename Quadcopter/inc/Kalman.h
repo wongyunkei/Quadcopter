@@ -14,21 +14,29 @@ namespace Math{
 
 		public:
 
-			Kalman(double, double*, double, double);
-			void Filtering(double*, double, double);
-			void Clear(double x);
-			double getQ();
-			void setQ(double q);
-			double getR1();
-			void setR1(double r1);
-			double getR2();
-			void setR2(double r2);
+			Kalman(float, float*, float, float);
+			void Filtering(float*, float, float);
+			void Clear(float x);
+			float getQ();
+			void setQ(float q);
+			float getR1();
+			void setR1(float r1);
+			float getR2();
+			void setR2(float r2);
 
 		private:
 
-			double _Q, _R[2],_X, _x,_P, _p, _K[2], _yk[2], _Sk[2][2];
+			float _Q;
+			float _R[2];
+			float correctX;
+			float  predictX;
+			float predictP;
+			float correctP;
+			float _K[2];
+			float _yk[2];
+			float _Sk[2][2];
 			bool isOneDim;
-			void MeasurementResidual(double, double);
+			void MeasurementResidual(float, float);
 			void MeasurementResidualCovariance();
 			void StatePredict();
 			void CovariancePredict();

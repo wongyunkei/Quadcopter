@@ -50,7 +50,8 @@ namespace Communication{
 	            R1,
 	            R2,
 	            DRIFT_KP,
-	            DRIFT_KI
+	            DRIFT_KI,
+	            SWITCH_LIGHT
 			};
 
 			Communicating(USART_TypeDef*, bool);

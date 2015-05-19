@@ -13,11 +13,11 @@ namespace Math{
 	class Vector{
 
 		public:
-			static void Add(double*, double*, double*);
-			static void Scale(double*, double*, double);
-			static void Multiplication(double*, double[3][3], double*);
-			static double DotProduct(double*, double*);
-			static void CrossProduct(double*, double*, double*);
+			static void Add(float*, float*, float*);
+			static void Scale(float*, float*, float);
+			static void Multiplication(float*, float[3][3], float*);
+			static float DotProduct(float*, float*);
+			static void CrossProduct(float*, float*, float*);
 		private:
 	};
 };

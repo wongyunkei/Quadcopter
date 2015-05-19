@@ -73,8 +73,8 @@ Sonic::Sonic() : distance(0){
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	GPIO_ResetBits(GPIOC, GPIO_Pin_0);
-	double R[2] = {0.0001, -1};
-	SonicKalman = new Kalman(0.000001, R, 0, 1);
+	float R[2] = {0.0001, -1};
+	SonicKalman = new Kalman(0.000001f, R, 0, 1);
 }
 
 Kalman* Sonic::getSonicKalman(){
@@ -107,9 +107,9 @@ void TIM2_IRQHandler(void){
 			TIM_SetCounter(TIM2, 0);
 		}
 		else{
-			double value = TIM_GetCapture2(TIM2);
-			double temp = 0;
-			Sonic::getInstance()->getSonicKalman()->Filtering(&temp, value / 5800.0, 0.0);
+			float value = TIM_GetCapture2(TIM2);
+			float temp = 0;
+			Sonic::getInstance()->getSonicKalman()->Filtering(&temp, value / 5800.0f, 0.0f);
 			Sonic::getInstance()->setDistance(temp);
 		}
 	}

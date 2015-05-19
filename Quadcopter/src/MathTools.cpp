@@ -27,36 +27,46 @@ float MathTools::Sqrt(float x)
   return x * u.x*(1.5f - xhalf * u.x * u.x);
 }
 
-double MathTools::Sign(double value){
+float MathTools::Sign(float value){
 
 	return value / fabs(value);
 
 }
 
-double MathTools::DegreeToRadian(double degree){
+float MathTools::DegreeToRadian(float degree){
 	return degree * RADIAN_PER_DEGREE;
 }
 
-double MathTools::RadianToDegree(double radian){
+float MathTools::RadianToDegree(float radian){
 	return radian * DEGREE_PER_RADIAN;
 }
 
-double MathTools::Trim(double value, double lowerBound, double upperBound){
+float MathTools::Trim(float value, float lowerBound, float upperBound){
 
 	return (value > upperBound ? upperBound : value < lowerBound ? lowerBound : value);
 
 }
 
-double MathTools::CutOff(double value, double BoundValue, double Bound){
+float MathTools::CutOff(float value, float BoundValue, float Bound){
 
 	return ((value < Bound && value > -Bound) ? BoundValue : value);
 
 }
 
-double MathTools::QuadRoot(double value){
+float MathTools::QuadRoot(float value){
 	return sqrt(sqrt(value));
 }
 
-double MathTools::OctRoot(double value){
+float MathTools::OctRoot(float value){
 	return sqrt(sqrt(sqrt(value)));
+}
+
+float MathTools::TrimResolution(float value){
+	union {
+		uint32_t d;
+		float f;
+	} x;
+	x.f = value;
+	x.d &= 0xfffffff0;
+	return x.f;
 }

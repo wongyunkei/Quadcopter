@@ -311,7 +311,7 @@ void Controlling::ControllingPoll(){
 		}
 	}
 
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabs(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))) > 10 || fabs(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))) > 10){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))) > 10 || fabsf(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))) > 10){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 
 		if(started){
 			Buzzer::getInstance()->Frequency(10, 100, true);

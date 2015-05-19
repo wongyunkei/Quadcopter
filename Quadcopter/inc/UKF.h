@@ -8,9 +8,11 @@
 #ifndef UKF_H_
 #define UKF_H_
 
-//#include <Matrix.h>
+#include <stdio.h>
 #include <Eigen/Eigen>
+using Eigen::Matrix3f;
 using Eigen::Matrix3d;
+using Eigen::Vector3f;
 using Eigen::Vector3d;
 
 namespace Math
@@ -18,28 +20,31 @@ namespace Math
     class UKF
     {
     	public:
-    		UKF(Vector3d x, Matrix3d p, Matrix3d q, Matrix3d r, double k = 1);
+    		UKF(Vector3f x, Matrix3f p, Matrix3f q, Matrix3f r, float k = 50.0f, float a = 0.25f);
     		static UKF* getInstance();
-    		void getSigmaPoints(Vector3d x[7]);
-    		Vector3d Filtering(Vector3d x[7], Vector3d z[7], Vector3d Z);
-    		static void printMat(char* ch, int index,  Matrix3d x);
-    		static void printVect(char* ch, int index,  Vector3d x);
+    		void getSigmaPoints(Vector3f x[7]);
+    		Vector3f Filtering(Vector3f x[7], Vector3f z[7], Vector3f Z);
+    		static void printMat(char* ch, int index,  Matrix3f x);
+    		static void printVect(char* ch, int index,  Vector3f x);
     	private:
 
     		void CalcSigmaPoints();
-    		void CalcEstimation(Vector3d x[7], Vector3d z[7]);
-    		void CalcMeasurement(Vector3d x[7], Vector3d z[7], Vector3d Z);
-    		Vector3d predictX;
-    		Vector3d correctX;
-    		Matrix3d predictP;
-    		Matrix3d correctP;
-    		Vector3d predictZ;
-    		Matrix3d Q;
-    		Matrix3d R;
-    		Vector3d S[7];
-    		double W[7];
-    		Matrix3d KalmanGain;
-        	double K;
+    		void CalcEstimation(Vector3f x[7], Vector3f z[7]);
+    		void CalcMeasurement(Vector3f x[7], Vector3f z[7], Vector3f Z);
+    		Vector3f predictX;
+    		Vector3f correctX;
+    		Matrix3f predictP;
+    		Matrix3f correctP;
+    		Vector3f predictZ;
+    		Matrix3f Q;
+    		Matrix3f R;
+    		Vector3f S[7];
+    		float Wm[7];
+    		float Wc[7];
+    		Matrix3f KalmanGain;
+        	float K;
+        	float lambda;
+        	float _a;
     };
 };
 

@@ -21,7 +21,7 @@
 
 Quaternion* _mQuaternion;
 
-Quaternion::Quaternion(double interval) : Interval(interval){
+Quaternion::Quaternion(float interval) : Interval(interval){
 
 	_mQuaternion = this;
 
@@ -35,7 +35,7 @@ Quaternion::Quaternion(double interval) : Interval(interval){
 //	_Quaternion[2] = 0;
 //	_Quaternion[3] = 0;
 
-//	double R[2] = {0.00075, 0.020472997};
+//	float R[2] = {0.00075, 0.020472997};
 //	_EulerKalman[0] = new Kalman(0.0001, R, _Euler[0], 1.0);
 //	R[0] = 0.0021;
 //	R[1] = 0.004316973;
@@ -44,16 +44,16 @@ Quaternion::Quaternion(double interval) : Interval(interval){
 //	R[1] = 0.001349584;
 //	_EulerKalman[2] = new Kalman(0.0001, R, 0, 1.0);
 
-	double R[2] = {0.001, 0.5};
-	_EulerKalman[0] = new Kalman(0.0001, R, _Euler[0], 1.0);
-	_EulerKalman[1] = new Kalman(0.0001, R, _Euler[1], 1.0);
-	_EulerKalman[2] = new Kalman(0.0001, R, 0, 1.0);
+	float R[2] = {0.001, 0.5};
+	_EulerKalman[0] = new Kalman(0.0001f, R, _Euler[0], 1.0f);
+	_EulerKalman[1] = new Kalman(0.0001f, R, _Euler[1], 1.0f);
+	_EulerKalman[2] = new Kalman(0.0001f, R, 0, 1.0f);
 
 
 //	Vector3d x;
-//	Matrix3d p;
-//	Matrix3d q;
-//	Matrix3d r;
+//	Matrix3f p;
+//	Matrix3f q;
+//	Matrix3f r;
 //	x.setZero();
 //	p.setIdentity();
 //	q.setZero();
@@ -67,6 +67,7 @@ Quaternion::Quaternion(double interval) : Interval(interval){
 	DriftCorrectionPid[0] = new Pid(5,0.5,0,0,1000,interval);
 	DriftCorrectionPid[1] = new Pid(6,0.5,0,0,1000,interval);
 	DriftCorrectionPid[2] = new Pid(7,0.5,0,0,1000,interval);
+	prevR.setZero();
 
 }
 
@@ -78,17 +79,17 @@ Kalman* Quaternion::getKalman(int index){
 	return _EulerKalman[index];
 }
 
-double Quaternion::getInitAngles(int index){
+float Quaternion::getInitAngles(int index){
 	return InitAngles[index];
 }
 
-double Quaternion::getEuler(int index){
+float Quaternion::getEuler(int index){
 	return _Euler[index];
 }
 
-void Quaternion::setEuler(int index, double angle){
+void Quaternion::setEuler(int index, float angle){
 	_Euler[index] = angle;
-	double quaternion[4];
+	float quaternion[4];
 	EulerToQuaternion(_Euler, quaternion);
 	for(int i = 0; i < 4; i++){
 		_Quaternion[i] = quaternion[i];
@@ -115,11 +116,11 @@ void Quaternion::resetQuaternion(){
 //	_EulerKalman[2]->Clear(0);
 }
 
-double* Quaternion::getQuaternion(){
+float* Quaternion::getQuaternion(){
 	return _Quaternion;
 }
 
-void Quaternion::getQuaternionConjugate(double* conjugate,double* quaternion){
+void Quaternion::getQuaternionConjugate(float* conjugate,float* quaternion){
 	conjugate[0] = quaternion[0];
 	conjugate[1] = -quaternion[1];
 	conjugate[2] = -quaternion[2];
@@ -127,29 +128,29 @@ void Quaternion::getQuaternionConjugate(double* conjugate,double* quaternion){
 }
 
 void Quaternion::Update(){
-
-	double DeltaQuaternion[4] = {0,0,0,0};
+	prevR = getRotationMatrix();
+	float DeltaQuaternion[4] = {0,0,0,0};
 	DeltaQuaternion[0] = 0;
 	for(int i = 1; i < 4; i++){
 		DeltaQuaternion[i] = MathTools::DegreeToRadian(Omega::getInstance()->getOmega(i - 1));
 	}
 
-	double g[3] = {0,0,1};
-	double f[3] = {0,0,0};
+	float g[3] = {0,0,1};
+	float f[3] = {0,0,0};
 	Vector::CrossProduct(f, g, _Euler);
 	f[2] = _Euler[2];
-	double acc[3];
+	float acc[3];
 	for(int i = 0; i < 3; i++){
 		acc[i] = Acceleration::getInstance()->getMovingAverageFilter(i)->getAverage();
 	}
 
 	Vector::Scale(acc, acc, 1 / GRAVITY);
-	double mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
 
 	bool valid = mag < 1.2 && mag > 0.8 ? true : false;
 
 	if(valid){
-		double z[3];
+		float z[3];
 		z[0] = 2 * (_Quaternion[1] * _Quaternion[3] - _Quaternion[0] * _Quaternion[2]);
 		z[1] = 2 * (_Quaternion[0] * _Quaternion[1] + _Quaternion[2] * _Quaternion[3]);
 		z[2] = 1 - 2 * (_Quaternion[1] * _Quaternion[1] + _Quaternion[2] * _Quaternion[2]);
@@ -162,7 +163,7 @@ void Quaternion::Update(){
 	}
 
 
-//	double DeltaQuaternion[4] = {0,0,0,0};
+//	float DeltaQuaternion[4] = {0,0,0,0};
 //	DeltaQuaternion[0] = 0;
 //	for(int i = 1; i < 4; i++){
 //		DeltaQuaternion[i] = MathTools::DegreeToRadian(Omega::getInstance()->getOmega(i - 1));
@@ -173,7 +174,7 @@ void Quaternion::Update(){
 //	}
 //	acc = acc * (1.0 / GRAVITY);
 //
-//	double mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+//	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
 //
 //	bool valid = mag < 1.2 && mag > 0.8 ? true : false;
 //
@@ -213,19 +214,25 @@ void Quaternion::Update(){
 //		}
 //	}
 
+
 	QuaternionMultiplication(DeltaQuaternion, _Quaternion, DeltaQuaternion);
+
 
 	for(int i = 0; i < 4; i++){
 		DeltaQuaternion[i] *= Interval /2;
 		_Quaternion[i] += DeltaQuaternion[i];
 	}
 
+
 	Normalization(_Quaternion, _Quaternion);
+
+	deltaR = QuaternionToMatrix(_Quaternion) * prevR.transpose();
+
 	QuaternionToEuler(_Quaternion, _Euler);
 }
 
-void Quaternion::Normalization(double* quaternion, double* quaternionNorm){
-	double mag = sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
+void Quaternion::Normalization(float* quaternion, float* quaternionNorm){
+	float mag = sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
 
 	for(int i = 0; i < 4; i++){
 		quaternionNorm[i] = quaternion[i] / mag;
@@ -233,10 +240,10 @@ void Quaternion::Normalization(double* quaternion, double* quaternionNorm){
 	}
 }
 
-void Quaternion::QuaternionMultiplication(double* quaternion, double* quaternion1,  double* quaternion2){
-	double temp[4];
+void Quaternion::QuaternionMultiplication(float* quaternion, float* quaternion1,  float* quaternion2){
+	float temp[4];
 	temp[0] = quaternion1[0] * quaternion2[0] - quaternion1[1] * quaternion2[1] - quaternion1[2] * quaternion2[2] - quaternion1[3] * quaternion2[3];
-	double v[3];
+	float v[3];
 	Vector::CrossProduct(v, &quaternion1[1], &quaternion2[1]);
 	temp[1] = quaternion1[0] * quaternion2[1] + quaternion1[1] * quaternion2[0] + v[0];
 	temp[2] = quaternion1[0] * quaternion2[2] + quaternion1[2] * quaternion2[0] + v[1];
@@ -246,30 +253,48 @@ void Quaternion::QuaternionMultiplication(double* quaternion, double* quaternion
 	}
 }
 
-void Quaternion::EulerToQuaternion(double* euler, double* quaternion){
-	double CosHalfRoll = cosf(euler[0] / 2), SinHalfRoll = sinf(euler[0] / 2);
-	double CosHalfPitch = cosf(euler[1] / 2), SinHalfPitch = sinf(euler[1] / 2);
-	double CosHalfYaw = cosf(euler[2] / 2), SinHalfYaw = sinf(euler[2] / 2);
+void Quaternion::EulerToQuaternion(float* euler, float* quaternion){
+	float CosHalfRoll = cosf(euler[0] / 2), SinHalfRoll = sinf(euler[0] / 2);
+	float CosHalfPitch = cosf(euler[1] / 2), SinHalfPitch = sinf(euler[1] / 2);
+	float CosHalfYaw = cosf(euler[2] / 2), SinHalfYaw = sinf(euler[2] / 2);
 	quaternion[0] = CosHalfRoll * CosHalfPitch * CosHalfYaw - SinHalfRoll * SinHalfPitch * SinHalfYaw;
 	quaternion[1] = CosHalfRoll * SinHalfPitch * SinHalfYaw + SinHalfRoll * CosHalfPitch * CosHalfYaw;
 	quaternion[2] = CosHalfRoll * SinHalfPitch * CosHalfYaw - SinHalfRoll * CosHalfPitch * SinHalfYaw;
 	quaternion[3] = CosHalfRoll * CosHalfPitch * SinHalfYaw + SinHalfRoll * SinHalfPitch * CosHalfYaw;
 }
 
-void Quaternion::QuaternionToEuler(double* quaternion, double* euler){
+void Quaternion::QuaternionToEuler(float* quaternion, float* euler){
 	euler[2] = atan2f(2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]), 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]));
 	euler[1] = asinf(2 * (quaternion[0] * quaternion[2] - quaternion[1] * quaternion[3]));
 	euler[0] = atan2f(2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]), 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]));
 }
 
-void Quaternion::QuaternionToMatrix(double* quaternion, double matrix[3][3]){
-	matrix[0][0] = 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
-	matrix[0][1] = 2 * (quaternion[1] * quaternion[2] - quaternion[0] * quaternion[3]);
-	matrix[0][2] = 2 * (quaternion[0] * quaternion[2] + quaternion[1] * quaternion[3]);
-	matrix[1][0] = 2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]);
-	matrix[1][1] = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[3] * quaternion[3]);
-	matrix[1][2] = 2 * (quaternion[2] * quaternion[3] - quaternion[0] * quaternion[1]);
-	matrix[2][0] = 2 * (quaternion[1] * quaternion[3] - quaternion[0] * quaternion[2]);
-	matrix[2][1] = 2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]);
-	matrix[2][2] = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]);
+Matrix3f Quaternion::QuaternionToMatrix(float* quaternion){
+	Matrix3f m;
+	m(0,0) = 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
+	m(0,1) = 2 * (quaternion[1] * quaternion[2] - quaternion[0] * quaternion[3]);
+	m(0,2) = 2 * (quaternion[0] * quaternion[2] + quaternion[1] * quaternion[3]);
+	m(1,0) = 2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]);
+	m(1,1) = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[3] * quaternion[3]);
+	m(1,2) = 2 * (quaternion[2] * quaternion[3] - quaternion[0] * quaternion[1]);
+	m(2,0) = 2 * (quaternion[1] * quaternion[3] - quaternion[0] * quaternion[2]);
+	m(2,1) = 2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]);
+	m(2,2) = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]);
+	return m;
+}
+
+Matrix3f Quaternion::getRotationMatrix(){
+	return QuaternionToMatrix(_Quaternion);
+}
+
+Matrix3f Quaternion::getPrevRotationMatrix(){
+	return prevR;
+}
+
+Matrix3f Quaternion::getDeltaRotationMatrix(){
+	return deltaR;
+}
+
+float Quaternion::getTheater(){
+	return acosf((getRotationMatrix().trace() - 1.0) / 2.0) ;
 }

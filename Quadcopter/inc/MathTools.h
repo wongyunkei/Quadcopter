@@ -18,13 +18,14 @@ namespace Math{
 			#define DEGREE_PER_RADIAN 57.2958f
 			#define RADIAN_PER_DEGREE 0.01745f
 			static float Sqrt(float);
-			static double Sign(double);
-			static double DegreeToRadian(double);
-			static double RadianToDegree(double);
-			static double Trim(double, double, double);
-			static double CutOff(double, double, double);
-			static double QuadRoot(double);
-			static double OctRoot(double);
+			static float Sign(float);
+			static float DegreeToRadian(float);
+			static float RadianToDegree(float);
+			static float Trim(float, float, float);
+			static float CutOff(float, float, float);
+			static float QuadRoot(float);
+			static float OctRoot(float);
+			static float TrimResolution(float value);
 
 		private:
 

@@ -8,6 +8,7 @@
 #include <PhasesMonitoring.h>
 #include <stm32f4xx.h>
 #include <stm32f4xx_rcc.h>
+#include <stm32f4xx_gpio.h>
 #include <stm32f4xx_tim.h>
 #include <stm32f4xx_it.h>
 #include <inttypes.h>
@@ -15,7 +16,6 @@
 #include <stdio.h>
 #include <Task.h>
 #include <Usart.h>
-#include <Math.h>
 
 PhasesMonitoring* _mPhasesMonitoring;
 
@@ -71,7 +71,7 @@ PhasesMonitoring::PhasesMonitoring() : toggleCount(0), interruptCount(0){
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource4, GPIO_AF_TIM3);
 	GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_TIM3);
 
-	TIM_TimeBaseStructure.TIM_Prescaler = 8-1;
+	TIM_TimeBaseStructure.TIM_Prescaler = 16-1;
 	TIM_TimeBaseStructure.TIM_Period = 0xffff;
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
@@ -106,15 +106,11 @@ PhasesMonitoring::PhasesMonitoring() : toggleCount(0), interruptCount(0){
 		OVFCount[i] = 0;
 		preTimestamp[i] = 0;
 		startCount[i] = STARTUP_COUNT;
-		double R[2] = {0.005, -1};
-		phaseKalman[0] = new Kalman(0.001, R, 0, 1.0);
-		phaseKalman[1] = new Kalman(0.001, R, 0, 1.0);
-		phaseKalman[2] = new Kalman(0.001, R, 0, 1.0);
-		phaseKalman[3] = new Kalman(0.001, R, 0, 1.0);
-		prePeriod[0] = 0;
-		prePeriod[1] = 0;
-		prePeriod[2] = 0;
-		prePeriod[3] = 0;
+		float R[2] = {0.000005f, -1};
+		phaseKalman[0] = new Kalman(0.000001f, R, 0, 1.0f);
+		phaseKalman[1] = new Kalman(0.000001f, R, 0, 1.0f);
+		phaseKalman[2] = new Kalman(0.000001f, R, 0, 1.0f);
+		phaseKalman[3] = new Kalman(0.000001f, R, 0, 1.0f);
 //		phaseAverage[0] = new MovingWindowAverageFilter(5);
 //		phaseAverage[1] = new MovingWindowAverageFilter(5);
 //		phaseAverage[2] = new MovingWindowAverageFilter(5);
@@ -251,15 +247,6 @@ int PhasesMonitoring::getInterruptIndex(){
 //	return phaseAverage[index];
 //}
 
-
-float PhasesMonitoring::getPrePeriod(int index){
-	return prePeriod[index];
-}
-
-void PhasesMonitoring::setPrePeriod(int index, float value){
-	prePeriod[index] = value;
-}
-
 void TIM3_IRQHandler(){
 	PhasesMonitoring::getInstance()->setInterruptCount(PhasesMonitoring::getInstance()->getInterruptCount() + 1);
 	uint8_t index = 0xff;
@@ -329,17 +316,15 @@ void TIM3_IRQHandler(){
 		PhasesMonitoring::getInstance()->resetExpaired(index);
 		if(timestamp > 0){
 			value = timestamp - PhasesMonitoring::getInstance()->getPreTimestamp(index) + 65536.0 * (float)PhasesMonitoring::getInstance()->getOVFCount(index);
-			//if(fabs(value - PhasesMonitoring::getInstance()->getPrePeriod(index)) < CONSISTANT_PERIOD_CHANGE && value > PERIOD_LOWER_LIMIT){
 			if(value > PERIOD_LOWER_LIMIT){
 				double temp = 0;
-				PhasesMonitoring::getInstance()->setPrePeriod(index, value);
-				PhasesMonitoring::getInstance()->getKalman(index)->Filtering(&temp, (double)value, -1);
+//				PhasesMonitoring::getInstance()->getKalman(index)->Filtering(&temp, (double)value, -1);
 	//			PhasesMonitoring::getInstance()->getMovingWindowAverageFilter(index)->Update(value);
-				PhasesMonitoring::getInstance()->setPeriod(index, temp);//PhasesMonitoring::getInstance()->getMovingWindowAverageFilter(index)->getAverage());
+				PhasesMonitoring::getInstance()->setPeriod(index, value);//PhasesMonitoring::getInstance()->getMovingWindowAverageFilter(index)->getAverage());
+				PhasesMonitoring::getInstance()->setPreTimestamp(index, 0);
+				PhasesMonitoring::getInstance()->resetOVFCount(index);
+				PhasesMonitoring::getInstance()->setInterruptEnabled(index, false);
 			}
-			PhasesMonitoring::getInstance()->setPreTimestamp(index, 0);
-			PhasesMonitoring::getInstance()->resetOVFCount(index);
-			PhasesMonitoring::getInstance()->setInterruptEnabled(index, false);
 		}
 	}
 }

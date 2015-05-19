@@ -37,6 +37,8 @@
 #include <Math.h>
 #include <stm32f4xx_it.h>
 #include <Buzzer.h>
+#include <PX4FLOW.h>
+#include <SE3.h>
 
 void TestMotorTask(){
 	static double pwm;
@@ -119,13 +121,16 @@ void RFOutput(){
 			Communicating::getInstant()->RFSend(4, (float)Controlling::getInstant()->watchDogCount);
 			break;
 		case 8:
-			double a[3];
-			a[0] = Acceleration::getInstance()->getMovingAverageFilter(0)->getAverage();
-			a[1] = Acceleration::getInstance()->getMovingAverageFilter(1)->getAverage();
-			a[2] = Acceleration::getInstance()->getMovingAverageFilter(2)->getAverage();
-			double mag = MathTools::Sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) / GRAVITY - 1.0;
-			Communicating::getInstant()->RFSend(0, (float)mag);
+			Communicating::getInstant()->RFSend(0, (float)((SE3::getInstance()->getPos())(0)*100.0));
+			Communicating::getInstant()->RFSend(1, (float)((SE3::getInstance()->getPos())(1)*100.0));
+			Communicating::getInstant()->RFSend(2, (float)((SE3::getInstance()->getPos())(2)*100.0));
 			break;
+		case 9:
+			Communicating::getInstant()->RFSend(0, (float)(PX4FLOW::getInstance()->getTranslation())(0)*100.0);
+			Communicating::getInstant()->RFSend(1, (float)(PX4FLOW::getInstance()->getTranslation())(1)*100.0);
+			Communicating::getInstant()->RFSend(2, (float)(PX4FLOW::getInstance()->getTranslation())(2)*100.0);
+			break;
+
 	}
 }
 
@@ -242,6 +247,12 @@ void Update(){
 	Acceleration::getInstance()->Update();
 	Quaternion::getInstance()->Update();
 }
+
+void SE3Update(){
+	PX4FLOW::getInstance()->Update();
+	SE3::getInstance()->Update();
+}
+
 
 void initUpdate(){
 	MPU6050::getInstance()->Update();
@@ -384,6 +395,16 @@ void Testing(){
 
 int main(){
 	Delay::DelayMS(500);
+
+	GPIO_InitTypeDef  GPIO_InitStructure;
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_SET);
 	Task* mTask = new Task();
 	Leds* mLeds = new Leds();
 	Buzzer* mBuzzer = new Buzzer();
@@ -408,7 +429,9 @@ int main(){
 	mLeds->Blink(100, Leds::LED1, true);
 	mTask->Attach(2, 0, initUpdate, false, 1024);
 	mTask->Run();
-	Quaternion* mQuaternion = new Quaternion(0.002);
+	Quaternion* mQuaternion = new Quaternion(0.002f);
+	PX4FLOW* mPX4FLOW = new PX4FLOW(I2C2, 0.008f);
+	SE3* mSE3 = new SE3();
 //	Sonic mSonic;
 //	mUsart1->Print("Volage:%g\n", mBattery->getBatteryLevel());
 
@@ -416,17 +439,18 @@ int main(){
 	mTask->Attach(2, 0, Update, true, -1);
 //	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
 	mTask->Attach(2, 1, ControlTask, true, -1);
-	mTask->Attach(20, 3, ReceiveTask, true, -1);
-	mTask->Attach(20, 11, SendTask, true, -1);
-	mTask->Attach(150, 50, RFOutput, true, -1);
-	mTask->Attach(100, 50, Output, true, -1);
+	mTask->Attach(8, 3, SE3Update, true, -1);
+	mTask->Attach(20, 5, ReceiveTask, true, -1);
+	mTask->Attach(20, 17, SendTask, true, -1);
+	mTask->Attach(100, 61, RFOutput, true, -1);
+	mTask->Attach(100, 61, Output, true, -1);
 //	mTask->Attach(100, 50, Sampling, true, -1);
 	mTask->Attach(5000, 120, BatteryPrint, true, -1);
 	if(mBattery->getBatteryLevel() > 12.0){
-		mBuzzer->Frequency(10, 1000, true);
+		mBuzzer->Frequency(5, 500, true);
 	}
 	else{
-		mBuzzer->Frequency(80, 1000, true);
+		mBuzzer->Frequency(30, 500, true);
 	}
 //	mTask->Attach(1000, 0, InterruptPrint, true, -1);
 //	mTask->Attach(2000, 0, Test, true, -1);

@@ -17,33 +17,39 @@ namespace Math{
 	class Quaternion{
 
 		public:
-			Quaternion(double);
+			Quaternion(float);
 			static Quaternion* getInstance();
 			void Update();
-			double getEuler(int);
-			void setEuler(int, double);
-			double* getQuaternion();
-			void getQuaternionConjugate(double*,double*);
+			float getEuler(int);
+			void setEuler(int, float);
+			float* getQuaternion();
+			void getQuaternionConjugate(float*,float*);
 			void resetQuaternion();
-			void QuaternionToMatrix(double*, double[3][3]);
-			double getInitAngles(int index);
+			Matrix3f getRotationMatrix();
+			Matrix3f getPrevRotationMatrix();
+			Matrix3f getDeltaRotationMatrix();
+			float getInitAngles(int index);
 			Kalman* getKalman(int index);
-			Vector3d temp;
+			float getTheater();
+			Vector3f temp;
 
 		private:
 
-			double Interval;
-			double _Quaternion[4];
+			float Interval;
+			float _Quaternion[4];
 			Kalman* _EulerKalman[3];
 			UKF* _EulerUKF;
-			double _Euler[3];
-			double InitAngles[2];
-			double PreAcc[3];
+			float _Euler[3];
+			float InitAngles[2];
+			float PreAcc[3];
 			Pid* DriftCorrectionPid[3];
-			void Normalization(double*, double*);
-			void QuaternionMultiplication(double*, double*,  double*);
-			void EulerToQuaternion(double*, double*);
-			void QuaternionToEuler(double*, double*);
+			Matrix3f prevR;
+			Matrix3f deltaR;
+			void Normalization(float*, float*);
+			void QuaternionMultiplication(float*, float*,  float*);
+			void EulerToQuaternion(float*, float*);
+			void QuaternionToEuler(float*, float*);
+			Matrix3f QuaternionToMatrix(float* quaternion);
 	};
 };
 
