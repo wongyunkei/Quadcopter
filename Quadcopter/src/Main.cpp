@@ -72,28 +72,28 @@ void RFOutput(){
 
 	switch(Communicating::getInstant()->getPrintType()){
 		case 0:
-			Communicating::getInstant()->RFSend(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))));
-			Communicating::getInstant()->RFSend(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))));
+//			Communicating::getInstant()->RFSend(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))));
+//			Communicating::getInstant()->RFSend(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))));
+//			Communicating::getInstant()->RFSend(2, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2))));
+			Communicating::getInstant()->RFSend(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))));
+			Communicating::getInstant()->RFSend(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))));
 			Communicating::getInstant()->RFSend(2, (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2))));
 			break;
 		case 1:
 
-			Communicating::getInstant()->RFSend(0, Pid::getInstance(0)->getPid(0));
-			Communicating::getInstant()->RFSend(1, Pid::getInstance(1)->getPid(0));
-			Communicating::getInstant()->RFSend(2, Pid::getInstance(2)->getPid(0));
-//			Communicating::getInstant()->RFSend(4, Fuzzy::getInstance(0)->u);
-//			Communicating::getInstant()->RFSend(0, (float)MathTools::RadianToDegree(Quaternion::getInstance()->getInitAngles(0)));
-//			Communicating::getInstant()->RFSend(1, (float)MathTools::RadianToDegree(Quaternion::getInstance()->getInitAngles(1)));
-//			Communicating::getInstant()->RFSend(0, (float)PhasesMonitoring::getInstance()->getRPM(0));
-//			Communicating::getInstant()->RFSend(1, (float)PhasesMonitoring::getInstance()->getRPM(1));
-//			Communicating::getInstant()->RFSend(2, (float)PhasesMonitoring::getInstance()->getRPM(2));
-//			Communicating::getInstant()->RFSend(3, (float)PhasesMonitoring::getInstance()->getRPM(3));
+			Communicating::getInstant()->RFSend(0, Controlling::getInstant()->getMotorTarget(0));
+			Communicating::getInstant()->RFSend(1, Controlling::getInstant()->getMotorTarget(1));
+			Communicating::getInstant()->RFSend(2, Controlling::getInstant()->getMotorTarget(2));
+			Communicating::getInstant()->RFSend(3, Controlling::getInstant()->getMotorTarget(3));
 			break;
 		case 2:
 
-			Communicating::getInstant()->RFSend(0, Pid::getInstance(17)->getPid(0));
-			Communicating::getInstant()->RFSend(1, Pid::getInstance(18)->getPid(0));
-			Communicating::getInstant()->RFSend(2, Pid::getInstance(19)->getPid(0));
+			Communicating::getInstant()->RFSend(4, Controlling::getInstant()->getLift());
+//			Communicating::getInstant()->RFSend(4, Pid::getInstance(1)->getIntegral());
+
+//			Communicating::getInstant()->RFSend(0, Pid::getInstance(17)->getPid(0));
+//			Communicating::getInstant()->RFSend(1, Pid::getInstance(18)->getPid(0));
+//			Communicating::getInstant()->RFSend(2, Pid::getInstance(19)->getPid(0));
 //			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getAcc(0));
 //			Communicating::getInstant()->RFSend(1, (float)Acceleration::getInstance()->getAcc(1));
 //			Communicating::getInstant()->RFSend(2, (float)Acceleration::getInstance()->getAcc(2));
@@ -415,8 +415,6 @@ int main(){
 	uint8_t rxAddress[4] = {0x01, 0x00, 0x00, 0x08};
 	NRF905* mNRF905 = new NRF905(8, NRF905::FREQ_433M, NRF905::PWR_POS_10dBM, NRF905::RX_NORMAL_PWR, NRF905::NO_RETRAN, rxAddress, txAddress, 8, 8);
 
-	Delay::DelayMS(500);
-
 	Controlling* mControlling = new Controlling();
 	Communicating* mCommunicating = new Communicating(USART1, true);
 	I2C* mI2C2 = new I2C(I2C2, I2C::SPEED_400K);
@@ -425,9 +423,8 @@ int main(){
 	Omega* mOmega = new Omega();
 //	PhasesMonitoring* mPhasesMonitoring = new PhasesMonitoring();
 
-	Delay::DelayMS(100);
 	mLeds->Blink(100, Leds::LED1, true);
-	mTask->Attach(2, 0, initUpdate, false, 1024);
+	mTask->Attach(2, 0, initUpdate, false, 2000);
 	mTask->Run();
 	Quaternion* mQuaternion = new Quaternion(0.002f);
 	PX4FLOW* mPX4FLOW = new PX4FLOW(I2C2, 0.008f);
@@ -441,9 +438,9 @@ int main(){
 	mTask->Attach(2, 1, ControlTask, true, -1);
 	mTask->Attach(8, 3, SE3Update, true, -1);
 	mTask->Attach(20, 5, ReceiveTask, true, -1);
-	mTask->Attach(20, 17, SendTask, true, -1);
-	mTask->Attach(100, 61, RFOutput, true, -1);
-	mTask->Attach(100, 61, Output, true, -1);
+	mTask->Attach(40, 17, SendTask, true, -1);
+	mTask->Attach(200, 61, RFOutput, true, -1);
+//	mTask->Attach(100, 61, Output, true, -1);
 //	mTask->Attach(100, 50, Sampling, true, -1);
 	mTask->Attach(5000, 120, BatteryPrint, true, -1);
 	if(mBattery->getBatteryLevel() > 12.0){

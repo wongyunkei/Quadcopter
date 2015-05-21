@@ -64,9 +64,9 @@ Quaternion::Quaternion(float interval) : Interval(interval){
 //	r(2,2) = 0.5;
 //	_EulerUKF = new UKF(x, p, q, r);
 
-	DriftCorrectionPid[0] = new Pid(5,0.5,0,0,1000,interval);
-	DriftCorrectionPid[1] = new Pid(6,0.5,0,0,1000,interval);
-	DriftCorrectionPid[2] = new Pid(7,0.5,0,0,1000,interval);
+	DriftCorrectionPid[0] = new Pid(5,0.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[1] = new Pid(6,0.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[2] = new Pid(7,0.5f,0.0001f,0,1000,interval);
 	prevR.setZero();
 
 }
@@ -236,7 +236,7 @@ void Quaternion::Normalization(float* quaternion, float* quaternionNorm){
 
 	for(int i = 0; i < 4; i++){
 		quaternionNorm[i] = quaternion[i] / mag;
-		quaternionNorm[i] = MathTools::Trim(quaternionNorm[i], -1, 1);
+		quaternionNorm[i] = MathTools::Trim(-1, quaternionNorm[i], 1);
 	}
 }
 

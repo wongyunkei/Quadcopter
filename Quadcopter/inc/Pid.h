@@ -14,22 +14,23 @@ namespace Math{
 
 		public:
 
-			Pid(int, double, double, double, double, double);
+			Pid(int, float, float, float, float, float);
 			static Pid* getInstance(int);
-			double setPid(double, double, double);
-			double getPid(int);
-			double pid(double, double);
+			float setPid(float, float, float);
+			float getPid(int);
+			float pid(float, float);
 			void clear();
+			float getIntegral();
 
 		private:
 
-			double Kp, Ki, Kd;
-			double Integral;
-			double IntegralLimit;
-			double PreErr;
-			double PreTimeStamp;
-			double Period;
-			double DefaultPeriod;
+			float Kp, Ki, Kd;
+			float Integral;
+			float IntegralLimit;
+			float PreErr;
+			float PreTimeStamp;
+			float Period;
+			float DefaultPeriod;
 
 	};
 };

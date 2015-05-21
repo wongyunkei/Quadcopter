@@ -41,7 +41,7 @@ float MathTools::RadianToDegree(float radian){
 	return radian * DEGREE_PER_RADIAN;
 }
 
-float MathTools::Trim(float value, float lowerBound, float upperBound){
+float MathTools::Trim(float lowerBound, float value, float upperBound){
 
 	return (value > upperBound ? upperBound : value < lowerBound ? lowerBound : value);
 

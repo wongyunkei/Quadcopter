@@ -104,7 +104,7 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::POWER:
 			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, Controlling::getInstant()->RPM2PWM(i, data));
+				PWM::getInstant()->Control(i, data);
 			}
 			Communicating::getInstant()->RFSend(4, data);
 			break;
@@ -131,7 +131,7 @@ void Communicating::Execute(int cmd, float data){
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::ROLL_KI:
-			Pid::getInstance(0)->setPid(Pid::getInstance(0)->getPid(0), Pid::getInstance(0)->getPid(1) + data, Pid::getInstance(0)->getPid(2));
+			Pid::getInstance(0)->setPid(Pid::getInstance(0)->getPid(0), data, Pid::getInstance(0)->getPid(2));
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::ROLL_KD:
@@ -144,7 +144,7 @@ void Communicating::Execute(int cmd, float data){
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::PITCH_KI:
-			Pid::getInstance(1)->setPid(Pid::getInstance(1)->getPid(0), Pid::getInstance(1)->getPid(1) + data, Pid::getInstance(1)->getPid(2));
+			Pid::getInstance(1)->setPid(Pid::getInstance(1)->getPid(0), data, Pid::getInstance(1)->getPid(2));
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::PITCH_KD:
@@ -165,6 +165,8 @@ void Communicating::Execute(int cmd, float data){
 			Controlling::getInstant()->setTarget(0, 0);
 			Controlling::getInstant()->setTarget(1, 0);
 			Controlling::getInstant()->setTarget(2, 0);
+			Controlling::getInstant()->setTarget(3, 0.3f);
+			Controlling::getInstant()->setLift(0);
 			Communicating::getInstant()->RFSend(4, 0);
 			break;
 
@@ -251,11 +253,11 @@ void Communicating::Execute(int cmd, float data){
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::YAW_KP:
-			Pid::getInstance(2)->setPid(Pid::getInstance(2)->getPid(0) + data, Pid::getInstance(2)->getPid(1), Pid::getInstance(2)->getPid(2));
+			Pid::getInstance(2)->setPid(data, Pid::getInstance(2)->getPid(1), Pid::getInstance(2)->getPid(2));
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::YAW_KI:
-			Pid::getInstance(2)->setPid(Pid::getInstance(2)->getPid(0), Pid::getInstance(2)->getPid(1) + data, Pid::getInstance(2)->getPid(2));
+			Pid::getInstance(2)->setPid(Pid::getInstance(2)->getPid(0), data, Pid::getInstance(2)->getPid(2));
 			Communicating::getInstant()->RFSend(4, data);
 			break;
 		case CMD::YAW_KD:
@@ -296,6 +298,50 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::SWITCH_LIGHT:
 			GPIO_ToggleBits(GPIOC, GPIO_Pin_0);
+			break;
+		case CMD::HIGHT_KP:
+			Pid::getInstance(3)->setPid(data, Pid::getInstance(3)->getPid(1), Pid::getInstance(3)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::HIGHT_KI:
+			Pid::getInstance(3)->setPid(Pid::getInstance(3)->getPid(0), data, Pid::getInstance(3)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::HIGHT_KD:
+			Pid::getInstance(3)->setPid(Pid::getInstance(3)->getPid(0), Pid::getInstance(3)->getPid(1), data);
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::X_KP:
+			Pid::getInstance(12)->setPid(data, Pid::getInstance(12)->getPid(1), Pid::getInstance(12)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::X_KI:
+			Pid::getInstance(12)->setPid(Pid::getInstance(12)->getPid(0), data, Pid::getInstance(12)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::X_KD:
+			Pid::getInstance(12)->setPid(Pid::getInstance(12)->getPid(0), Pid::getInstance(12)->getPid(1), data);
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::Y_KP:
+			Pid::getInstance(13)->setPid(data, Pid::getInstance(13)->getPid(1), Pid::getInstance(13)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::Y_KI:
+			Pid::getInstance(13)->setPid(Pid::getInstance(13)->getPid(0), data, Pid::getInstance(13)->getPid(2));
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::Y_KD:
+			Pid::getInstance(13)->setPid(Pid::getInstance(13)->getPid(0), Pid::getInstance(13)->getPid(1), data);
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::MAX_LIFT_VALUE:
+			Controlling::getInstant()->setMaxLift(data);
+			Communicating::getInstant()->RFSend(4, data);
+			break;
+		case CMD::MIN_LIFT_VALUE:
+			Controlling::getInstant()->setMinLift(data);
+			Communicating::getInstant()->RFSend(4, data);
 			break;
 	}
 

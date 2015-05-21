@@ -15,9 +15,9 @@
 Fuzzy* _mFuzzy[10];
 
 Fuzzy::Fuzzy(int index, int setLength,
-			double maxE, double maxEC, double maxU,
-			double minE, double minEC, double minU,
-			double maxKp, double maxKi, double maxKd, double** fuzzyTable) : SetLength(setLength),
+			float maxE, float maxEC, float maxU,
+			float minE, float minEC, float minU,
+			float maxKp, float maxKi, float maxKd, float** fuzzyTable) : SetLength(setLength),
 																		MaxE(maxE),
 																		MaxEC(maxEC),
 																		MaxU(maxU),
@@ -30,12 +30,12 @@ Fuzzy::Fuzzy(int index, int setLength,
 																		E(0),
 																		EC(0),
 																		U(0){
-	Ke = (double)(2.0 * SetLength) / (MaxE - MinE);
-	Kec = (double)(2.0 * SetLength) / (MaxEC - MinEC);
+	Ke = (float)(2.0 * SetLength) / (MaxE - MinE);
+	Kec = (float)(2.0 * SetLength) / (MaxEC - MinEC);
 	Ku = (MaxU - MinU) / (2.0 * SetLength);
-	FuzzyTable = new double*[2 * SetLength + 1];
+	FuzzyTable = new float*[2 * SetLength + 1];
 	for(int i = 0; i < 2 * SetLength + 1; i++){
-		FuzzyTable[i] = new double[2 * SetLength + 1];
+		FuzzyTable[i] = new float[2 * SetLength + 1];
 	}
 	for(int i = 0; i < 2 * SetLength + 1; i++){
 		for(int j = 0; j < 2 * SetLength + 1; j++){
@@ -49,7 +49,7 @@ Fuzzy* Fuzzy::getInstance(int index){
 	return _mFuzzy[index];
 }
 
-bool Fuzzy::FuzzyAlgorithm(double e, double ec, double* Kp, double* Ki, double* Kd){
+bool Fuzzy::FuzzyAlgorithm(float e, float ec, float* Kp, float* Ki, float* Kd){
 
 	Fuzzification(e, ec);
 	if(!FuzzyDerivation()){
@@ -59,7 +59,7 @@ bool Fuzzy::FuzzyAlgorithm(double e, double ec, double* Kp, double* Ki, double* 
 	return true;
 }
 
-void Fuzzy::Fuzzification(double e, double ec){
+void Fuzzy::Fuzzification(float e, float ec){
 	E = Ke * (e - (MaxE + MinE) / 2.0);
 	EC = Kec * (ec - (MaxEC + MinEC) / 2.0);
 }
@@ -74,8 +74,8 @@ bool Fuzzy::FuzzyDerivation(){
 	}
 }
 
-void Fuzzy::Defuzzification(double* Kp, double* Ki, double* Kd){
-	double u = (double)(Ku * U) + (MaxU + MinU) / 2.0;
+void Fuzzy::Defuzzification(float* Kp, float* Ki, float* Kd){
+	float u = (float)(Ku * U) + (MaxU + MinU) / 2.0;
 	*Kp = u * MaxKp;
 	*Ki = MaxKi * (1 - u);
 	*Kd =  MaxKd * (1 - u);

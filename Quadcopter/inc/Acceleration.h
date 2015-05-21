@@ -17,7 +17,7 @@ namespace Sensors{
 
 		public:
 
-			#define GRAVITY		9.80665
+			#define GRAVITY		9.80665f
 
 			Acceleration();
 			static Acceleration* getInstance();

@@ -51,7 +51,18 @@ namespace Communication{
 	            R2,
 	            DRIFT_KP,
 	            DRIFT_KI,
-	            SWITCH_LIGHT
+	            SWITCH_LIGHT,
+				HIGHT_KP,
+				HIGHT_KI,
+				HIGHT_KD,
+				X_KP,
+				X_KI,
+				X_KD,
+				Y_KP,
+				Y_KI,
+				Y_KD,
+				MAX_LIFT_VALUE,
+				MIN_LIFT_VALUE
 			};
 
 			Communicating(USART_TypeDef*, bool);

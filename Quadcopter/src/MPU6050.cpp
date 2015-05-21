@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <MathTools.h>
+#include <Acceleration.h>
 
 #define MPU6050_I2C			I2C2
 
@@ -20,25 +21,16 @@ void UpdateTask(){
 	MPU6050::getInstance()->Update();
 }
 
-MPU6050::MPU6050(double interval) : Interval(interval), inited(0){
+MPU6050::MPU6050(float interval) : Interval(interval), inited(0){
 
 	_mMPU6050 = this;
 
-
-	RawAccOffset[0] = 0.0;
-	RawAccOffset[1] = 0.0;
-	RawAccOffset[2] = 0.0;
-	RawAccScale[0] = 1.0;
-	RawAccScale[1] = 1.0;
-	RawAccScale[2] = 1.0;
-
-//	RawAccOffset[0] = 0.26;
-//	RawAccOffset[1] = 0.26;
-//	RawAccOffset[2] = 0.528387534;
-//	RawAccScale[0] = 0.986367685;
-//	RawAccScale[1] = 0.982351206;
-//	RawAccScale[2] = 0.960433939;
-
+	RawAccScale[0] = 2.0*GRAVITY / (RAWACCPOSX - RAWACCNEGX);
+	RawAccScale[1] = 2.0*GRAVITY / (RAWACCPOSY - RAWACCNEGY);
+	RawAccScale[2] = 2.0*GRAVITY / (RAWACCPOSZ - RAWACCNEGZ);
+	RawAccOffset[0] = RAWACCPOSX * RawAccScale[0] - GRAVITY;
+	RawAccOffset[1] = RAWACCPOSY * RawAccScale[1] - GRAVITY;
+	RawAccOffset[2] = RAWACCPOSZ * RawAccScale[2] - GRAVITY;
 	FastInitialization();
 
 //	Task::getInstance()->Attach(interval * 1000, 0, UpdateTask, false, 1024);
@@ -46,9 +38,9 @@ MPU6050::MPU6050(double interval) : Interval(interval), inited(0){
 //
 //	while(!GyroCal());
 
-	RawOmegaOffset[0] = 2.75;
-	RawOmegaOffset[1] = 5.7;//4.8;
-	RawOmegaOffset[2] = -0.4;//1.33;
+	RawOmegaOffset[0] = 3.45f;//2.75;
+	RawOmegaOffset[1] = 6.4;//5.7;//4.8;
+	RawOmegaOffset[2] = -0.5;//-0.4;//1.33;
 	inited = 1;
 	Task::getInstance()->Attach(2, 0, UpdateTask, false, 32);
 	Task::getInstance()->Run();
@@ -105,15 +97,15 @@ bool MPU6050::Update(){
 		if(i >= 0 && i <= 5){
 			int j = i / 2;
 			temp = (data[i + 1] | (data[i] << 8));
-			RawAcc[j] = (double)temp * 0.0047884;
+			RawAcc[j] = (float)temp * 0.0047884;
 		}
 		else if(i >= 8 && i <= 13){
 			temp = data[i + 1] | (data[i] << 8);
-			RawOmega[(i - 8) / 2] = (double)temp * 0.0609756;
+			RawOmega[(i - 8) / 2] = (float)temp * 0.0609756;
 		}
 	}
 
-	double swap;
+	float swap;
 
 	swap = RawAcc[0];
 	RawAcc[0] = RawAcc[1];
@@ -127,32 +119,32 @@ bool MPU6050::Update(){
 		RawAcc[i] *= RawAccScale[i];
 		RawAcc[i] -= RawAccOffset[i];
 		RawOmega[i] -= inited * RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 0.5);
+		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0);
 	}
 
 	return true;
 }
 
-void MPU6050::setRawOmegaOffset(int index, double value){
+void MPU6050::setRawOmegaOffset(int index, float value){
 	RawOmegaOffset[index] = value;
 }
 
-double MPU6050::getRawOmegaOffset(int index){
+float MPU6050::getRawOmegaOffset(int index){
 	return RawOmegaOffset[index];
 }
 
-void MPU6050::setRawOmega(int index, double value){
+void MPU6050::setRawOmega(int index, float value){
 	RawOmega[index] = value;
 }
 
-double MPU6050::getRawOmega(int index){
+float MPU6050::getRawOmega(int index){
 	return RawOmega[index];
 }
 
-void MPU6050::setRawAcc(int index, double value){
+void MPU6050::setRawAcc(int index, float value){
 	RawAcc[index] = value;
 }
 
-double MPU6050::getRawAcc(int index){
+float MPU6050::getRawAcc(int index){
 	return RawAcc[index];
 }

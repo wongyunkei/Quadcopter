@@ -22,6 +22,10 @@
 #include <PhasesMonitoring.h>
 #include <Buzzer.h>
 #include <Fuzzy.h>
+#include <SE3.h>
+#include <Eigen/Eigen>
+
+using Eigen::Vector3f;
 
 Controlling* _mControlling;
 
@@ -36,12 +40,15 @@ void StartingTask(){
 		if(startCount == 0){
 			for(int i = 0; i < 4; i++){
 				PWM::getInstant()->Control(i, INIT_PWM);
+				Controlling::getInstant()->setLift(0);
+				Controlling::getInstant()->setTarget(3, 0.6f);
 //				PWM::getInstant()->Control(i, Controlling::getInstant()->RPM2PWM(i, INIT_RPM));
 			}
 		}
 		if(startCount++ >= 25){
 
 			startCount = 0;
+			Controlling::getInstant()->setLift(0);
 //			float rpm0 = PhasesMonitoring::getInstance()->getRPM(0);
 //			float rpm1 = PhasesMonitoring::getInstance()->getRPM(1);
 //			float rpm2 = PhasesMonitoring::getInstance()->getRPM(2);
@@ -64,16 +71,19 @@ void StartingTask(){
 int StoppingDelayCount;
 
 void StoppingTask(){
-
 	if(Controlling::getInstant()->getStopping()){
-		if(StoppingDelayCount++ <= 50){
-			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 5);
-		}
-		else if(StoppingDelayCount++ <= 100){
-			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 3);
-		}
-		else if(StoppingDelayCount++ <= 200){
-			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 1);
+//		if(StoppingDelayCount++ <= 50){
+//			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 5);
+//		}
+//		else if(StoppingDelayCount++ <= 100){
+//			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 3);
+//		}
+//		else if(StoppingDelayCount++ <= 200){
+//			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 1);
+//		}
+		if(SE3::getInstance()->getPos()(2) > 0.25f){
+			Controlling::getInstant()->setTarget(3, SE3::getInstance()->getPos()(2) - 0.001f);
+			Controlling::getInstant()->setMaxLift(LANDING_MAX_LIFT);
 		}
 		else{
 			StoppingDelayCount = 0;
@@ -93,7 +103,8 @@ void StoppingTask(){
 			Pid::getInstance(9)->clear();
 			Pid::getInstance(10)->clear();
 			Pid::getInstance(11)->clear();
-
+			Controlling::getInstant()->setLift(0);
+			Controlling::getInstant()->setMaxLift(MAX_LIFT);
 			for(int i = 0; i < 4; i++){
 				Controlling::getInstant()->setMotorTarget(i, 0);
 				Controlling::getInstant()->setMotorValue(i, 0);
@@ -104,13 +115,13 @@ void StoppingTask(){
 	}
 }
 
-Controlling::Controlling() : initRPM(INIT_RPM), preFzPWM(0), HightPidDelayCount(0), started(false), starting(false), stopping(false), watchDogCount(0), initPWM(INIT_PWM), FzPWM(0), cosRollcosPitch(1){
+Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_RPM), preFzPWM(0), XYPidDelayCount(0), HightPidDelayCount(0), started(false), starting(false), stopping(false), watchDogCount(0), initPWM(INIT_PWM), FzPWM(0), cosRollcosPitch(1), Lift(0.0f){
 	_mControlling = this;
 	ControlPWM = new PWM();
-	target[0] = 0.0;
-	target[1] = 0.0;
-	target[2] = 0.0;
-	target[3] = 0.0;
+	target[0] = 0.0f;
+	target[1] = 0.0f;
+	target[2] = 0.0f;
+	target[3] = 0.6f;
 	FzPWM = target[3];
 	thrust[0] = 0;
 	thrust[1] = 0;
@@ -120,9 +131,9 @@ Controlling::Controlling() : initRPM(INIT_RPM), preFzPWM(0), HightPidDelayCount(
 	offset[1] = 0.0;
 	offset[2] = 0.0;
 	offset[3] = 0.0;
-	RPYOffset[0] = -1.0;
-	RPYOffset[1] = -2.0;
-	RPYOffset[2] = 0.0;
+	RPYOffset[0] = 0.0f;
+	RPYOffset[1] = 0.0f;
+	RPYOffset[2] = 15.0f;
 
 	rotorPWM[0] = initPWM;
 	rotorPWM[1] = initPWM;
@@ -144,36 +155,19 @@ Controlling::Controlling() : initRPM(INIT_RPM), preFzPWM(0), HightPidDelayCount(
 	MotorValue[2] = 0;
 	MotorValue[3] = 0;
 
-//	RPYPid[0] = new Pid(0,0.01,0.0001,0.0,1000.0,0.002);//(0,0.027,0.0001,0.0,0.002);
-//	RPYPid[1] = new Pid(1,0.01,0.0001,0.0,1000.0,0.002);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-//	RPYPid[2] = new Pid(2,0.01,0.0,0,1000.0,0.002);//(2,0.12,0.001,0.0,0.002);
-//	D_RPYPid[0] = new Pid(3,0.01,0,0.0,1000.0,0.002);
-//	D_RPYPid[1] = new Pid(4,0.01,0,0.0,1000.0,0.002);
-//	D_RPYPid[2] = new Pid(5,0.001,0,0,1000.0,0.002);//(5,0.15,0,0.0,0.002);
-//	RPYPid[0] = new Pid(0,33.45,1.052,0.0,10000.0,0.002);//(0,0.027,0.0001,0.0,0.002);
-//	RPYPid[1] = new Pid(1,33.45,1.052,0.0,10000.0,0.002);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-//	RPYPid[2] = new Pid(2,19.729,0.62,0,10000.0,0.002);//(2,0.12,0.001,0.0,0.002);
-//	D_RPYPid[0] = new Pid(3,96.5,0,0.0,10000.0,0.002);
-//	D_RPYPid[1] = new Pid(4,96.5,0,0.0,10000.0,0.002);
-//	D_RPYPid[2] = new Pid(5,56.95,0,0,10000.0,0.002);//(5,0.15,0,0.0,0.002);
+	RPYPid[0] = new Pid(0,1000.0f,300000.0f,0.0,6000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
+	RPYPid[1] = new Pid(1,2000.0f,100000.0f,0.0,6000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
+	RPYPid[2] = new Pid(2,2500.0f,10000.0f,0.0,6000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
+	D_RPYPid[0] = new Pid(17,500.0f,0,0,6000.0f,0.002f);
+	D_RPYPid[1] = new Pid(18,500.0f,0,0,6000.0f,0.002f);
+	D_RPYPid[2] = new Pid(19,500.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
 
-//	RPYPid[0] = new Pid(0,280,1.052,0.0,1000.0,0.002);//(0,0.027,0.0001,0.0,0.002);
-//	RPYPid[1] = new Pid(1,280,1.052,0.0,1000.0,0.002);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-//	RPYPid[2] = new Pid(2,19.729,0.62,0,1000.0,0.002);//(2,0.12,0.001,0.0,0.002);
-//	D_RPYPid[0] = new Pid(3,96.5,0,0.0,1000.0,0.002);
-//	D_RPYPid[1] = new Pid(4,96.5,0,0.0,1000.0,0.002);
-//	D_RPYPid[2] = new Pid(5,56.95,0,0,1000.0,0.002);//(5,0.15,0,0.0,0.002);
+	HightPid = new Pid(3, 0.8f, 0.0f, 100.0f, 6000.0f, 0.1f);
 
-//	HightPid = new Pid(6, 8, 0.0567281, 0.0, 4, 0.06);
+	XYPid[0] = new Pid(12, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);
+	XYPid[1] = new Pid(13, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);
 
-	RPYPid[0] = new Pid(0,700,0.005,0.0,3000.0,0.002);//(0,0.027,0.0001,0.0,0.002);
-	RPYPid[1] = new Pid(1,800,0.005,0.0,3000.0,0.002);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-	RPYPid[2] = new Pid(2,1000,0.005,0.0,3000.0,0.002);//(2,0.12,0.001,0.0,0.002);
-	D_RPYPid[0] = new Pid(17,200,0,0,3000.0,0.002);
-	D_RPYPid[1] = new Pid(18,200,0,0,3000.0,0.002);
-	D_RPYPid[2] = new Pid(19,100,0,0,3000.0,0.002);//(5,0.15,0,0.0,0.002);
-
-	double _fuzzyTable[15][15] = {{7, 6, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 6, 7},
+	float _fuzzyTable[15][15] = {{7, 6, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 6, 7},
 								{6, 6, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 6, 6},
 								{5, 4, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 4, 5},
 								{4, 4, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 4, 4},
@@ -189,9 +183,9 @@ Controlling::Controlling() : initRPM(INIT_RPM), preFzPWM(0), HightPidDelayCount(
 								{6, 6, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 6, 6},
 								{7, 6, 2, 1, -1, -4, -6, -7, -6, -4, -1, 1, 2, 6, 7}};
 
-	fuzzyTable = new double*[15];
+	fuzzyTable = new float*[15];
 	for(int i = 0; i < 15; i++){
-		fuzzyTable[i] = new double[15];
+		fuzzyTable[i] = new float[15];
 		for(int j = 0; j < 15; j++){
 			fuzzyTable[i][j] = _fuzzyTable[i][j];
 		}
@@ -221,16 +215,16 @@ void Controlling::setStopping(bool value){
 	stopping = value;
 }
 
-void Controlling::setMotorTarget(int index, double value){
+void Controlling::setMotorTarget(int index, float value){
 	MotorTarget[index] = value;
 }
 
-double Controlling::getMotorTarget(int index){
+float Controlling::getMotorTarget(int index){
 	return MotorTarget[index];
 }
 
 void Controlling::MotorControl(int index, float value){
-	double rpm = value + MotorPid[index]->pid(value, PhasesMonitoring::getInstance()->getRPM(index));
+	float rpm = value + MotorPid[index]->pid(value, PhasesMonitoring::getInstance()->getRPM(index));
 	PWM::getInstant()->Control(index, RPM2PWM(index, rpm));
 }
 
@@ -258,41 +252,32 @@ float Controlling::RPM2PWM(int index, float rpm){
 
 void Controlling::ControllingPoll(){
 
-//	Communicating::getInstant()->RFSend(4, k[0][2]);
-//	Communicating::getInstant()->RFSend(1, Controlling::getInstant()->_k[1]);
-//	Communicating::getInstant()->RFSend(2, Controlling::getInstant()->_k[2]);
-//	Communicating::getInstant()->RFSend(4, Fuzzy::getInstance(0)->u);
-//	Communicating::getInstant()->RFSend(4, Fuzzy::getInstance(0)->E);
-//	printf("%g,%g,%g\n", _k[0], _k[1], _k[2]);
-//	_k[0] = k[1][0];
-//	_k[1] = k[1][1];
-//	_k[2] = k[1][2];
-//	printf("%g,%g,%g\n", _k[0], _k[1], _k[2]);
-//	_k[0] = k[2][0];
-//	_k[1] = k[2][1];
-//	_k[2] = k[2][2];
-//	printf("%g,%g,%g\n\n", _k[0], _k[1], _k[2]);
-
 	if(watchDogCount < WATCHDOGCOUNT_LIMIT && (started)){
 		watchDogCount++;
 
-		double k[3][3] = {{0.0,0.0,0.0},{0.0,0.0,0.0},{0.0,0.0,0.0}};
-		if(FuzzyRPY[0]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)), &k[0][0], &k[0][1], &k[0][2])){
+		float k[3][3] = {{0.0,0.0,0.0},{0.0,0.0,0.0},{0.0,0.0,0.0}};
+		if(FuzzyRPY[0]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(0) + Quaternion::getInstance()->getInitAngles(0), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)), &k[0][0], &k[0][1], &k[0][2])){
 
 			RPYPid[0]->setPid(k[0][0], k[0][1], 0.0);
 			D_RPYPid[0]->setPid(k[0][2], 0.0, 0.0);
 		}
-		if(FuzzyRPY[1]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)), &k[1][0], &k[1][1], &k[1][2])){
+		if(FuzzyRPY[1]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(1) + Quaternion::getInstance()->getInitAngles(1), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)), &k[1][0], &k[1][1], &k[1][2])){
 
 			RPYPid[1]->setPid(k[1][0], k[1][1], 0.0);
 			D_RPYPid[1]->setPid(k[1][2], 0.0, 0.0);
 		}
-		if(FuzzyRPY[2]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(2) - Quaternion::getInstance()->getInitAngles(2), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(2)), &k[2][0], &k[2][1], &k[2][2])){
+		if(FuzzyRPY[2]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(2) + Quaternion::getInstance()->getInitAngles(2), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(2)), &k[2][0], &k[2][1], &k[2][2])){
 
 			RPYPid[2]->setPid(k[2][0], k[2][1], 0.0);
 			D_RPYPid[2]->setPid(k[2][2], 0.0, 0.0);
 		}
-
+		errXY[0] = 0;
+		errXY[1] = 0;
+		if(XYPidDelayCount++ % 4 == 0){
+			XYPidDelayCount = 0;
+			errXY[0] = XYPid[0]->pid(0.0f, SE3::getInstance()->getPos()(0));
+			errXY[1] = XYPid[1]->pid(0.0f, SE3::getInstance()->getPos()(1));
+		}
 
 		errRPY[0] = RPYPid[0]->pid(MathTools::DegreeToRadian(target[0] + RPYOffset[0]), Quaternion::getInstance()->getEuler(0)) - Quaternion::getInstance()->getInitAngles(0) + D_RPYPid[0]->pid(0, MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)));
 		errRPY[1] = RPYPid[1]->pid(MathTools::DegreeToRadian(target[1] + RPYOffset[1]), Quaternion::getInstance()->getEuler(1)) - Quaternion::getInstance()->getInitAngles(1) + D_RPYPid[1]->pid(0, MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)));
@@ -300,10 +285,24 @@ void Controlling::ControllingPoll(){
 
 		cosRollcosPitch = cosf(Quaternion::getInstance()->getEuler(0)) * cosf(Quaternion::getInstance()->getEuler(1));
 
-		MotorTarget[0] = initRPM / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2];
-		MotorTarget[1] = initRPM / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2];
-		MotorTarget[2] = initRPM / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2];
-		MotorTarget[3] = initRPM / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2];
+		if(HightPidDelayCount++ % 50 == 0){
+			HightPidDelayCount = 0;
+			Vector3f pos = SE3::getInstance()->getPos();
+			Lift += HightPid->pid(target[3], pos(2));
+//			Lift *= fabsf(Lift);
+//			Lift += minLift;
+			Lift = MathTools::Trim(minLift, Lift, maxLift);
+		}
+
+
+//		MotorTarget[0] = initRPM / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2];
+//		MotorTarget[1] = initRPM / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2];
+//		MotorTarget[2] = initRPM / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2];
+//		MotorTarget[3] = initRPM / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2];
+		MotorTarget[0] = Lift / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2] - errXY[0] - errXY[1];
+		MotorTarget[1] = Lift / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2] - errXY[0] + errXY[1];
+		MotorTarget[2] = Lift / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2] + errXY[0] + errXY[1];
+		MotorTarget[3] = Lift / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2] + errXY[0] - errXY[1];
 
 		for(int i = 0; i < 4; i++){
 			PWM::getInstant()->Control(i, MotorTarget[i]);
@@ -311,7 +310,8 @@ void Controlling::ControllingPoll(){
 		}
 	}
 
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))) > 10 || fabsf(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))) > 10){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+//	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))) > 15	){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 
 		if(started){
 			Buzzer::getInstance()->Frequency(10, 100, true);
@@ -355,19 +355,19 @@ bool Controlling::getStart(){
 	return started;
 }
 
-double Controlling::getMotorValue(int index){
+float Controlling::getMotorValue(int index){
 	return MotorValue[index];
 }
 
-void Controlling::setMotorValue(int index, double value){
+void Controlling::setMotorValue(int index, float value){
 	MotorValue[index] = value;
 }
 
-double Controlling::getMotorRPM(int index){
+float Controlling::getMotorRPM(int index){
 	return MotorRPM[index];
 }
 
-void Controlling::setMotorRPM(int index, double value){
+void Controlling::setMotorRPM(int index, float value){
 	MotorRPM[index] = value;
 }
 
@@ -378,35 +378,35 @@ void Controlling::Stopping(){
 	}
 }
 
-double Controlling::getThrust(int index){
+float Controlling::getThrust(int index){
 	return thrust[index];
 }
 
-double Controlling::getRotorPWM(int index){
+float Controlling::getRotorPWM(int index){
 	return rotorPWM[index];
 }
 
-double Controlling::getTarget(int index){
+float Controlling::getTarget(int index){
 	return target[index];
 }
 
-void Controlling::setTarget(int index, double value){
+void Controlling::setTarget(int index, float value){
 	target[index] = value;
 }
 
-double Controlling::getOffset(int index){
+float Controlling::getOffset(int index){
 	return offset[index];
 }
 
-void Controlling::setOffset(int index, double value){
+void Controlling::setOffset(int index, float value){
 	offset[index] = value;
 }
 
-void Controlling::setRPYOffset(int index, double value){
+void Controlling::setRPYOffset(int index, float value){
 	RPYOffset[index] = value;
 }
 
-double Controlling::getRPYOffset(int index){
+float Controlling::getRPYOffset(int index){
 	return RPYOffset[index];
 }
 
@@ -414,44 +414,59 @@ void Controlling::clearWatchDogCount(){
 	watchDogCount = 0;
 }
 
-double Controlling::getErrRPY(int index){
+float Controlling::getErrRPY(int index){
 	return errRPY[index];
 }
 
-double Controlling::getInitPWM(){
+float Controlling::getInitPWM(){
 	return initPWM;
 }
 
-void Controlling::setInitPWM(double value){
+void Controlling::setInitPWM(float value){
 	initPWM = value;
 }
 
 
-double Controlling::getInitRPM(){
+float Controlling::getInitRPM(){
 	return initRPM;
 }
 
-void Controlling::setInitRPM(double value){
+void Controlling::setInitRPM(float value){
 	initRPM = value;
 }
 
+float Controlling::getLift(){
+	return Lift;
+}
 
-double Controlling::getFzPWM(){
+void Controlling::setLift(float value){
+	Lift = value;
+}
+
+float Controlling::getFzPWM(){
 	return FzPWM;
 }
 
-void Controlling::setFzPWM(double value){
+void Controlling::setFzPWM(float value){
 	FzPWM = value;
 }
 
-double Controlling::getPreFzPWM(){
+float Controlling::getPreFzPWM(){
 	return preFzPWM;
 }
 
-void Controlling::setPreFzPWM(double value){
+void Controlling::setPreFzPWM(float value){
 	preFzPWM = value;
 }
 
-void Controlling::setRotorPWM(int index, double value){
+void Controlling::setRotorPWM(int index, float value){
 	rotorPWM[index] = value;
+}
+
+void Controlling::setMaxLift(float value){
+	maxLift = value;
+}
+
+void Controlling::setMinLift(float value){
+	minLift = value;
 }

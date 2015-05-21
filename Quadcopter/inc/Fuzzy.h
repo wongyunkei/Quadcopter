@@ -14,21 +14,21 @@ namespace Math{
 
 		public:
 
-			Fuzzy(int index, int setLength, double maxE, double maxEC, double maxU, double minE, double minEC, double minU, double maxKp, double maxKi, double maxKd, double** fuzzyTable);
+			Fuzzy(int index, int setLength, float maxE, float maxEC, float maxU, float minE, float minEC, float minU, float maxKp, float maxKi, float maxKd, float** fuzzyTable);
 			static Fuzzy* getInstance(int index);
-			bool FuzzyAlgorithm(double, double, double*, double*, double*);
+			bool FuzzyAlgorithm(float, float, float*, float*, float*);
 
 		private:
-			double MaxE, MaxEC, MaxU;
-			double MinE, MinEC, MinU;
+			float MaxE, MaxEC, MaxU;
+			float MinE, MinEC, MinU;
 			int SetLength;
-			double MaxKp, MaxKi, MaxKd;
-			double Ke, Kec, Ku;
+			float MaxKp, MaxKi, MaxKd;
+			float Ke, Kec, Ku;
 			int E, EC, U;
-			double** FuzzyTable;
-			void Fuzzification(double, double);
+			float** FuzzyTable;
+			void Fuzzification(float, float);
 			bool FuzzyDerivation();
-			void Defuzzification(double*, double*, double*);
+			void Defuzzification(float*, float*, float*);
 
 	};
 };

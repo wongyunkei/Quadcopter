@@ -13,6 +13,12 @@ namespace Sensors{
 	class MPU6050{
 		public:
 
+			#define RAWACCPOSX	10.0f
+			#define RAWACCNEGX	-9.63f
+			#define RAWACCPOSY	9.78f
+			#define RAWACCNEGY	-9.94f
+			#define RAWACCPOSZ	9.53f
+			#define RAWACCNEGZ	-10.25f
 			enum ADDR{ADDRESS = 0x68};
 			enum REG{RA_XG_OFFS_TC = 0x00,
 					 RA_YG_OFFS_TC = 0x01,
@@ -125,27 +131,27 @@ namespace Sensors{
 				  	 RA_FIFO_R_W = 0x74,
 				  	 RA_WHO_AM_I = 0x75};
 
-			MPU6050(double);
+			MPU6050(float);
 			static MPU6050* getInstance();
 			bool Update();
-			void setRawAcc(int, double);
-			double getRawAcc(int);
-			void setRawAccOffset(int, double);
-			double getRawAccOffset(int);
-			void setRawAccScale(int, double);
-			double getRawAccScale(int);
-			void setRawOmega(int, double);
-			double getRawOmega(int);
-			void setRawOmegaOffset(int, double);
-			double getRawOmegaOffset(int);
+			void setRawAcc(int, float);
+			float getRawAcc(int);
+			void setRawAccOffset(int, float);
+			float getRawAccOffset(int);
+			void setRawAccScale(int, float);
+			float getRawAccScale(int);
+			void setRawOmega(int, float);
+			float getRawOmega(int);
+			void setRawOmegaOffset(int, float);
+			float getRawOmegaOffset(int);
 
 		private:
-			double Interval;
-			double RawAcc[3];
-			double RawAccOffset[3];
-			double RawAccScale[3];
-			double RawOmega[3];
-			double RawOmegaOffset[3];
+			float Interval;
+			float RawAcc[3];
+			float RawAccOffset[3];
+			float RawAccScale[3];
+			float RawOmega[3];
+			float RawOmegaOffset[3];
 			int inited;
 			bool GyroCal();
 			void FastInitialization();

@@ -12,7 +12,7 @@
 
 Pid* _mPid[20];
 
-Pid::Pid(int index, double kp, double ki, double kd, double integralLimit, double t) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), DefaultPeriod(t), Period(t), PreTimeStamp(0){
+Pid::Pid(int index, float kp, float ki, float kd, float integralLimit, float t) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), DefaultPeriod(t), Period(t), PreTimeStamp(0){
 	_mPid[index] = this;
 }
 
@@ -20,14 +20,14 @@ Pid* Pid::getInstance(int index){
 	return _mPid[index];
 }
 
-double Pid::setPid(double kp, double ki, double kd){
+float Pid::setPid(float kp, float ki, float kd){
 	Kp = kp;
 	Ki = ki;
 	Kd = kd;
 }
 
-double Pid::getPid(int index){
-	double v = 0;
+float Pid::getPid(int index){
+	float v = 0;
 
 	switch(index){
 		case 0:
@@ -51,9 +51,9 @@ void Pid::clear(){
 	PreTimeStamp = 0;
 }
 
-double Pid::pid(double target, double current){
-	double t = Ticks::getInstance()->getTicks();
-	t /= 1000;
+float Pid::pid(float target, float current){
+	float t = Ticks::getInstance()->getTicks();
+	t /= 1000.0f;
 	if(PreTimeStamp > 0){
 		Period = t < PreTimeStamp ? (10000 - PreTimeStamp + t) : t - PreTimeStamp;
 	}
@@ -61,9 +61,15 @@ double Pid::pid(double target, double current){
 		Period = DefaultPeriod;
 	}
 	PreTimeStamp = t;
-	double err = target - current;
+	float err = target - current;
 	Integral += err;
-	Integral = MathTools::Trim(Integral, -IntegralLimit, IntegralLimit);
-	double derivative = err - PreErr;
-	return Kp * err + Ki * Integral * Period + Kd * derivative / Period;
+	Integral *= Period;
+	Integral = MathTools::Trim(-IntegralLimit, Integral, IntegralLimit);
+	float derivative = err - PreErr;
+	PreErr = err;
+	return Kp * err + Ki * Integral + Kd * derivative / Period;
+}
+
+float Pid::getIntegral(){
+	return Integral;
 }
