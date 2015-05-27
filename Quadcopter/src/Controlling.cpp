@@ -39,6 +39,7 @@ void StartingTask(){
 	if(Controlling::getInstant()->getStarting()){
 		if(startCount == 0){
 			for(int i = 0; i < 4; i++){
+				GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_RESET);
 				PWM::getInstant()->Control(i, INIT_PWM);
 				Controlling::getInstant()->setLift(0);
 				Controlling::getInstant()->setTarget(3, 0.6f);
@@ -111,6 +112,7 @@ void StoppingTask(){
 			}
 			Controlling::getInstant()->setStopping(false);
 			Communicating::getInstant()->RFSend(4,0);
+			GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_SET);
 		}
 	}
 }
@@ -155,14 +157,14 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	MotorValue[2] = 0;
 	MotorValue[3] = 0;
 
-	RPYPid[0] = new Pid(0,1000.0f,300000.0f,0.0,6000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
-	RPYPid[1] = new Pid(1,2000.0f,100000.0f,0.0,6000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-	RPYPid[2] = new Pid(2,2500.0f,10000.0f,0.0,6000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
-	D_RPYPid[0] = new Pid(17,500.0f,0,0,6000.0f,0.002f);
-	D_RPYPid[1] = new Pid(18,500.0f,0,0,6000.0f,0.002f);
-	D_RPYPid[2] = new Pid(19,500.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
+	RPYPid[0] = new Pid(0,1000.0f,2000.0f,0.0,6000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
+	RPYPid[1] = new Pid(1,2000.0f,2000.0f,0.0,6000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
+	RPYPid[2] = new Pid(2,2500.0f,0.0f,0.0,6000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
+	D_RPYPid[0] = new Pid(17,300.0f,0,0,6000.0f,0.002f);
+	D_RPYPid[1] = new Pid(18,300.0f,0,0,6000.0f,0.002f);
+	D_RPYPid[2] = new Pid(19,300.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
 
-	HightPid = new Pid(3, 0.8f, 0.0f, 100.0f, 6000.0f, 0.1f);
+	HightPid = new Pid(3, 0.0f, 0.0f, 0.0f, 6000.0f, 0.1f);
 
 	XYPid[0] = new Pid(12, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);
 	XYPid[1] = new Pid(13, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);

@@ -139,9 +139,11 @@ void BatteryPrint(){
 }
 
 void Output(){
-	for(int i = 0; i < Task::getInstance()->TasksNum; i++){
-		Task::getInstance()->printDeration(i);
-	}
+	printf("%g,%g,%g\n", PX4FLOW::getInstance()->getTranslation()(0)*100.0f, PX4FLOW::getInstance()->getTranslation()(1)*100.0f, PX4FLOW::getInstance()->getTranslation()(2)*100.0f);
+
+//	for(int i = 0; i < Task::getInstance()->TasksNum; i++){
+//		Task::getInstance()->printDeration(i);
+//	}
 	//Usart::getInstance(USART1)->Print("\n\nUpdtate:%d\nControl:%d\nRX:%d\nTX:%d\n\n\n", t[1] - t[0], t[3] - t[2], t[5] - t[4], t[7] - t[6]);
 //	Usart::getInstance(USART1)->Print("%d\n", );
 //	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
@@ -440,7 +442,7 @@ int main(){
 	mTask->Attach(20, 5, ReceiveTask, true, -1);
 	mTask->Attach(40, 17, SendTask, true, -1);
 	mTask->Attach(200, 61, RFOutput, true, -1);
-//	mTask->Attach(100, 61, Output, true, -1);
+	mTask->Attach(100, 61, Output, true, -1);
 //	mTask->Attach(100, 50, Sampling, true, -1);
 	mTask->Attach(5000, 120, BatteryPrint, true, -1);
 	if(mBattery->getBatteryLevel() > 12.0){

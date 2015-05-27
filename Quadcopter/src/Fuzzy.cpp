@@ -77,7 +77,7 @@ bool Fuzzy::FuzzyDerivation(){
 void Fuzzy::Defuzzification(float* Kp, float* Ki, float* Kd){
 	float u = (float)(Ku * U) + (MaxU + MinU) / 2.0;
 	*Kp = u * MaxKp;
-	*Ki = MaxKi * (1 - u);
+	//*Ki = MaxKi * (1 - u);
 	*Kd =  MaxKd * (1 - u);
 }
 

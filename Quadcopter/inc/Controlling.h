@@ -29,7 +29,7 @@ namespace Control{
 			#define INIT_PWM		3500.0f
 			#define INIT_RPM		3500.0f
 			#define MIN_LIFT		5300.0f
-			#define MAX_LIFT		5400.0f
+			#define MAX_LIFT		5800.0f
 			#define LANDING_MAX_LIFT		5000.0f
 			#define MAX_RPM			7000.0f
 			Controlling();
