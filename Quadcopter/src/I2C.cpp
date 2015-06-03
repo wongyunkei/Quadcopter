@@ -17,11 +17,13 @@
 #include <Delay.h>
 #include <Leds.h>
 #include <AdditionalTools.h>
+#include <Buzzer.h>
+#include <Task.h>
 
 I2C* _mI2C1;
 I2C* _mI2C2;
 
-I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock){
+I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock, bool createdInstance):CreatedInstance(createdInstance), ErrorCount(0){
 
 	_I2Cx = I2Cx;
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -31,7 +33,7 @@ I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock){
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStruct.GPIO_OType = GPIO_OType_OD;
-    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+    GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 
 	I2C_InitStruct.I2C_ClockSpeed = clock;
     I2C_InitStruct.I2C_Mode = I2C_Mode_I2C;
@@ -47,7 +49,9 @@ I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock){
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_I2C1);
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_I2C1);
 
-		_mI2C1 = this;
+		if(!CreatedInstance){
+			_mI2C1 = this;
+		}
 	}
 	else if(I2Cx == I2C2)
 	{
@@ -56,7 +60,9 @@ I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock){
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_I2C2);
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_I2C2);
 
-		_mI2C2 = this;
+		if(!CreatedInstance){
+			_mI2C2 = this;
+		}
 	}
 
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -66,6 +72,8 @@ I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock){
 
 void I2C::ResetI2C(){
 	Leds::getInstance()->Toggle(Leds::LED2);
+	ErrorCount++;
+	I2C_DeInit(_I2Cx);
 	GPIO_InitTypeDef GPIO_InitStruct;
 	if(_I2Cx == I2C1){
 		GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6;
@@ -75,12 +83,12 @@ void I2C::ResetI2C(){
 	}
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_OD;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 	if(_I2Cx == I2C1){
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7;
+		GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7;
 	}
 	else if(_I2Cx == I2C2){
 		GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11;
@@ -88,22 +96,21 @@ void I2C::ResetI2C(){
 
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
 	if(_I2Cx == I2C1){
-		GPIO_WriteBit(GPIOB, GPIO_Pin_6, Bit_SET);
-		GPIO_WriteBit(GPIOB, GPIO_Pin_7, Bit_RESET);
-		Delay::DelayUS(1);
 		GPIO_WriteBit(GPIOB, GPIO_Pin_7, Bit_SET);
+		GPIO_WriteBit(GPIOB, GPIO_Pin_6, Bit_RESET);
+		Delay::DelayUS(1);
+		GPIO_WriteBit(GPIOB, GPIO_Pin_6, Bit_SET);
 		Delay::DelayUS(1);
 	}
 	else if(_I2Cx == I2C2){
-		GPIO_WriteBit(GPIOB, GPIO_Pin_10, Bit_SET);
-		GPIO_WriteBit(GPIOB, GPIO_Pin_11, Bit_RESET);
-		Delay::DelayUS(1);
 		GPIO_WriteBit(GPIOB, GPIO_Pin_11, Bit_SET);
+		GPIO_WriteBit(GPIOB, GPIO_Pin_10, Bit_RESET);
+		Delay::DelayUS(1);
+		GPIO_WriteBit(GPIOB, GPIO_Pin_10, Bit_SET);
 		Delay::DelayUS(1);
 	}
 
-	I2C_DeInit(_I2Cx);
-	I2C(_I2Cx, I2C::SPEED_400K);
+	I2C(_I2Cx, I2C::SPEED_400K, true);
 }
 
 I2C* I2C::getInstance(I2C_TypeDef* I2Cx){

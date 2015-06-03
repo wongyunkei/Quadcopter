@@ -144,8 +144,10 @@ namespace Sensors{
 			float getRawOmega(int);
 			void setRawOmegaOffset(int, float);
 			float getRawOmegaOffset(int);
+			bool getIsValided();
 
 		private:
+			bool isValided;
 			float Interval;
 			float RawAcc[3];
 			float RawAccOffset[3];

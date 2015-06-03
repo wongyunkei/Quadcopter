@@ -90,7 +90,7 @@ void Kalman::Gain(){
 		_K[1] = predictP * inv_Sk[0][1] + predictP * inv_Sk[1][1];
 	}
 	else{
-		float inv_Sk = 1.0 / _Sk[0][0];
+		double inv_Sk = 1.0 / _Sk[0][0];
 		_K[0] = predictP * inv_Sk;
 	}
 }

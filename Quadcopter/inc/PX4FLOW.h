@@ -23,7 +23,9 @@ namespace Sensors{
 			void Update();
 			Vector3f getTranslation();
 			void reset();
+			bool getIsValided();
 		private:
+			bool isValided;
 			Vector3f Translation;
 			I2C_TypeDef* PX4FLOW_I2C;
 			float Interval;

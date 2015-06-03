@@ -128,6 +128,12 @@ void Quaternion::getQuaternionConjugate(float* conjugate,float* quaternion){
 }
 
 void Quaternion::Update(){
+	if(Omega::getInstance()->getIsValided() == false){
+		return;
+	}
+	if(Acceleration::getInstance()->getIsValided() == false){
+		return;
+	}
 	prevR = getRotationMatrix();
 	float DeltaQuaternion[4] = {0,0,0,0};
 	DeltaQuaternion[0] = 0;

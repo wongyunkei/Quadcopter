@@ -14,13 +14,13 @@
 
 Acceleration* _mAcceleration;
 
-Acceleration::Acceleration(){
+Acceleration::Acceleration() : isValided(false){
 	accMovingAverage[0] = new MovingWindowAverageFilter(50);
 	accMovingAverage[1] = new MovingWindowAverageFilter(50);
 	accMovingAverage[2] = new MovingWindowAverageFilter(50);
 	_mAcceleration = this;
 
-//	double R[3][2] = {{0.001, -1},
+//	float R[3][2] = {{0.001, -1},
 //					{0.001, -1},
 //					{0.001, -1}};
 //	AccKalman[0] = new Kalman(0.000001, R[0], MPU6050::getInstance()->getRawAcc(0), 1);
@@ -39,26 +39,43 @@ MovingWindowAverageFilter* Acceleration::getMovingAverageFilter(int index){
 void Acceleration::Update(){
 
 	for(int i = 0; i < 3; i++){
-		Acc[i] = MPU6050::getInstance()->getRawAcc(i);
+		float temp = MPU6050::getInstance()->getRawAcc(i);
+		if(MPU6050::getInstance()->getIsValided()){
+			if(temp == temp){
+				Acc[i] = temp;
+				accMovingAverage[i]->Update(Acc[i]);
+				isValided = true;
+			}
+			else{
+				isValided = false;
+			}
+		}
+		else{
+			isValided = false;
+		}
 //		AccKalman[i]->Filtering(&Acc[i], MPU6050::getInstance()->getRawAcc(i), 0.0);
-		accMovingAverage[i]->Update(Acc[i]);
+
 	}
 
 }
 
-double Acceleration::getAcc(int index){
+bool Acceleration::getIsValided(){
+	return isValided;
+}
+
+float Acceleration::getAcc(int index){
 	return Acc[index];
 }
 
-double Acceleration::getRawAcc(int index){
+float Acceleration::getRawAcc(int index){
 	return RawAcc[index];
 }
 
-void Acceleration::setAcc(int index, double value){
+void Acceleration::setAcc(int index, float value){
 	Acc[index] = value;
 }
 
-double Acceleration::getAngle(int index){
+float Acceleration::getAngle(int index){
 	if(index == 0){
 		return atan2(Acc[1], MathTools::Sqrt(Acc[0] * Acc[0] + Acc[2] * Acc[2]));
 	}
@@ -67,7 +84,7 @@ double Acceleration::getAngle(int index){
 	}
 }
 
-double Acceleration::getFilteredAngle(int index){
+float Acceleration::getFilteredAngle(int index){
 	if(index == 0){
 		return atan2(accMovingAverage[1]->getAverage(), MathTools::Sqrt(accMovingAverage[0]->getAverage() * accMovingAverage[0]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
 	}

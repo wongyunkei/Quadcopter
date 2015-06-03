@@ -19,14 +19,15 @@ namespace Sensors{
 			Omega();
 			static Omega* getInstance();
 			void Update();
-			double getOmega(int);
-			void setOmega(int, double);
-			double getRawOmega(int index);
+			float getOmega(int);
+			void setOmega(int, float);
+			float getRawOmega(int index);
+			bool getIsValided();
 
 		private:
-
-			double _Omega[3];
-			double _RawOmega[3];
+			bool isValided;
+			float _Omega[3];
+			float _RawOmega[3];
 			Kalman* OmegaKalman[3];
 	};
 };

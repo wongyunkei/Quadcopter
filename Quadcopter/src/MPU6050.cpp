@@ -12,6 +12,7 @@
 #include <math.h>
 #include <MathTools.h>
 #include <Acceleration.h>
+#include <Buzzer.h>
 
 #define MPU6050_I2C			I2C2
 
@@ -21,7 +22,7 @@ void UpdateTask(){
 	MPU6050::getInstance()->Update();
 }
 
-MPU6050::MPU6050(float interval) : Interval(interval), inited(0){
+MPU6050::MPU6050(float interval) : Interval(interval), inited(0), isValided(false){
 
 	_mMPU6050 = this;
 
@@ -48,11 +49,36 @@ MPU6050::MPU6050(float interval) : Interval(interval), inited(0){
 
 void MPU6050::FastInitialization(){
 
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_PWR_MGMT_1,0x00));
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_SMPLRT_DIV,0x07));
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_CONFIG,0x00));
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_GYRO_CONFIG,0x18));
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_ACCEL_CONFIG,0x18));
+	Ticks::getInstance()->setTimeout(3);
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_PWR_MGMT_1,0x00)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
+	Ticks::getInstance()->setTimeout(3);
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_SMPLRT_DIV,0x07)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
+	Ticks::getInstance()->setTimeout(3);
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_CONFIG,0x00)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
+	Ticks::getInstance()->setTimeout(3);
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_GYRO_CONFIG,0x18)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
+	Ticks::getInstance()->setTimeout(3);
+	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_ACCEL_CONFIG,0x18)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
 }
 
 MPU6050* MPU6050::getInstance(){
@@ -90,6 +116,7 @@ bool MPU6050::Update(){
 
 	if(!I2C::getInstance(MPU6050_I2C)->BurstRead(ADDRESS, RA_ACCEL_XOUT_H, 14, data)){
 		FastInitialization();
+		isValided = false;
 		return false;
 	}
 
@@ -121,8 +148,12 @@ bool MPU6050::Update(){
 		RawOmega[i] -= inited * RawOmegaOffset[i];
 		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0);
 	}
-
+	isValided = true;
 	return true;
+}
+
+bool MPU6050::getIsValided(){
+	return isValided;
 }
 
 void MPU6050::setRawOmegaOffset(int index, float value){

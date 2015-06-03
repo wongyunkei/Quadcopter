@@ -39,6 +39,7 @@
 #include <Buzzer.h>
 #include <PX4FLOW.h>
 #include <SE3.h>
+#include <Kalman.h>
 
 void TestMotorTask(){
 	static double pwm;
@@ -138,66 +139,7 @@ void BatteryPrint(){
 	Communicating::getInstant()->RFSend(4, (float)Battery::getInstance()->getBatteryLevel());
 }
 
-void Output(){
-	printf("%g,%g,%g\n", PX4FLOW::getInstance()->getTranslation()(0)*100.0f, PX4FLOW::getInstance()->getTranslation()(1)*100.0f, PX4FLOW::getInstance()->getTranslation()(2)*100.0f);
 
-//	for(int i = 0; i < Task::getInstance()->TasksNum; i++){
-//		Task::getInstance()->printDeration(i);
-//	}
-	//Usart::getInstance(USART1)->Print("\n\nUpdtate:%d\nControl:%d\nRX:%d\nTX:%d\n\n\n", t[1] - t[0], t[3] - t[2], t[5] - t[4], t[7] - t[6]);
-//	Usart::getInstance(USART1)->Print("%d\n", );
-//	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
-//			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
-//			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)),
-//			MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(0)),
-//			MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(1)));
-
-
-//	Usart::getInstance(USART1)->Print("$,%g,%g\n", MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(0)),
-//			MathTools::RadianToDegree(Acceleration::getInstance()->getAngle(1)));
-
-//	switch(Communicating::getInstant()->getPrintType()){
-//		case 0:
-//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
-//					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
-//					MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)));
-//			break;
-//		case 1:
-//			Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g\n", PhasesMonitoring::getInstance()->getRPM(0),
-//					PhasesMonitoring::getInstance()->getRPM(1),
-//					PhasesMonitoring::getInstance()->getRPM(2),
-//					PhasesMonitoring::getInstance()->getRPM(3));
-//			break;
-//		case 2:
-//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
-//					Acceleration::getInstance()->getAcc(1),
-//					Acceleration::getInstance()->getAcc(2));
-//			break;
-//		case 3:
-//			Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
-//					Acceleration::getInstance()->getMovingAverageFilter(1)->getAverage(),
-//					Acceleration::getInstance()->getMovingAverageFilter(2)->getAverage());
-//			break;
-//		case 4:
-//				Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", Omega::getInstance()->getOmega(0),
-//				Omega::getInstance()->getOmega(1),
-//				Omega::getInstance()->getOmega(2));
-//			break;
-//	}
-
-
-//	printf("$,%g,%g,%g,", MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)),
-//			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)),
-//			MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2)));
-//
-//	printf("%g,%g,%g,", Omega::getInstance()->getOmega(0),
-//				Omega::getInstance()->getOmega(1),
-//			Omega::getInstance()->getOmega(2));
-//
-//	printf("%g,%g,%g\n", Acceleration::getInstance()->getAcc(0),
-//				Acceleration::getInstance()->getAcc(1),
-//				Acceleration::getInstance()->getAcc(2));
-}
 
 void Print(){
 
@@ -254,7 +196,6 @@ void SE3Update(){
 	PX4FLOW::getInstance()->Update();
 	SE3::getInstance()->Update();
 }
-
 
 void initUpdate(){
 	MPU6050::getInstance()->Update();
@@ -373,8 +314,8 @@ int main1(){
 	BufferCount = 0;
 	rfBufferCount = 0;
 	mLeds.Blink(100, Leds::LED1, true);
-	mTask.Attach(20, 0, UartTask, true, -1);
-	mTask.Attach(20, 11, RFTask, true, -1);
+	mTask.Attach(10, 0, UartTask, true, -1);
+	mTask.Attach(10, 7, RFTask, true, -1);
 	mTask.Run();
 }
 
@@ -395,6 +336,21 @@ void Testing(){
 	Usart::getInstance(USART1)->Print("%d\n", Ticks::getInstance()->getTicks());
 }
 
+void Output(){
+
+//	Usart::getInstance(USART1)->Print("%g  %g  %g\n", (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))),
+//									(float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))),
+//									(float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2))));
+
+//	printf("%d\n", I2C::getInstance(I2C2)->ErrorCount);
+//	printf("1:%lx  %lx\n", Update, Task::getInstance()->mTask[3]);
+//	printf("2:%lx  %lx\n", ControlTask, Task::getInstance()->mTask[3]);
+//	printf("3:%lx  %lx\n", SE3Update, Task::getInstance()->mTask[3]);
+//	printf("4:%lx  %lx\n", ReceiveTask, Task::getInstance()->mTask[3]);
+//	printf("5:%lx  %lx\n", SendTask, Task::getInstance()->mTask[3]);
+//	printf("6:%lx  %lx\n", RFOutput, Task::getInstance()->mTask[3]);
+}
+
 int main(){
 	Delay::DelayMS(500);
 
@@ -412,7 +368,7 @@ int main(){
 	Buzzer* mBuzzer = new Buzzer();
 	Battery* mBattery = new Battery();
 	Usart* mUsart1 = new Usart(USART1, 256000);
-
+	printf("Started!\n");
 	uint8_t txAddress[4] = {0x01, 0x09, 0x08, 0x07};
 	uint8_t rxAddress[4] = {0x01, 0x00, 0x00, 0x08};
 	NRF905* mNRF905 = new NRF905(8, NRF905::FREQ_433M, NRF905::PWR_POS_10dBM, NRF905::RX_NORMAL_PWR, NRF905::NO_RETRAN, rxAddress, txAddress, 8, 8);
@@ -439,12 +395,12 @@ int main(){
 //	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
 	mTask->Attach(2, 1, ControlTask, true, -1);
 	mTask->Attach(8, 3, SE3Update, true, -1);
-	mTask->Attach(20, 5, ReceiveTask, true, -1);
-	mTask->Attach(40, 17, SendTask, true, -1);
-	mTask->Attach(200, 61, RFOutput, true, -1);
+	mTask->Attach(10, 5, ReceiveTask, true, -1);
+	mTask->Attach(10, 7, SendTask, true, -1);
+	mTask->Attach(100, 61, RFOutput, true, -1);
 	mTask->Attach(100, 61, Output, true, -1);
 //	mTask->Attach(100, 50, Sampling, true, -1);
-	mTask->Attach(5000, 120, BatteryPrint, true, -1);
+	mTask->Attach(1000, 120, BatteryPrint, true, -1);
 	if(mBattery->getBatteryLevel() > 12.0){
 		mBuzzer->Frequency(5, 500, true);
 	}
@@ -456,4 +412,9 @@ int main(){
 	mTask->Run();
 
 	return 0;
+}
+
+void HardFault_Handler(){
+
+//	printf("%d\n", Task::getInstance()->Count);
 }

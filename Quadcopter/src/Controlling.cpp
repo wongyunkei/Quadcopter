@@ -164,7 +164,7 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	D_RPYPid[1] = new Pid(18,300.0f,0,0,6000.0f,0.002f);
 	D_RPYPid[2] = new Pid(19,300.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
 
-	HightPid = new Pid(3, 0.0f, 0.0f, 0.0f, 6000.0f, 0.1f);
+	HightPid = new Pid(3, 2.0f, 0.0f, 7.0f, 6000.0f, 0.1f);
 
 	XYPid[0] = new Pid(12, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);
 	XYPid[1] = new Pid(13, 0.0f, 0.0f, 0.0f, 6000.0f, 0.008f);
@@ -254,8 +254,10 @@ float Controlling::RPM2PWM(int index, float rpm){
 
 void Controlling::ControllingPoll(){
 
-	if(watchDogCount < WATCHDOGCOUNT_LIMIT && (started)){
-		watchDogCount++;
+	if(started){
+		if(watchDogCount < WATCHDOGCOUNT_LIMIT){
+			watchDogCount++;
+		}
 
 		float k[3][3] = {{0.0,0.0,0.0},{0.0,0.0,0.0},{0.0,0.0,0.0}};
 		if(FuzzyRPY[0]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(0) + Quaternion::getInstance()->getInitAngles(0), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)), &k[0][0], &k[0][1], &k[0][2])){
@@ -312,8 +314,10 @@ void Controlling::ControllingPoll(){
 		}
 	}
 
-//	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0) - Quaternion::getInstance()->getInitAngles(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1) - Quaternion::getInstance()->getInitAngles(1))) > 15	){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+	if(watchDogCount >= WATCHDOGCOUNT_LIMIT ||
+			fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 20.0f ||
+			fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 20){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+//	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 
 		if(started){
 			Buzzer::getInstance()->Frequency(10, 100, true);

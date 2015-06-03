@@ -17,7 +17,7 @@ namespace Control{
 
 	class Controlling{
 		public:
-			#define WATCHDOGCOUNT_LIMIT	1000
+			#define WATCHDOGCOUNT_LIMIT	800
 			#define JX	0.047387
 			#define JY	0.047387
 			#define JZ	0.07438

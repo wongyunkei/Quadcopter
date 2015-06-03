@@ -78,6 +78,9 @@ void SE3::Update(){
 		}
 	}
 
+	if(PX4FLOW::getInstance()->getIsValided() == false){
+		return;
+	}
 	Vector3f Translation = PX4FLOW::getInstance()->getTranslation();
 	for(int i = 0; i < 3; i++){
 		deltaSE3(i,3) = Translation(i);
@@ -101,9 +104,9 @@ void SE3::Update(){
 		pos(i) = _pos(i);
 	}
 //	UKF::printVect("pos", 0, pos);
-	Vector3f x[7];
-	SE3UKF->getSigmaPoints(x);
-	pos = SE3UKF->Filtering(x,x,pos);
+//	Vector3f x[7];
+//	SE3UKF->getSigmaPoints(x);
+//	pos = SE3UKF->Filtering(x,x,pos);
 //	SE3Kalman[0]->Filtering(&pos(0), pos(0), 0);
 //	SE3Kalman[1]->Filtering(&pos(1), pos(1), 0);
 //	SE3Kalman[2]->Filtering(&pos(2), pos(2), 0);

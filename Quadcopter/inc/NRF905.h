@@ -125,6 +125,7 @@ namespace Communication{
 			uint8_t* getRxAddress();
 			uint8_t* getTxAddress();
 			int getTXPW();
+			int Count;
 
 		private:
 			Spi* NRF905Spi;
@@ -137,11 +138,11 @@ namespace Communication{
 			uint8_t* _txAddress;
 			int NRF905_RXPW;
 			int NRF905_TXPW;
-			int ErrorCount;
 			bool isTransmitting;
 			char Buffer[2048];
 			char * pBuffer;
 			int BufferCount;
+			int ErrorCount;
 			void setTrxce();
 			void clrTrxce();
 			void setTxen();

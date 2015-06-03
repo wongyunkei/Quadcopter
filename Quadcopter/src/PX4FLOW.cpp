@@ -9,7 +9,7 @@
 
 PX4FLOW* _mPX4FLOW;
 
-PX4FLOW::PX4FLOW(I2C_TypeDef* I2Cx, float interval) : PX4FLOW_I2C(I2Cx), Interval(interval), prevZ(0){
+PX4FLOW::PX4FLOW(I2C_TypeDef* I2Cx, float interval) : PX4FLOW_I2C(I2Cx), Interval(interval), prevZ(0), isValided(false){
 	_mPX4FLOW = this;
 	Translation.setZero();
 	prevZ = 0;
@@ -43,9 +43,11 @@ void PX4FLOW::Update(){
 	int16_t temp;
 
 	if(!I2C::getInstance(PX4FLOW_I2C)->BurstRead(0x42, 0x06, 4, data)){
+		isValided = false;
 		return;
 	}
 	if(!I2C::getInstance(PX4FLOW_I2C)->BurstRead(0x42, 0x14, 2, &data[4])){
+		isValided = false;
 		return;
 	}
 	float velocityX = 0;
@@ -72,6 +74,11 @@ void PX4FLOW::Update(){
 //	flowUKF->getSigmaPoints(x);
 //	Translation = flowUKF->Filtering(x,x,Translation);
 	prevZ = posZ;
+	isValided = true;
+}
+
+bool PX4FLOW::getIsValided(){
+	return isValided;
 }
 
 Vector3f PX4FLOW::getTranslation(){

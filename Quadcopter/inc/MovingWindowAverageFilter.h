@@ -13,11 +13,11 @@ namespace Math{
 	class MovingWindowAverageFilter{
 		public:
 			MovingWindowAverageFilter(int windowSize);
-			void Update(double value);
-			double getAverage();
+			void Update(float value);
+			float getAverage();
 			void Clear();
 		private:
-			double* buffer;
+			float* buffer;
 			int WindowSize;
 			int bufferCount;
 	};

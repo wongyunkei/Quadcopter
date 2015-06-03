@@ -12,10 +12,11 @@
 #include <Usart.h>
 #include <stdio.h>
 #include <stm32f4xx_iwdg.h>
+#include <Communicating.h>
 
 Task* _mTask;
 
-Task::Task() : TasksNum(0), _BreakCout(-1){
+Task::Task() : TasksNum(0), _BreakCout(-1), hangCount(0), currentTaskNum(0), IsPrintTaskNum(false){
 	pTicks = new Ticks();
 	_mTask = this;
 }
@@ -67,7 +68,9 @@ void Task::printDeration(int index){
 	printf("Task %d Duration: %d\n", index, duration[index][1] - duration[index][0]);
 }
 
-void Task::Run(){
+void Task::Run(bool isPrintTaskNum){
+
+	IsPrintTaskNum = isPrintTaskNum;
 
 	uint16_t ticksImg = 0;
 
@@ -82,6 +85,8 @@ void Task::Run(){
 
 				if(pTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
 					duration[i][0] = pTicks->getTicks();
+					hangCount = 0;
+					currentTaskNum = i;
 					mTask[i]();
 					duration[i][1] = pTicks->getTicks();
 					if(!IsPeriodic[i]){
@@ -97,4 +102,3 @@ void Task::Run(){
 		}
 	}
 }
-

@@ -6,12 +6,13 @@
  */
 
 #include <MovingWindowAverageFilter.h>
+#include <stdio.h>
 
 MovingWindowAverageFilter::MovingWindowAverageFilter(int windowSize) : WindowSize(windowSize), bufferCount(0){
-	buffer = new double[windowSize]{};
+	buffer = new float[windowSize]{};
 }
 
-void MovingWindowAverageFilter::Update(double value){
+void MovingWindowAverageFilter::Update(float value){
 	if(bufferCount == WindowSize){
 		for(int i = 0; i < WindowSize - 1; i++){
 			buffer[i] = buffer[i + 1];
@@ -24,8 +25,8 @@ void MovingWindowAverageFilter::Update(double value){
 	bufferCount = (bufferCount == WindowSize) ? WindowSize : bufferCount + 1;
 }
 
-double MovingWindowAverageFilter::getAverage(){
-	double sum = 0;
+float MovingWindowAverageFilter::getAverage(){
+	float sum = 0;
 	for(int i = 0; i < bufferCount; i++){
 		sum += buffer[i];
 	}
@@ -39,7 +40,7 @@ double MovingWindowAverageFilter::getAverage(){
 
 void MovingWindowAverageFilter::Clear(){
 	delete buffer;
-	buffer = new double[WindowSize]{};
+	buffer = new float[WindowSize]{};
 	bufferCount = 0;
 }
 

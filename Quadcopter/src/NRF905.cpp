@@ -13,6 +13,7 @@
 #include <Leds.h>
 #include <Usart.h>
 #include <stm32f4xx_it.h>
+#include <Buzzer.h>
 
 NRF905 * _mNRF905;
 
@@ -122,7 +123,7 @@ uint8_t* NRF905::getTxAddress(){
 	return _txAddress;
 }
 
-NRF905::NRF905(int channel, FREQ freq, POWER power, RX_POWER rxPower, RETRAN retrans, uint8_t* rxAddress, uint8_t* txAddress, int rxLength, int txLength, bool createdInstance) : NRF905Spi(0), _channel(channel), _freq(freq), _power(power), _rxPower(rxPower), _retrans(retrans), _rxAddress(rxAddress), _txAddress(txAddress), pBuffer(Buffer), NRF905_RXPW(rxLength), NRF905_TXPW(txLength), isTransmitting(false), ErrorCount(0), BufferCount(0){
+NRF905::NRF905(int channel, FREQ freq, POWER power, RX_POWER rxPower, RETRAN retrans, uint8_t* rxAddress, uint8_t* txAddress, int rxLength, int txLength, bool createdInstance) : Count(0), NRF905Spi(0), _channel(channel), _freq(freq), _power(power), _rxPower(rxPower), _retrans(retrans), _rxAddress(rxAddress), _txAddress(txAddress), pBuffer(Buffer), NRF905_RXPW(rxLength), NRF905_TXPW(txLength), isTransmitting(false), ErrorCount(0), BufferCount(0){
 
 	if(!createdInstance){
 		_mNRF905 = this;
@@ -253,6 +254,7 @@ int NRF905::getBufferCount(){
 
 void EXTI_IRQHandler()
 {
+	NRF905::getInstance()->Count++;
     if(EXTI_GetFlagStatus(EXTI_Line_CH) == SET)
 	{
     	if(NRF905::getInstance()->getIsTransmiting()){

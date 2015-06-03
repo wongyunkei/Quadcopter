@@ -24,22 +24,25 @@ namespace Time{
 			static Task* getInstance();
 			void Attach(uint16_t, uint16_t, pTask, bool, int);
 			void DeAttach(pTask);
-			void Run();
+			void Run(bool isPrintTaskNum= false);
 			void resetBreakCount();
 			void printDeration(int index);
+			bool IsPrintTaskNum;
+			int currentTaskNum;
+			int hangCount;
+			int Count;
 
 			uint16_t TasksNum;
 			int duration[MAX_TASKS_NUM][2];
+			pTask mTask[MAX_TASKS_NUM];
 
 		private:
 
-			pTask mTask[MAX_TASKS_NUM];
 			Ticks* pTicks;
 			uint16_t TaskPeriod[MAX_TASKS_NUM];
 			uint16_t PhaseShift[MAX_TASKS_NUM];
 			uint16_t IsPeriodic[MAX_TASKS_NUM];
 			int _BreakCout;
-
 	};
 };
 

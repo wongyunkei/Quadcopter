@@ -31,6 +31,10 @@ Communicating* Communicating::getInstant(){
 	return _mCommunicating;
 }
 
+int Communicating::getTxBufferCount(){
+	return txBufferCount;
+}
+
 void Communicating::ReceivePoll(){
 	int length;
 	if(isRF){

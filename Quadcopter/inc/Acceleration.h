@@ -22,16 +22,18 @@ namespace Sensors{
 			Acceleration();
 			static Acceleration* getInstance();
 			void Update();
-			double getAcc(int);
-			void setAcc(int, double);
-			double getRawAcc(int);
-			double getAngle(int);
-			double getFilteredAngle(int);
+			float getAcc(int);
+			void setAcc(int, float);
+			float getRawAcc(int);
+			float getAngle(int);
+			float getFilteredAngle(int);
 			MovingWindowAverageFilter* getMovingAverageFilter(int index);
+			bool getIsValided();
 
 		private:
-			double Acc[3];
-			double RawAcc[3];
+			bool isValided;
+			float Acc[3];
+			float RawAcc[3];
 			Kalman* AccKalman[3];
 			MovingWindowAverageFilter* accMovingAverage[3];
 	};

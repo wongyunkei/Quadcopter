@@ -21,14 +21,15 @@ namespace Communication{
 		public:
 
 			enum CLOCK{SPEED_100K = 100000, SPEED_400K = 400000};
-			I2C(I2C_TypeDef*, CLOCK);
+			I2C(I2C_TypeDef*, CLOCK, bool createdInstance = false);
 			static I2C* getInstance(I2C_TypeDef*);
 			bool Write(uint8_t, uint8_t, uint8_t);
 			uint8_t Read(uint8_t, uint8_t);
 			bool BurstWrite(uint8_t, uint8_t, uint8_t, uint8_t*);
 			bool BurstRead(uint8_t, uint8_t, uint8_t, uint8_t*);
-
+			int ErrorCount;
 		private:
+			bool CreatedInstance;
 			I2C_TypeDef* _I2Cx;
 			void ResetI2C();
 	};

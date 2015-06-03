@@ -11,10 +11,10 @@
 
 Omega* _mOmega;
 
-Omega::Omega(){
+Omega::Omega() : isValided(false){
 	_mOmega = this;
 
-//	double R[3][2] = {{0.0001, -1},
+//	float R[3][2] = {{0.0001, -1},
 //					{0.0001, -1},
 //					{0.0001, -1}};
 //	OmegaKalman[0] = new Kalman(0.000001, R[0], MPU6050::getInstance()->getRawOmega(0), 1);
@@ -29,20 +29,36 @@ Omega* Omega::getInstance(){
 void Omega::Update(){
 
 	for(int i = 0; i < 3; i++){
-//		OmegaKalman[i]->Filtering(&_Omega[i], MPU6050::getInstance()->getRawOmega(i), 0.0);
-		_Omega[i] = MPU6050::getInstance()->getRawOmega(i);
+		float temp = MPU6050::getInstance()->getRawOmega(i);
+		if(MPU6050::getInstance()->getIsValided()){
+			if(temp == temp){
+		//		OmegaKalman[i]->Filtering(&_Omega[i], MPU6050::getInstance()->getRawOmega(i), 0.0);
+				_Omega[i] = temp;
+				isValided = true;
+			}
+			else{
+				isValided = false;
+			}
+		}
+		else{
+			isValided = false;
+		}
 	}
 }
 
-double Omega::getOmega(int index){
+bool Omega::getIsValided(){
+	return isValided;
+}
+
+float Omega::getOmega(int index){
 	return _Omega[index];
 }
 
-void Omega::setOmega(int index, double value){
+void Omega::setOmega(int index, float value){
 	_Omega[index] = value;
 }
 
-double Omega::getRawOmega(int index){
+float Omega::getRawOmega(int index){
 	return _RawOmega[index];
 }
 

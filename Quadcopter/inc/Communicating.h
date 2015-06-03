@@ -77,6 +77,7 @@ namespace Communication{
 			void setCmdData(float value);
 			void SendCmd(unsigned char, float);
 			void floatToBytes(float, unsigned char*);
+			int getTxBufferCount();
 
 		private:
 			USART_TypeDef* Com;
@@ -84,8 +85,8 @@ namespace Communication{
 			bool isToken;
 			unsigned char Buffer[2048];
 			unsigned char txBuffer[2048];
-			int BufferCount;
 			int txBufferCount;
+			int BufferCount;
 			unsigned char Bytes[7];
 			int PrintType;
 			float CmdData;

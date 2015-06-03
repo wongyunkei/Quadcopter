@@ -33,6 +33,7 @@ namespace Math{
 			float getTheater();
 			Vector3f temp;
 
+
 		private:
 
 			float Interval;
