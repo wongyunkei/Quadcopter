@@ -11,6 +11,7 @@
 #include <Math.h>
 #include <Leds.h>
 #include <stdio.h>
+#include <Quaternion.h>
 
 Acceleration* _mAcceleration;
 
@@ -18,6 +19,12 @@ Acceleration::Acceleration() : isValided(false){
 	accMovingAverage[0] = new MovingWindowAverageFilter(50);
 	accMovingAverage[1] = new MovingWindowAverageFilter(50);
 	accMovingAverage[2] = new MovingWindowAverageFilter(50);
+	Pos[0] = 0.0f;
+	Pos[1] = 0.0f;
+	Pos[2] = 0.0f;
+	Vel[0] = 0.0f;
+	Vel[1] = 0.0f;
+	Vel[2] = 0.0f;
 	_mAcceleration = this;
 
 //	float R[3][2] = {{0.001, -1},
@@ -56,6 +63,17 @@ void Acceleration::Update(){
 //		AccKalman[i]->Filtering(&Acc[i], MPU6050::getInstance()->getRawAcc(i), 0.0);
 
 	}
+	if(isValided){
+
+//		float g[3] = {-GRAVITY*sinf(getFilteredAngle(0)),-GRAVITY*sinf(getFilteredAngle(1)),-GRAVITY*cosf(getFilteredAngle(0))*cosf(getFilteredAngle(1))};
+//		float a[3] = {accMovingAverage[0]->getAverage(), accMovingAverage[1]->getAverage(),accMovingAverage[2]->getAverage()};
+//		Vector::Add(a, a, g);
+//		Vector::Scale(a,a,0.002f);
+//		for(int i = 0; i < 3; i++){
+//			Vel[i] += a[i];
+//			Pos[i] += Vel[i] * 0.002f;
+//		}
+	}
 
 }
 
@@ -67,6 +85,13 @@ float Acceleration::getAcc(int index){
 	return Acc[index];
 }
 
+float Acceleration::getVel(int index){
+	return Vel[index];
+}
+
+float Acceleration::getPos(int index){
+	return Pos[index];
+}
 float Acceleration::getRawAcc(int index){
 	return RawAcc[index];
 }
@@ -86,9 +111,9 @@ float Acceleration::getAngle(int index){
 
 float Acceleration::getFilteredAngle(int index){
 	if(index == 0){
-		return atan2(accMovingAverage[1]->getAverage(), MathTools::Sqrt(accMovingAverage[0]->getAverage() * accMovingAverage[0]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
+		return atan2(-accMovingAverage[1]->getAverage(), MathTools::Sqrt(accMovingAverage[0]->getAverage() * accMovingAverage[0]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
 	}
 	else{
-		return atan2(-accMovingAverage[0]->getAverage(), MathTools::Sqrt(accMovingAverage[1]->getAverage() * accMovingAverage[1]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
+		return atan2(accMovingAverage[0]->getAverage(), MathTools::Sqrt(accMovingAverage[1]->getAverage() * accMovingAverage[1]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
 	}
 }

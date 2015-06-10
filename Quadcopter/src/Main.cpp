@@ -88,8 +88,11 @@ void RFOutput(){
 			Communicating::getInstant()->RFSend(3, Controlling::getInstant()->getMotorTarget(3));
 			break;
 		case 2:
+			Communicating::getInstant()->RFSend(0, (float)Acceleration::getInstance()->getVel(0));
+			Communicating::getInstant()->RFSend(1, (float)Acceleration::getInstance()->getVel(1));
+			Communicating::getInstant()->RFSend(2, (float)Acceleration::getInstance()->getVel(2));
 
-			Communicating::getInstant()->RFSend(4, Controlling::getInstant()->getLift());
+//			Communicating::getInstant()->RFSend(4, Controlling::getInstant()->getLift());
 //			Communicating::getInstant()->RFSend(4, Pid::getInstance(1)->getIntegral());
 
 //			Communicating::getInstant()->RFSend(0, Pid::getInstance(17)->getPid(0));
@@ -338,9 +341,17 @@ void Testing(){
 
 void Output(){
 
+	Vector3f v = SE3::getInstance()->getPos();
+	Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", v(0),v(1),v(2));
+//	printf("1:%g  %g  %g\n", Quaternion::getInstance()->temp1(0), Quaternion::getInstance()->temp1(1), Quaternion::getInstance()->temp1(2));
+//	printf("2:%g  %g  %g\n", Quaternion::getInstance()->temp2(0), Quaternion::getInstance()->temp2(1), Quaternion::getInstance()->temp2(2));
+//	Matrix3f m = Quaternion::getInstance()->getRotationMatrix();
+//	printf("%g  %g  %g\n", m(2,0), m(2,1), m(2,2));
 //	Usart::getInstance(USART1)->Print("%g  %g  %g\n", (float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))),
 //									(float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))),
 //									(float)(MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(2))));
+//	Vector3f v = PX4FLOW::getInstance()->getTranslation();
+//	Usart::getInstance(USART1)->Print("$,%g,%g,%g\n", v(0),v(1),v(2));
 
 //	printf("%d\n", I2C::getInstance(I2C2)->ErrorCount);
 //	printf("1:%lx  %lx\n", Update, Task::getInstance()->mTask[3]);
@@ -409,7 +420,7 @@ int main(){
 	}
 //	mTask->Attach(1000, 0, InterruptPrint, true, -1);
 //	mTask->Attach(2000, 0, Test, true, -1);
-	mTask->Run();
+	mTask->Run(true);
 
 	return 0;
 }

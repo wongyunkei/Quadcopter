@@ -13,12 +13,12 @@ namespace Sensors{
 	class MPU6050{
 		public:
 
-			#define RAWACCPOSX	10.0f
-			#define RAWACCNEGX	-9.63f
-			#define RAWACCPOSY	9.78f
-			#define RAWACCNEGY	-9.94f
-			#define RAWACCPOSZ	9.53f
-			#define RAWACCNEGZ	-10.25f
+			#define RAWACCPOSX	9.63f
+			#define RAWACCNEGX	-10.0f
+			#define RAWACCPOSY	9.94f
+			#define RAWACCNEGY	-9.78f
+			#define RAWACCPOSZ	10.25f
+			#define RAWACCNEGZ	-9.53f
 			enum ADDR{ADDRESS = 0x68};
 			enum REG{RA_XG_OFFS_TC = 0x00,
 					 RA_YG_OFFS_TC = 0x01,

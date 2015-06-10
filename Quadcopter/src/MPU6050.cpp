@@ -135,8 +135,9 @@ bool MPU6050::Update(){
 	float swap;
 
 	swap = RawAcc[0];
-	RawAcc[0] = RawAcc[1];
-	RawAcc[1] = -swap;
+	RawAcc[0] = -RawAcc[1];
+	RawAcc[1] = swap;
+	RawAcc[2] = -RawAcc[2];
 
 	swap = RawOmega[0];
 	RawOmega[0] = RawOmega[1];

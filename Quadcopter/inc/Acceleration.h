@@ -10,6 +10,7 @@
 
 #include <Kalman.h>
 #include <MovingWindowAverageFilter.h>
+#include <Vector.h>
 
 namespace Sensors{
 
@@ -23,6 +24,8 @@ namespace Sensors{
 			static Acceleration* getInstance();
 			void Update();
 			float getAcc(int);
+			float getVel(int);
+			float getPos(int);
 			void setAcc(int, float);
 			float getRawAcc(int);
 			float getAngle(int);
@@ -33,6 +36,8 @@ namespace Sensors{
 		private:
 			bool isValided;
 			float Acc[3];
+			float Pos[3];
+			float Vel[3];
 			float RawAcc[3];
 			Kalman* AccKalman[3];
 			MovingWindowAverageFilter* accMovingAverage[3];

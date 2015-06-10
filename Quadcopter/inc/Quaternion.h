@@ -31,7 +31,8 @@ namespace Math{
 			float getInitAngles(int index);
 			Kalman* getKalman(int index);
 			float getTheater();
-			Vector3f temp;
+			Vector3f temp1;
+			Vector3f temp2;
 
 
 		private:

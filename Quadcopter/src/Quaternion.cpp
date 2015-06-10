@@ -64,9 +64,9 @@ Quaternion::Quaternion(float interval) : Interval(interval){
 //	r(2,2) = 0.5;
 //	_EulerUKF = new UKF(x, p, q, r);
 
-	DriftCorrectionPid[0] = new Pid(5,0.5f,0.0001f,0,1000,interval);
-	DriftCorrectionPid[1] = new Pid(6,0.5f,0.0001f,0,1000,interval);
-	DriftCorrectionPid[2] = new Pid(7,0.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[0] = new Pid(5,1.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[1] = new Pid(6,1.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[2] = new Pid(7,1.5f,0.0001f,0,1000,interval);
 	prevR.setZero();
 
 }
@@ -140,11 +140,20 @@ void Quaternion::Update(){
 	for(int i = 1; i < 4; i++){
 		DeltaQuaternion[i] = MathTools::DegreeToRadian(Omega::getInstance()->getOmega(i - 1));
 	}
+	Vector3f g;
+	g(0) = 0;
+	g(1) = 0;
+	g(2) = 1;
+	Matrix3f m = getRotationMatrix();
+	g = m.transpose()*g;
+	Vector3f e;
+	e(0) = m(2,0);
+	e(1) = m(2,1);
+	e(2) = m(2,2);
+	Vector3f f_ = g.cross(e);
 
-	float g[3] = {0,0,1};
-	float f[3] = {0,0,0};
-	Vector::CrossProduct(f, g, _Euler);
-	f[2] = _Euler[2];
+	float f[3] = {f_(0),f_(1),f_(2)};
+
 	float acc[3];
 	for(int i = 0; i < 3; i++){
 		acc[i] = Acceleration::getInstance()->getMovingAverageFilter(i)->getAverage();
@@ -161,7 +170,8 @@ void Quaternion::Update(){
 		z[1] = 2 * (_Quaternion[0] * _Quaternion[1] + _Quaternion[2] * _Quaternion[3]);
 		z[2] = 1 - 2 * (_Quaternion[1] * _Quaternion[1] + _Quaternion[2] * _Quaternion[2]);
 
-		Vector::CrossProduct(z, z, acc);
+		Vector::CrossProduct(z, acc, z);
+
 		for(int i = 0; i < 3; i++){
 			_EulerKalman[i]->Filtering(&f[i], z[i], f[i]);
 			DeltaQuaternion[i+1] += DriftCorrectionPid[i]->pid(0, f[i]);
