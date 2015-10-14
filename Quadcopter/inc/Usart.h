@@ -18,7 +18,7 @@ namespace Communication{
 
 			Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance = false);
 			static Usart* getInstance(USART_TypeDef* UARTx);
-			int Read(unsigned char*, int);
+			int Read(char*, int);
 			void setBufferCount(int);
 			int getBufferCount();
 			char* getBuffer();
@@ -33,7 +33,7 @@ namespace Communication{
 		private:
 
 			char Buffer[2048];
-			char txBuffer[32];
+			char txBuffer[128];
 			char rxBuffer[7];
 			bool isDmaBusy;
 			char* pBuffer;

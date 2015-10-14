@@ -10,10 +10,10 @@
 #include <Spi.h>
 #include <stm32f4xx_gpio.h>
 #include <Task.h>
-#include <Leds.h>
 #include <Usart.h>
 #include <stm32f4xx_it.h>
 #include <Buzzer.h>
+#include <Leds.h.bak>
 
 NRF905 * _mNRF905;
 
@@ -183,13 +183,13 @@ NRF905::NRF905(int channel, FREQ freq, POWER power, RX_POWER rxPower, RETRAN ret
 	NVIC_Init(&NVIC_InitStructure);
 
 	setPwr();
-	NRF905Spi->WriteCmd(WC, channel);
-	NRF905Spi->WriteCmd(WC + 1, freq | power | rxPower | retrans);
-	NRF905Spi->WriteNBytes(WC + 5, 4, (uint8_t*)rxAddress);
-	NRF905Spi->WriteCmd(WC + 9, UP_CLK_FREQ_500K | UP_CLK_EN | XOF_16M | CRC_EN | CRC_16);
-	NRF905Spi->WriteNBytes(WTA, 4, (uint8_t*)txAddress);
-	NRF905Spi->WriteCmd(RX_PW, NRF905_RXPW);
-	NRF905Spi->WriteCmd(TX_PW, NRF905_TXPW);
+//	NRF905Spi->WriteCmd(WC, channel);
+//	NRF905Spi->WriteCmd(WC + 1, freq | power | rxPower | retrans);
+//	NRF905Spi->WriteNBytes(WC + 5, 4, (uint8_t*)rxAddress);
+//	NRF905Spi->WriteCmd(WC + 9, UP_CLK_FREQ_500K | UP_CLK_EN | XOF_16M | CRC_EN | CRC_16);
+//	NRF905Spi->WriteNBytes(WTA, 4, (uint8_t*)txAddress);
+//	NRF905Spi->WriteCmd(RX_PW, NRF905_RXPW);
+//	NRF905Spi->WriteCmd(TX_PW, NRF905_TXPW);
 
 	setReceive();
 }
@@ -213,7 +213,7 @@ bool NRF905::Write(const char* pstr, ...)
 
 	fp = buf;
 
-	NRF905Spi->WriteNBytes(WTP, NRF905_TXPW, (uint8_t*)fp);
+//	NRF905Spi->WriteNBytes(WTP, NRF905_TXPW, (uint8_t*)fp);
 	NRF905::getInstance()->setIsTransmiting(true);
 	setTransmit();
 	return true;
@@ -267,7 +267,7 @@ void EXTI_IRQHandler()
     			NRF905::getInstance()->setBufferCount(0);
     		}
     		NRF905::getInstance()->setStandby();
-    		Spi::getInstance(RF_SPI)->ReadNBytes(NRF905::RRP, NRF905::getInstance()->getRXPW(), (uint8_t*)(NRF905::getInstance()->getBuffer() + NRF905::getInstance()->getBufferCount()));
+//    		Spi::getInstance(RF_SPI)->ReadNBytes(NRF905::RRP, NRF905::getInstance()->getRXPW(), (uint8_t*)(NRF905::getInstance()->getBuffer() + NRF905::getInstance()->getBufferCount()));
     		NRF905::getInstance()->setBufferCount(NRF905::getInstance()->getBufferCount() + NRF905::getInstance()->getRXPW());
     	}
 		NRF905::getInstance()->setReceive();

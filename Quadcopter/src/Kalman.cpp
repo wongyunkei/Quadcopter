@@ -97,7 +97,7 @@ void Kalman::Gain(){
 
 void Kalman::Clear(float x){
 	predictX = correctX = x;
-	predictP = correctP = 1.0;
+	predictP = correctP = 0.0;
 }
 
 float Kalman::getQ(){

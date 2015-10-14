@@ -12,20 +12,26 @@
 #include <math.h>
 #include <MathTools.h>
 #include <Acceleration.h>
-#include <Buzzer.h>
 
-#define MPU6050_I2C			I2C2
+MPU6050* _mMPU6050[6];
 
-MPU6050* _mMPU6050;
-
-void UpdateTask(){
-	MPU6050::getInstance()->Update();
+void MPU6050::setI2CBypass(int index, bool onState){
+	uint8_t data = 0;
+	if(onState){
+		data = 0x02;
+	}
+	Ticks::getInstance()->setTimeout(3);
+	while(!i2cx->Write(ADDRESS,RA_INT_PIN_CFG,data)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
 }
 
-MPU6050::MPU6050(float interval) : Interval(interval), inited(0), isValided(false){
+MPU6050::MPU6050(int index, I2C* i2c) : isValided(false){
 
-	_mMPU6050 = this;
-
+	_mMPU6050[index] = this;
+	i2cx = i2c;
 	RawAccScale[0] = 2.0*GRAVITY / (RAWACCPOSX - RAWACCNEGX);
 	RawAccScale[1] = 2.0*GRAVITY / (RAWACCPOSY - RAWACCNEGY);
 	RawAccScale[2] = 2.0*GRAVITY / (RAWACCPOSZ - RAWACCNEGZ);
@@ -34,79 +40,49 @@ MPU6050::MPU6050(float interval) : Interval(interval), inited(0), isValided(fals
 	RawAccOffset[2] = RAWACCPOSZ * RawAccScale[2] - GRAVITY;
 	FastInitialization();
 
-//	Task::getInstance()->Attach(interval * 1000, 0, UpdateTask, false, 1024);
-//	Task::getInstance()->Run();
-//
-//	while(!GyroCal());
-
-	RawOmegaOffset[0] = 3.45f;//2.75;
-	RawOmegaOffset[1] = 6.4;//5.7;//4.8;
-	RawOmegaOffset[2] = -0.5;//-0.4;//1.33;
-	inited = 1;
-	Task::getInstance()->Attach(2, 0, UpdateTask, false, 32);
-	Task::getInstance()->Run();
+	RawOmegaOffset[0] = 0.0f;
+	RawOmegaOffset[1] = -2.3f;
+	RawOmegaOffset[2] = -0.7f;
 }
 
 void MPU6050::FastInitialization(){
 
 	Ticks::getInstance()->setTimeout(3);
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_PWR_MGMT_1,0x00)){
+	while(!i2cx->Write(ADDRESS,RA_PWR_MGMT_1,0x00)){
+		if(Ticks::getInstance()->Timeout()){
+			return;
+		}
+	}
+
+	Ticks::getInstance()->setTimeout(3);
+	while(!i2cx->Write(ADDRESS,RA_SMPLRT_DIV,0x07)){
 		if(Ticks::getInstance()->Timeout()){
 			return;
 		}
 	}
 	Ticks::getInstance()->setTimeout(3);
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_SMPLRT_DIV,0x07)){
+	while(!i2cx->Write(ADDRESS,RA_CONFIG,0x00)){
 		if(Ticks::getInstance()->Timeout()){
 			return;
 		}
 	}
 	Ticks::getInstance()->setTimeout(3);
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_CONFIG,0x00)){
+	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x18)){
 		if(Ticks::getInstance()->Timeout()){
 			return;
 		}
 	}
 	Ticks::getInstance()->setTimeout(3);
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_GYRO_CONFIG,0x18)){
-		if(Ticks::getInstance()->Timeout()){
-			return;
-		}
-	}
-	Ticks::getInstance()->setTimeout(3);
-	while(!I2C::getInstance(MPU6050_I2C)->Write(ADDRESS,RA_ACCEL_CONFIG,0x18)){
+	while(!i2cx->Write(ADDRESS,RA_ACCEL_CONFIG,0x18)){
 		if(Ticks::getInstance()->Timeout()){
 			return;
 		}
 	}
 }
 
-MPU6050* MPU6050::getInstance(){
+MPU6050* MPU6050::getInstance(int index){
 
-	return _mMPU6050;
-}
-
-void GyroCalTask(){
-
-	MPU6050::getInstance()->Update();
-	for(int i = 0; i < 3; i++){
-		MPU6050::getInstance()->setRawOmegaOffset(i, MPU6050::getInstance()->getRawOmegaOffset(i) + MPU6050::getInstance()->getRawOmega(i));
-	}
-}
-
-bool MPU6050::GyroCal(){
-
-	RawOmegaOffset[0] = 0;
-	RawOmegaOffset[1] = 0;
-	RawOmegaOffset[2] = 0;
-	Task::getInstance()->Attach(Interval * 1000, 0, GyroCalTask, false, 10000);
-	Task::getInstance()->Run();
-	for(int i = 0; i < 3; i++){
-		setRawOmegaOffset(i, getRawOmegaOffset(i) / 10000.0);
-	}
-	float offset[3] = {(float)getRawOmegaOffset(0), (float)getRawOmegaOffset(1), (float)getRawOmegaOffset(2)};
-	printf("OmegaOffset:%g,%g,%g\r\n", offset[0], offset[1], offset[2]);
-	return true;
+	return _mMPU6050[index];
 }
 
 bool MPU6050::Update(){
@@ -114,7 +90,7 @@ bool MPU6050::Update(){
 	uint8_t data[14];
 	int16_t temp;
 
-	if(!I2C::getInstance(MPU6050_I2C)->BurstRead(ADDRESS, RA_ACCEL_XOUT_H, 14, data)){
+	if(!i2cx->BurstRead(ADDRESS, RA_ACCEL_XOUT_H, 14, data)){
 		FastInitialization();
 		isValided = false;
 		return false;
@@ -124,11 +100,15 @@ bool MPU6050::Update(){
 		if(i >= 0 && i <= 5){
 			int j = i / 2;
 			temp = (data[i + 1] | (data[i] << 8));
-			RawAcc[j] = (float)temp * 0.0047884;
+			RawAcc[j] = (float)temp * 0.0047884f;
+		}
+		else if(i >= 6 && i <= 7){
+			temp = (data[i + 1] | (data[i] << 8));
+			temperature = (float)temp / 340.0f + 36.53f;
 		}
 		else if(i >= 8 && i <= 13){
 			temp = data[i + 1] | (data[i] << 8);
-			RawOmega[(i - 8) / 2] = (float)temp * 0.0609756;
+			RawOmega[(i - 8) / 2] = (float)temp * 0.0609756f;//0.0076335877862595f;
 		}
 	}
 
@@ -136,47 +116,72 @@ bool MPU6050::Update(){
 
 	swap = RawAcc[0];
 	RawAcc[0] = -RawAcc[1];
-	RawAcc[1] = swap;
+	RawAcc[1] = -swap;
 	RawAcc[2] = -RawAcc[2];
 
 	swap = RawOmega[0];
 	RawOmega[0] = RawOmega[1];
-	RawOmega[1] = -swap;
+	RawOmega[1] = swap;
 
 	for(int i = 0; i < 3; i++){
 		RawAcc[i] *= RawAccScale[i];
 		RawAcc[i] -= RawAccOffset[i];
-		RawOmega[i] -= inited * RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0);
+//		RawOmega[i] -= getGyroTemperatureCompensation(i, temperature);
+		RawOmega[i] -= RawOmegaOffset[i];
+		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 5.0f);
 	}
 	isValided = true;
 	return true;
+}
+
+float MPU6050::getGyroTemperatureCompensation(int index, float temp){
+	float value = 0;
+	switch(index){
+		case 0:
+			value = -0.00007f*temp*temp + 0.0375*temp - 1.6842f;
+			break;
+		case 1:
+			value = 0.0005f*temp*temp - 0.1131f*temp + 6.102f;
+			break;
+		case 2:
+			value = 0.00002f*temp*temp + 0.0072f*temp - 1.2311f;
+			break;
+	}
+	return value;
 }
 
 bool MPU6050::getIsValided(){
 	return isValided;
 }
 
-void MPU6050::setRawOmegaOffset(int index, float value){
-	RawOmegaOffset[index] = value;
+void MPU6050::setTemperature(float value){
+	temperature = value;
 }
 
-float MPU6050::getRawOmegaOffset(int index){
-	return RawOmegaOffset[index];
+float MPU6050::getTemperature(){
+	return temperature;
 }
 
-void MPU6050::setRawOmega(int index, float value){
-	RawOmega[index] = value;
+void MPU6050::setRawOmegaOffset(int channel, float value){
+	RawOmegaOffset[channel] = value;
 }
 
-float MPU6050::getRawOmega(int index){
-	return RawOmega[index];
+float MPU6050::getRawOmegaOffset(int channel){
+	return RawOmegaOffset[channel];
 }
 
-void MPU6050::setRawAcc(int index, float value){
-	RawAcc[index] = value;
+void MPU6050::setRawOmega(int channel, float value){
+	RawOmega[channel] = value;
 }
 
-float MPU6050::getRawAcc(int index){
-	return RawAcc[index];
+float MPU6050::getRawOmega(int channel){
+	return RawOmega[channel];
+}
+
+void MPU6050::setRawAcc(int channel, float value){
+	RawAcc[channel] = value;
+}
+
+float MPU6050::getRawAcc(int channel){
+	return RawAcc[channel];
 }

@@ -23,21 +23,20 @@ namespace Communication{
 			static Spi* getInstance(SPI_TypeDef* spi);
 			PRESCALER getPrescaler();
 			SPIMODE getSpiMode();
-			uint8_t WriteRead(uint8_t);
-			uint8_t WriteCmd(uint8_t, uint8_t);
-			uint8_t ReadData(uint8_t);
-			void WriteNBytes(uint8_t, uint8_t, uint8_t*);
-			void ReadNBytes(uint8_t, uint8_t, uint8_t*);
-			void _WriteNBytes(uint8_t, uint8_t, uint8_t*);
-			void _ReadNBytes(uint8_t, uint8_t, uint8_t*);
+			int WriteRead(int index, uint8_t);
+			bool WriteCmd(int index, uint8_t reg, uint8_t cmd);
+			bool ReadData(int index, uint8_t, uint8_t* value);
+			bool WriteNBytes(int index, uint8_t, uint8_t, uint8_t*);
+			bool ReadNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData);
+//			void _WriteNBytes(uint8_t, uint8_t, uint8_t*);
+//			void _ReadNBytes(uint8_t, uint8_t, uint8_t*);
+			bool Byte(uint8_t byte, uint8_t* data);;
 			void resetSpi();
-
-			void ChipSelect();
-			void ChipDeSelect();
-			uint8_t Byte( uint8_t);
 
 		private:
 
+			void ChipSelect(int index);
+			void ChipDeSelect(int index);
 			SPI_TypeDef* Spix;
 			PRESCALER _prescaler;
 			SPIMODE _spiMode;

@@ -16,7 +16,7 @@ PWM* PWM::getInstant(){
 	return _mPWM;
 }
 
-PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
+PWM::PWM() : MaxPWM(10000), LowerLimit(0), UpperLimit(10000-1), PWM_TIM(TIM8){
 
 	_mPWM = this;
 
@@ -31,7 +31,7 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_TIM8);
@@ -39,8 +39,8 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource8, GPIO_AF_TIM8);
 	GPIO_PinAFConfig(GPIOC, GPIO_PinSource9, GPIO_AF_TIM8);
 
-	TIM_TimeBaseStructure.TIM_Prescaler = 16 - 1;
-	TIM_TimeBaseStructure.TIM_Period = 52500-1;
+	TIM_TimeBaseStructure.TIM_Prescaler = 168 - 1;
+	TIM_TimeBaseStructure.TIM_Period = 10000-1;
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
@@ -63,6 +63,9 @@ PWM::PWM() : MaxPWM(10000), LowerLimit(7350), UpperLimit(25200), PWM_TIM(TIM8){
 	TIM_ARRPreloadConfig(PWM_TIM, ENABLE);
 	TIM_Cmd(PWM_TIM, ENABLE);
 	TIM_CtrlPWMOutputs(PWM_TIM, ENABLE);
+	for(int i = 0; i < 4; i++){
+		Control(i, 0);
+	}
 }
 
 void PWM::Control(int index, double dutyCycle){

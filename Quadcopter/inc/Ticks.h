@@ -19,7 +19,7 @@ namespace Time{
 
 		public:
 
-			Ticks();
+			Ticks(bool onWatchDog);
 			static Ticks* getInstance();
 			void TicksIncrement();
 			bool TicksComp(uint16_t, uint16_t, uint16_t);

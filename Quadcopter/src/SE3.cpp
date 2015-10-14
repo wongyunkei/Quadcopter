@@ -71,10 +71,10 @@ void SE3::Update(){
 
 	Matrix4f deltaSE3;
 	deltaSE3.setIdentity();
-	Matrix3f deltaRotation = Quaternion::getInstance()->getDeltaRotationMatrix();
+//	Matrix3f deltaRotation = Quaternion::getInstance()->getDeltaRotationMatrix();
 	for(int i = 0; i < 3; i++){
 		for(int j = 0; j < 3; j++){
-			deltaSE3(i,j) = deltaRotation(i,j);
+//			deltaSE3(i,j) = deltaRotation(i,j);
 		}
 	}
 

@@ -8,18 +8,21 @@
 #ifndef  MPU6050_H_
 #define  MPU6050_H_
 
+#include <I2C.h>
+
 namespace Sensors{
 
 	class MPU6050{
 		public:
 
-			#define RAWACCPOSX	9.63f
-			#define RAWACCNEGX	-10.0f
-			#define RAWACCPOSY	9.94f
-			#define RAWACCNEGY	-9.78f
-			#define RAWACCPOSZ	10.25f
-			#define RAWACCNEGZ	-9.53f
+			#define RAWACCPOSX	9.8f//9.63f
+			#define RAWACCNEGX	-9.7f//-10.0f
+			#define RAWACCPOSY	9.5f//9.94f
+			#define RAWACCNEGY	-9.9f//-9.78f
+			#define RAWACCPOSZ	10.3f//10.25f
+			#define RAWACCNEGZ	-9.7f//-9.53f
 			enum ADDR{ADDRESS = 0x68};
+			enum DEV{DEV1, DEV2, DEV3, DEV4, DEV5, DEV6};
 			enum REG{RA_XG_OFFS_TC = 0x00,
 					 RA_YG_OFFS_TC = 0x01,
 					 RA_ZG_OFFS_TC = 0x02,
@@ -131,32 +134,38 @@ namespace Sensors{
 				  	 RA_FIFO_R_W = 0x74,
 				  	 RA_WHO_AM_I = 0x75};
 
-			MPU6050(float);
-			static MPU6050* getInstance();
+			MPU6050(int index, I2C* i2c);
+			static MPU6050* getInstance(int index);
+			void setI2CBypass(int index, bool onState);
 			bool Update();
-			void setRawAcc(int, float);
-			float getRawAcc(int);
-			void setRawAccOffset(int, float);
-			float getRawAccOffset(int);
-			void setRawAccScale(int, float);
-			float getRawAccScale(int);
-			void setRawOmega(int, float);
-			float getRawOmega(int);
-			void setRawOmegaOffset(int, float);
-			float getRawOmegaOffset(int);
+			void setTemperature(float value);
+			float getTemperature();
+			void setRawAcc(int channel, float value);
+			float getRawAcc(int channel);
+			void setRawAccOffset(int channel, float value);
+			float getRawAccOffset(int channel);
+			void setRawAccScale(int channel, float value);
+			float getRawAccScale(int channel);
+			void setRawOmega(int channel, float value);
+			float getRawOmega(int channel);
+			void setRawOmegaOffset(int channel, float value);
+			float getRawOmegaOffset(int channel);
 			bool getIsValided();
 
 		private:
 			bool isValided;
+			I2C* i2cx;
+			int DevIndex;
 			float Interval;
 			float RawAcc[3];
 			float RawAccOffset[3];
 			float RawAccScale[3];
 			float RawOmega[3];
 			float RawOmegaOffset[3];
+			float temperature;
 			int inited;
-			bool GyroCal();
 			void FastInitialization();
+			float getGyroTemperatureCompensation(int index, float temp);
 	};
 };
 

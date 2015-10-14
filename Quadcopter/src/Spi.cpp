@@ -7,6 +7,7 @@
 
 #include <Spi.h>
 #include <Delay.h>
+#include <stdio.h>
 #include <stm32f4xx_spi.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
@@ -14,8 +15,14 @@
 #include <Usart.h>
 #include <Task.h>
 
-#define SPI1_GPIO	GPIOA
-#define SPI2_GPIO	GPIOB
+#define CS_GPIO	GPIOD
+#define CS_RCC	RCC_AHB1Periph_GPIOD
+#define CS0_PIN	GPIO_Pin_0
+#define CS1_PIN	GPIO_Pin_1
+#define CS2_PIN	GPIO_Pin_2
+#define CS3_PIN	GPIO_Pin_3
+#define CS4_PIN	GPIO_Pin_4
+#define CS5_PIN	GPIO_Pin_5
 
 Spi* _mSpi1;
 Spi* _mSpi2;
@@ -47,16 +54,20 @@ void Spi::resetSpi(){
 	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 	spiDelayCount = 0;
 	if(Spix == SPI1){
-		//MISO & MOSI
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+		//MISO
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		//MOSI
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
 		//SCK
+
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
 		GPIO_Init(GPIOB, &GPIO_InitStructure);
 		//NSS
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetSpi1Task, true, -1);
+		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
+		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
+		Task::getInstance()->Attach(10, 0, resetSpi1Task, true);
 	}
 	else if(Spix == SPI2){
 
@@ -67,9 +78,9 @@ void Spi::resetSpi(){
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
 		GPIO_Init(GPIOB, &GPIO_InitStructure);
 		//NSS
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetSpi2Task, true, -1);
+		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
+		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
+		Task::getInstance()->Attach(10, 0, resetSpi2Task, true);
 	}
 }
 
@@ -157,20 +168,26 @@ Spi::Spi(SPI_TypeDef* spi, PRESCALER prescaler, SPIMODE spiMode, bool createdIns
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
 		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-		//MISO & MOSI
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+		//MISO
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
 		GPIO_Init(GPIOA, &GPIO_InitStructure);
 		GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_SPI1);
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_SPI1);
+		//MOSI
+
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource5, GPIO_AF_SPI1);
 		//SCK
 		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
 		GPIO_Init(GPIOB, &GPIO_InitStructure);
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource3, GPIO_AF_SPI1);
 		//NSS
+
+
+		RCC_AHB1PeriphClockCmd(CS_RCC, ENABLE);
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
+		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
 
 		SPI_Init(SPI1, &SPI_InitStructure);
 		SPI_Cmd(SPI1, ENABLE);
@@ -192,11 +209,17 @@ Spi::Spi(SPI_TypeDef* spi, PRESCALER prescaler, SPIMODE spiMode, bool createdIns
 		GPIO_Init(GPIOB, &GPIO_InitStructure);
 		GPIO_PinAFConfig(GPIOB, GPIO_PinSource13, GPIO_AF_SPI1);
 		//NSS
-		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-		GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
 
+		RCC_AHB1PeriphClockCmd(CS_RCC, ENABLE);
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
+		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
+
+		//		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
+//		GPIO_Init(GPIOB, &GPIO_InitStructure);
+		for(int i = 0; i < 6; i++){
+			ChipDeSelect(i);
+		}
 		SPI_Init(SPI2, &SPI_InitStructure);
 		SPI_Cmd(SPI2, ENABLE);
 		if(!createdInstance){
@@ -217,121 +240,195 @@ Spi::SPIMODE Spi::getSpiMode(){
 Spi* Spi::getInstance(SPI_TypeDef* spi){
 	Spi* pSpi;
 	if(spi == SPI1){
-
 		pSpi = _mSpi1;
 	}
 	else if(spi == SPI2){
-
 		pSpi = _mSpi2;
 	}
 	return pSpi;
 }
 
-uint8_t Spi::Byte(uint8_t byte){
-	Ticks::getInstance()->setTimeout(2);
+bool Spi::Byte(uint8_t byte, uint8_t* data){
+	Ticks::getInstance()->setTimeout(3);
 	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
 		if(Ticks::getInstance()->Timeout()){
-			return 0;
+			return false;
 		}
 	}
+
 	SPI_I2S_SendData(Spix, byte);
-	Ticks::getInstance()->setTimeout(2);
+	Ticks::getInstance()->setTimeout(3);
 	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_RXNE) == RESET){
 		if(Ticks::getInstance()->Timeout()){
-			return 0;
+			return false;
 		}
 	}
-	return SPI_I2S_ReceiveData(Spix);
+
+	*data = (uint8_t)SPI_I2S_ReceiveData(Spix);
+	return true;
 }
 
-uint8_t Spi::WriteRead(uint8_t data){
+int Spi::WriteRead(int index, uint8_t data){
 
 	uint8_t value = 0;
-	ChipSelect();
-	value = Byte(data);
-	ChipDeSelect();
+	ChipSelect(index);
+	Byte(data, &value);
+	ChipDeSelect(index);
 	return value;
 }
 
-uint8_t Spi::WriteCmd(uint8_t reg, uint8_t cmd){
+bool Spi::WriteCmd(int index, uint8_t reg, uint8_t cmd){
 
-	uint8_t value = 0;
-	ChipSelect();
-	Byte(reg);
-	value = Byte(cmd);
-	ChipDeSelect();
-	return value;
+	uint8_t v = 0;
+	ChipSelect(index);
+	if(!Byte(reg, &v)){
+		ChipDeSelect(index);
+		return false;
+	}
+	if(!Byte(cmd, &v)){
+		ChipDeSelect(index);
+		return false;
+	}
+	ChipDeSelect(index);
+	return true;
 }
 
-uint8_t Spi::ReadData(uint8_t reg){
+bool Spi::ReadData(int index, uint8_t reg, uint8_t* value){
 
-	uint8_t value = 0;
-	ChipSelect();
-	Byte(reg);
-	value = Byte(0x00);
-	ChipDeSelect();
-	return value;
+	uint8_t v = 0;
+	ChipSelect(index);
+	if(!Byte(reg, &v)){
+		ChipDeSelect(index);
+		return false;
+	}
+
+	if(!Byte(0x00, value)){
+		ChipDeSelect(index);
+		return false;
+	}
+	ChipDeSelect(index);
+	return true;
 }
 
-void Spi::WriteNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
+bool Spi::WriteNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 
 	int i = 0;
-	ChipSelect();
-	Byte(reg);
-	for(i = 0; i < length; i++){
-		Byte(*(pData + i));
+	uint8_t v = 0;
+	ChipSelect(index);
+	if(!Byte(reg, &v)){
+		ChipDeSelect(index);
+		return false;
 	}
-	ChipDeSelect();
+	for(i = 0; i < length; i++){
+		if(!Byte(*(pData + i), &v)){
+			ChipDeSelect(index);
+			return false;
+		}
+	}
+	ChipDeSelect(index);
+	return true;
 }
 
-void Spi::ReadNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
+bool Spi::ReadNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 
 	int i = 0;
-	ChipSelect();
-	Byte(reg);
-	for(i = 0; i < length; i++){
-		*(pData + i) = Byte(0x00);
+	uint8_t v = 0;
+	ChipSelect(index);
+	if(!Byte(reg, &v)){
+		ChipDeSelect(index);
+		return false;
 	}
-	ChipDeSelect();
+	for(i = 0; i < length; i++){
+		if(!Byte(0x00, (pData + i))){
+			ChipDeSelect(index);
+			return false;
+		}
+	}
+	ChipDeSelect(index);
+	return true;
 }
 
-void Spi::ChipSelect(){
+void Spi::ChipSelect(int index){
 
-	if(Spix == SPI1){
-		GPIO_ResetBits(SPI1_GPIO, GPIO_Pin_15);
+	switch(index){
+		case 0:
+			GPIO_ResetBits(CS_GPIO, CS0_PIN);
+			break;
+		case 1:
+			GPIO_ResetBits(CS_GPIO, CS1_PIN);
+			break;
+		case 2:
+			GPIO_ResetBits(CS_GPIO, CS2_PIN);
+			break;
+		case 3:
+			GPIO_ResetBits(CS_GPIO, CS3_PIN);
+			break;
+		case 4:
+			GPIO_ResetBits(CS_GPIO, CS4_PIN);
+			break;
+		case 5:
+			GPIO_ResetBits(CS_GPIO, CS5_PIN);
+			break;
 	}
-	else{
-		GPIO_ResetBits(SPI2_GPIO, GPIO_Pin_12);
-	}
+//	if(Spix == SPI1){
+//		GPIO_ResetBits(SPI1_GPIO, GPIO_Pin_15);
+//	}
+//	else{
+//		GPIO_ResetBits(SPI2_GPIO, GPIO_Pin_12);
+//	}
 	Delay::DelayUS(1);
 }
 
-void Spi::ChipDeSelect(){
+void Spi::ChipDeSelect(int index){
 
-	if(Spix == SPI1){
+	switch(index){
+		case 0:
+			GPIO_SetBits(CS_GPIO, CS0_PIN);
+			break;
+		case 1:
+			GPIO_SetBits(CS_GPIO, CS1_PIN);
+			break;
+		case 2:
+			GPIO_SetBits(CS_GPIO, CS2_PIN);
+			break;
+		case 3:
+			GPIO_SetBits(CS_GPIO, CS3_PIN);
+			break;
+		case 4:
+			GPIO_SetBits(CS_GPIO, CS4_PIN);
+			break;
+		case 5:
+			GPIO_SetBits(CS_GPIO, CS5_PIN);
+			break;
+	}
 
-		GPIO_SetBits(SPI1_GPIO, GPIO_Pin_15);
-	}
-	else{
-		GPIO_SetBits(SPI2_GPIO, GPIO_Pin_12);
-	}
+//	if(Spix == SPI1){
+//
+//		GPIO_SetBits(SPI1_GPIO, GPIO_Pin_15);
+//	}
+//	else{
+//		GPIO_SetBits(SPI2_GPIO, GPIO_Pin_12);
+//	}
 	Delay::DelayUS(1);
 }
 
-void Spi::_WriteNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
-
-	int i = 0;
-	Byte(reg);
-	for(i = 0; i < length; i++){
-		Byte(*(pData + i));
-	}
-}
-
-void Spi::_ReadNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
-
-	int i = 0;
-	Byte(reg);
-	for(i = 0; i < length; i++){
-		*(pData + i) = Byte(0x00);
-	}
-}
+//void Spi::_WriteNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
+//
+//	int i = 0;
+//	Byte(reg);
+//	for(i = 0; i < length; i++){
+//		if(Byte(0x00, (pData + i))){
+//			ChipDeSelect(index);
+//			return false;
+//		}
+//	}
+//}
+//
+//void Spi::_ReadNBytes(uint8_t reg, uint8_t length, uint8_t* pData){
+//
+//	int i = 0;
+//	Byte(reg);
+//	for(i = 0; i < length; i++){
+//		*(pData + i) = Byte(0x00);
+//	}
+//}

@@ -8,12 +8,12 @@
 #include <Usart.h>
 #include <stm32f4xx_usart.h>
 #include <stdio.h>
-#include <Leds.h>
 #include <stm32f4xx_it.h>
 #include <Ticks.h>
 #include <stdarg.h>
 #include <stm32f4xx_dma.h>
 #include <Delay.h>
+#include <Leds.h.bak>
 #include <Task.h>
 
 extern USART_TypeDef* STDOUT_USART;
@@ -71,7 +71,7 @@ void DMA1_Stream1_IRQHandler(void)
 				break;
 			}
 		}
-		for(int i = 0; i < 8; i++){
+		for(int i = 0; i < 5; i++){
 			Usart::getInstance(USART3)->getBuffer()[Usart::getInstance(USART3)->getBufferCount()] = Usart::getInstance(USART3)->getRxBuffer()[i];
 			Usart::getInstance(USART3)->setBufferCount(Usart::getInstance(USART3)->getBufferCount() + 1);
 			if(Usart::getInstance(USART3)->getBufferCount() == 2047){
@@ -95,7 +95,7 @@ void DMA2_Stream2_IRQHandler(void)
 				break;
 			}
 		}
-		for(int i = 0; i < 8; i++){
+		for(int i = 0; i < 5; i++){
 			Usart::getInstance(USART1)->getBuffer()[Usart::getInstance(USART1)->getBufferCount()] = Usart::getInstance(USART1)->getRxBuffer()[i];
 			Usart::getInstance(USART1)->setBufferCount(Usart::getInstance(USART1)->getBufferCount() + 1);
 			if(Usart::getInstance(USART1)->getBufferCount() == 2047){
@@ -167,7 +167,7 @@ char* Usart::getRxBuffer(){
 	return rxBuffer;
 }
 
-int Usart::Read(unsigned char* buffer, int length){
+int Usart::Read(char* buffer, int length){
 
 	for(int i = 0; i < length; i++){
 		if(pBuffer >= Buffer + 2047){
@@ -302,11 +302,16 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 		}
 		USART_DeInit(USART1);
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_9;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
+		GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+		GPIO_Init(GPIOB, &GPIO_InitStructure);
+//		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+//		GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
+//		GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
+//		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_9;
+//		GPIO_Init(GPIOA, &GPIO_InitStructure);
 		USART_Init(USART1, &USART_InitStructure);
 		USART_Cmd(USART1, ENABLE);
 		//NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
@@ -344,7 +349,7 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 
 		DMA_DeInit(DMA2_Stream2);
 
-		DMA_InitStructure.DMA_BufferSize = 8;
+		DMA_InitStructure.DMA_BufferSize = 5;
 		DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable ;
 		DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull ;
 		DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
@@ -424,7 +429,7 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 
 		DMA_DeInit(DMA1_Stream1);
 
-		DMA_InitStructure.DMA_BufferSize = 8;
+		DMA_InitStructure.DMA_BufferSize = 5;
 		DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable ;
 		DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_1QuarterFull ;
 		DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single ;
@@ -489,8 +494,10 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 		NVIC_InitStructure.NVIC_IRQChannel = UART5_IRQn;
 	}
 
-	//USART_ITConfig(UARTx, USART_IT_RXNE, ENABLE);
-	//NVIC_Init(&NVIC_InitStructure);
+	if(UARTx == UART4 || UARTx == UART5 ){
+		USART_ITConfig(UARTx, USART_IT_RXNE, ENABLE);
+		NVIC_Init(&NVIC_InitStructure);
+	}
 	setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -506,7 +513,7 @@ void Usart::Print(const char* pstr, ...)
 	int length = 0;
 	va_list arglist;
 	char* fp;
-	for(int i = 0; i < 32; i++){
+	for(int i = 0; i < 128; i++){
 		txBuffer[i] = 0;
 	}
 	va_start(arglist, pstr);

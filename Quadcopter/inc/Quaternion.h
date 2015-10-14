@@ -17,8 +17,8 @@ namespace Math{
 	class Quaternion{
 
 		public:
-			Quaternion(float);
-			static Quaternion* getInstance();
+			Quaternion(int index, float interval);
+			static Quaternion* getInstance(int index);
 			void Update();
 			float getEuler(int);
 			void setEuler(int, float);
@@ -31,19 +31,25 @@ namespace Math{
 			float getInitAngles(int index);
 			Kalman* getKalman(int index);
 			float getTheater();
-			Vector3f temp1;
-			Vector3f temp2;
+			float temp1;
+			float temp2;
+			float temp3;
 
 
 		private:
 
 			float Interval;
+			int DevIndex;
 			float _Quaternion[4];
 			Kalman* _EulerKalman[3];
 			UKF* _EulerUKF;
 			float _Euler[3];
 			float InitAngles[2];
-			float PreAcc[3];
+			float Acc[3];
+			float Angle[2];
+			float prevAngle[2];
+			bool prevValid;
+			bool Valid;
 			Pid* DriftCorrectionPid[3];
 			Matrix3f prevR;
 			Matrix3f deltaR;
@@ -52,6 +58,12 @@ namespace Math{
 			void EulerToQuaternion(float*, float*);
 			void QuaternionToEuler(float*, float*);
 			Matrix3f QuaternionToMatrix(float* quaternion);
+			Matrix3f EulerToMatrix(float* euler);
+			void MatrixToEuler(Matrix3f m, float* euler);
+			void MatrixToQuaternion(Matrix3f m, float* quaternion);
+			void MatrixToFixedAngles(Matrix3f m, float* fixedAngles);
+			void FixedAnglesToQuaternion(float* fixedAngles, float* quaternion);
+			void resetQuaternionTask();
 	};
 };
 

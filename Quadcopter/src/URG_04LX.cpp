@@ -12,12 +12,12 @@
 #include <Usart.h>
 #include <URG_04LX.h>
 #include <Delay.h>
+#include <Leds.h.bak>
 #include <stm32f4xx_it.h>
 #include <stm32f4xx_syscfg.h>
 #include <stm32f4xx_exti.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
-#include <Leds.h>
 
 #define URG_04LX_UART	UART4
 
@@ -112,7 +112,7 @@ unsigned char URG_04LX_poll(void){
 
 	if(Usart::getInstance(URG_04LX_UART)->getBufferCount() >= returnNumBytes){
 		unsigned char str[2048];
-		Usart::getInstance(URG_04LX_UART)->Read(str, returnNumBytes);
+//		Usart::getInstance(URG_04LX_UART)->Read(str, returnNumBytes);
 		return URG_04LX_extract_distance(str);
 	}
 	return -128;

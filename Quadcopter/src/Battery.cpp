@@ -77,7 +77,7 @@ Battery* Battery::getInstance(){
 
 double Battery::getBatteryLevel(){
 	BatteryLevel = BatteryLevelBuffer;
-	return BatteryLevel * 0.0031267;
+	return 4096.0f * 0.43f / BatteryLevel;
 }
 
 

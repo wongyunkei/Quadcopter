@@ -6,51 +6,52 @@
  */
 
 #include <Acceleration.h>
-#include <MPU6050.h>
+#include <Leds.h>
 #include <MathTools.h>
 #include <Math.h>
-#include <Leds.h>
 #include <stdio.h>
 #include <Quaternion.h>
+#include <MPU6050.h>
 
-Acceleration* _mAcceleration;
+Acceleration* _mAcceleration[6];
 
-Acceleration::Acceleration() : isValided(false){
-	accMovingAverage[0] = new MovingWindowAverageFilter(50);
-	accMovingAverage[1] = new MovingWindowAverageFilter(50);
-	accMovingAverage[2] = new MovingWindowAverageFilter(50);
+Acceleration::Acceleration(int index) : DevIndex(index), isValided(false){
+	accMovingAverage[0] = new MovingWindowAverageFilter(20);
+	accMovingAverage[1] = new MovingWindowAverageFilter(20);
+	accMovingAverage[2] = new MovingWindowAverageFilter(20);
 	Pos[0] = 0.0f;
 	Pos[1] = 0.0f;
 	Pos[2] = 0.0f;
 	Vel[0] = 0.0f;
 	Vel[1] = 0.0f;
 	Vel[2] = 0.0f;
-	_mAcceleration = this;
+	_mAcceleration[index] = this;
 
-//	float R[3][2] = {{0.001, -1},
-//					{0.001, -1},
-//					{0.001, -1}};
-//	AccKalman[0] = new Kalman(0.000001, R[0], MPU6050::getInstance()->getRawAcc(0), 1);
-//	AccKalman[1] = new Kalman(0.000001, R[1], MPU6050::getInstance()->getRawAcc(1), 1);
-//	AccKalman[2] = new Kalman(0.000001, R[2], MPU6050::getInstance()->getRawAcc(2), 1);
+	float R[3][2] = {{0.001f, -1},
+					{0.001f, -1},
+					{0.001f, -1}};
+	AccKalman[0] = new Kalman(0.0001f, R[0], MPU6050::getInstance(0)->getRawAcc(0), 0.0f);
+	AccKalman[1] = new Kalman(0.0001f, R[1], MPU6050::getInstance(0)->getRawAcc(1), 0.0f);
+	AccKalman[2] = new Kalman(0.0001f, R[2], MPU6050::getInstance(0)->getRawAcc(2), 0.0f);
 }
 
-Acceleration* Acceleration::getInstance(){
-	return _mAcceleration;
+Acceleration* Acceleration::getInstance(int index){
+	return _mAcceleration[index];
 }
 
-MovingWindowAverageFilter* Acceleration::getMovingAverageFilter(int index){
-	return accMovingAverage[index];
+MovingWindowAverageFilter* Acceleration::getMovingAverageFilter(int channel){
+	return accMovingAverage[channel];
 }
 
 void Acceleration::Update(){
 
 	for(int i = 0; i < 3; i++){
-		float temp = MPU6050::getInstance()->getRawAcc(i);
-		if(MPU6050::getInstance()->getIsValided()){
+		float temp = MPU6050::getInstance(DevIndex)->getRawAcc(i);
+		if(MPU6050::getInstance(DevIndex)->getIsValided()){
 			if(temp == temp){
 				Acc[i] = temp;
 				accMovingAverage[i]->Update(Acc[i]);
+				AccKalman[i]->Filtering(&Acc[i], Acc[i], 0.0f);
 				isValided = true;
 			}
 			else{
@@ -81,27 +82,27 @@ bool Acceleration::getIsValided(){
 	return isValided;
 }
 
-float Acceleration::getAcc(int index){
-	return Acc[index];
+float Acceleration::getAcc(int channel){
+	return Acc[channel];
 }
 
-float Acceleration::getVel(int index){
-	return Vel[index];
+float Acceleration::getVel(int channel){
+	return Vel[channel];
 }
 
-float Acceleration::getPos(int index){
-	return Pos[index];
+float Acceleration::getPos(int channel){
+	return Pos[channel];
 }
-float Acceleration::getRawAcc(int index){
-	return RawAcc[index];
-}
-
-void Acceleration::setAcc(int index, float value){
-	Acc[index] = value;
+float Acceleration::getRawAcc(int channel){
+	return RawAcc[channel];
 }
 
-float Acceleration::getAngle(int index){
-	if(index == 0){
+void Acceleration::setAcc(int channel, float value){
+	Acc[channel] = value;
+}
+
+float Acceleration::getAngle(int channel){
+	if(channel == 0){
 		return atan2(Acc[1], MathTools::Sqrt(Acc[0] * Acc[0] + Acc[2] * Acc[2]));
 	}
 	else{
@@ -109,11 +110,11 @@ float Acceleration::getAngle(int index){
 	}
 }
 
-float Acceleration::getFilteredAngle(int index){
-	if(index == 0){
-		return atan2(-accMovingAverage[1]->getAverage(), MathTools::Sqrt(accMovingAverage[0]->getAverage() * accMovingAverage[0]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
+float Acceleration::getFilteredAngle(int channel){
+	if(channel == 0){
+		return atan2(accMovingAverage[1]->getAverage(), MathTools::Sqrt(accMovingAverage[0]->getAverage() * accMovingAverage[0]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
 	}
 	else{
-		return atan2(accMovingAverage[0]->getAverage(), MathTools::Sqrt(accMovingAverage[1]->getAverage() * accMovingAverage[1]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
+		return atan2(-accMovingAverage[0]->getAverage(), MathTools::Sqrt(accMovingAverage[1]->getAverage() * accMovingAverage[1]->getAverage() + accMovingAverage[2]->getAverage() * accMovingAverage[2]->getAverage()));
 	}
 }

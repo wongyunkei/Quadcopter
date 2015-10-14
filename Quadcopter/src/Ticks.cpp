@@ -23,14 +23,14 @@ void SysTick_Handler(void){
 		_mTicks->setTicks(0);
 	}
 	if(Task::getInstance()->IsPrintTaskNum){
-		if(Task::getInstance()->hangCount++ > 1000){
+		if(Task::getInstance()->hangCount++ > 10000){
 			for(int i = 0; i < 4; i++){
 				PWM::getInstant()->Control(i, 0);
 			}
-			Communicating::getInstant()->RFSend(5,Task::getInstance()->currentTaskNum);
+			Communicating::getInstant(Communicating::COM1)->Send(5,Task::getInstance()->currentTaskNum);
 
-			while(Communicating::getInstant()->getTxBufferCount() >= 8){
-				Communicating::getInstant()->SendPoll();
+			while(Communicating::getInstant(Communicating::COM1)->getTxBufferCount() >= 4){
+				Communicating::getInstant(Communicating::COM1)->SendPoll();
 				Delay::DelayMS(10);
 			}
 		}
@@ -47,15 +47,17 @@ uint16_t Ticks::getTimeout(){
 	}
 }
 
-Ticks::Ticks() : ticks(0), timeoutCount(0), timeoutStartTimestamp(0) {
+Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp(0) {
 
-	SysTick_Config(168000);
+	SysTick_Config(16800);
 	_mTicks = this;
-	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-	IWDG_SetPrescaler(IWDG_Prescaler_256);
-	IWDG_SetReload(250);
-	IWDG_ReloadCounter();
-	IWDG_Enable();
+	if(onWatchDog){
+		IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+		IWDG_SetPrescaler(IWDG_Prescaler_256);
+		IWDG_SetReload(250);
+		IWDG_ReloadCounter();
+		IWDG_Enable();
+	}
 }
 
 Ticks* Ticks::getInstance(){

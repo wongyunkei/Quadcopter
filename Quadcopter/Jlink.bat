@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\SEGGER\JLink_V502f\JLink.exe" -device STM32F407ZG -if SWD -speed 4000 C:\Users\wongy\git\Quadcopter\Quadcopter\Jlink.ld

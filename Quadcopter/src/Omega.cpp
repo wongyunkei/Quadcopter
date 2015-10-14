@@ -9,31 +9,32 @@
 #include <MPU6050.h>
 #include <MathTools.h>
 
-Omega* _mOmega;
+Omega* _mOmega[6];
 
-Omega::Omega() : isValided(false){
-	_mOmega = this;
+Omega::Omega(int index) : DevIndex(index), isValided(false){
+	_mOmega[index] = this;
 
-//	float R[3][2] = {{0.0001, -1},
-//					{0.0001, -1},
-//					{0.0001, -1}};
-//	OmegaKalman[0] = new Kalman(0.000001, R[0], MPU6050::getInstance()->getRawOmega(0), 1);
-//	OmegaKalman[1] = new Kalman(0.000001, R[1], MPU6050::getInstance()->getRawOmega(1), 1);
-//	OmegaKalman[2] = new Kalman(0.000001, R[2], MPU6050::getInstance()->getRawOmega(2), 1);
+	float R[3][2] = {{0.001f, -1},
+					{0.001f, -1},
+					{0.001f, -1}};
+	OmegaKalman[0] = new Kalman(0.0001f, R[0], MPU6050::getInstance(0)->getRawOmega(0), 1);
+	OmegaKalman[1] = new Kalman(0.0001f, R[1], MPU6050::getInstance(0)->getRawOmega(1), 1);
+	OmegaKalman[2] = new Kalman(0.0001f, R[2], MPU6050::getInstance(0)->getRawOmega(2), 1);
 }
 
-Omega* Omega::getInstance(){
-	return _mOmega;
+Omega* Omega::getInstance(int index){
+	return _mOmega[index];
 }
 
 void Omega::Update(){
 
 	for(int i = 0; i < 3; i++){
-		float temp = MPU6050::getInstance()->getRawOmega(i);
-		if(MPU6050::getInstance()->getIsValided()){
+		float temp = MPU6050::getInstance(DevIndex)->getRawOmega(i);
+		if(MPU6050::getInstance(DevIndex)->getIsValided()){
 			if(temp == temp){
-		//		OmegaKalman[i]->Filtering(&_Omega[i], MPU6050::getInstance()->getRawOmega(i), 0.0);
 				_Omega[i] = temp;
+//				OmegaKalman[i]->Filtering(&_Omega[i], MPU6050::getInstance(0)->getRawOmega(i), 0.0f);
+//				_Omega[i] = MathTools::CutOff(_Omega[i], 0.0f, 5.0f);
 				isValided = true;
 			}
 			else{
@@ -50,19 +51,14 @@ bool Omega::getIsValided(){
 	return isValided;
 }
 
-float Omega::getOmega(int index){
-	return _Omega[index];
+float Omega::getOmega(int channel){
+	return _Omega[channel];
 }
 
-void Omega::setOmega(int index, float value){
-	_Omega[index] = value;
+void Omega::setOmega(int channel, float value){
+	_Omega[channel] = value;
 }
 
-float Omega::getRawOmega(int index){
-	return _RawOmega[index];
+float Omega::getRawOmega(int channel){
+	return _RawOmega[channel];
 }
-
-
-
-
-

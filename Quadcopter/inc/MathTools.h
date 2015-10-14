@@ -8,6 +8,8 @@
 #ifndef MATHTOOLS_H_
 #define MATHTOOLS_H_
 
+#include <inttypes.h>
+
 namespace Math{
 
 	class MathTools{
@@ -26,6 +28,9 @@ namespace Math{
 			static float QuadRoot(float);
 			static float OctRoot(float);
 			static float TrimResolution(float value);
+			static float CalcLength(float* x, int length);
+			static int FloatToHalfInt(float _float);
+			static float HalfIntToFloat(int hbits);
 
 		private:
 

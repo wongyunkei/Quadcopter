@@ -14,22 +14,26 @@
 #include <Kalman.h>
 #include <MPU6050.h>
 #include <stdio.h>
-#include <Leds.h>
 #include <Pid.h>
 #include <Usart.h>
 #include <Task.h>
+#include <HMC5883L.h>
+#include <Controlling.h>
+#include <Delay.h>
+#include <AdditionalTools.h>
 
-Quaternion* _mQuaternion;
+Quaternion* _mQuaternion[6];
 
-Quaternion::Quaternion(float interval) : Interval(interval){
+Quaternion::Quaternion(int index, float interval) : DevIndex(index), Interval(interval), Valid(false), prevValid(false){
 
-	_mQuaternion = this;
+	_mQuaternion[index] = this;
 
-	InitAngles[0] = _Euler[0] = Acceleration::getInstance()->getFilteredAngle(0);
-	InitAngles[1] = _Euler[1] = Acceleration::getInstance()->getFilteredAngle(1);
+	InitAngles[0] = _Euler[0] = Acceleration::getInstance(index)->getFilteredAngle(0);
+	InitAngles[1] = _Euler[1] = Acceleration::getInstance(index)->getFilteredAngle(1);
 	_Euler[2] = 0;
 	EulerToQuaternion(_Euler, _Quaternion);
-
+	prevAngle[0] = 0;
+	prevAngle[1] = 0;
 //	_Quaternion[0] = 1;
 //	_Quaternion[1] = 0;
 //	_Quaternion[2] = 0;
@@ -44,10 +48,14 @@ Quaternion::Quaternion(float interval) : Interval(interval){
 //	R[1] = 0.001349584;
 //	_EulerKalman[2] = new Kalman(0.0001, R, 0, 1.0);
 
-	float R[2] = {0.001, 0.5};
-	_EulerKalman[0] = new Kalman(0.0001f, R, _Euler[0], 1.0f);
-	_EulerKalman[1] = new Kalman(0.0001f, R, _Euler[1], 1.0f);
-	_EulerKalman[2] = new Kalman(0.0001f, R, 0, 1.0f);
+	float R[2] = {0.362194628f, 1.0f};
+	_EulerKalman[0] = new Kalman(0.0001f, R, _Euler[0], 0.0f);
+	R[0] = 0.069756417f;
+	R[1] = 0.1f;
+	_EulerKalman[1] = new Kalman(0.0001f, R, _Euler[1], 0.0f);
+	R[0] = 0.077777865f;
+	R[1] = 0.1f;
+	_EulerKalman[2] = new Kalman(0.0001f, R, 0, 0.0f);
 
 
 //	Vector3d x;
@@ -64,15 +72,14 @@ Quaternion::Quaternion(float interval) : Interval(interval){
 //	r(2,2) = 0.5;
 //	_EulerUKF = new UKF(x, p, q, r);
 
-	DriftCorrectionPid[0] = new Pid(5,1.5f,0.0001f,0,1000,interval);
-	DriftCorrectionPid[1] = new Pid(6,1.5f,0.0001f,0,1000,interval);
-	DriftCorrectionPid[2] = new Pid(7,1.5f,0.0001f,0,1000,interval);
+	DriftCorrectionPid[0] = new Pid(5,0.1f,0.00001f,0,1000,interval);
+	DriftCorrectionPid[1] = new Pid(6,0.1f,0.00001f,0,1000,interval);
+	DriftCorrectionPid[2] = new Pid(7,0.1f,0.00001f,0,1000,interval);
 	prevR.setZero();
-
 }
 
-Quaternion* Quaternion::getInstance(){
-	return _mQuaternion;
+Quaternion* Quaternion::getInstance(int index){
+	return _mQuaternion[index];
 }
 
 Kalman* Quaternion::getKalman(int index){
@@ -97,23 +104,40 @@ void Quaternion::setEuler(int index, float angle){
 }
 
 
-void resetUpdate(){
-	MPU6050::getInstance()->Update();
-	Omega::getInstance()->Update();
-	Acceleration::getInstance()->Update();
-	Quaternion::getInstance()->Update();
+void resetUpdate(int index){
+	MPU6050::getInstance(index)->Update();
+	Omega::getInstance(index)->Update();
+	Acceleration::getInstance(index)->Update();
+	Quaternion::getInstance(index)->Update();
+}
+
+void Quaternion::resetQuaternionTask(){
+	for(int i = 0; i < 500; i++){
+		MPU6050::getInstance(DevIndex)->Update();
+		Acceleration::getInstance(DevIndex)->Update();
+		Omega::getInstance(DevIndex)->Update();
+		Quaternion::getInstance(DevIndex)->Update();
+		Delay::DelayMS(2);
+	}
+	Controlling::getInstant()->setRPYOffset(0, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(0)));
+	Controlling::getInstant()->setRPYOffset(1, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(1)));
+	Controlling::getInstant()->setRPYOffset(2, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(2)));
 }
 
 void Quaternion::resetQuaternion(){
 
-	InitAngles[0] = _Euler[0] = Acceleration::getInstance()->getFilteredAngle(0);
-	InitAngles[1] = _Euler[1] = Acceleration::getInstance()->getFilteredAngle(1);
+	InitAngles[0] = _Euler[0] = Acceleration::getInstance(DevIndex)->getFilteredAngle(0);
+	InitAngles[1] = _Euler[1] = Acceleration::getInstance(DevIndex)->getFilteredAngle(1);
 	_Euler[2] = 0;
 	EulerToQuaternion(_Euler, _Quaternion);
-//	for(int i = 0; i < 2; i++){
-//		_EulerKalman[i]->Clear(_Euler[i]);
-//	}
-//	_EulerKalman[2]->Clear(0);
+//	resetQuaternionTask();
+	for(int i = 0; i < 2; i++){
+		_EulerKalman[i]->Clear(_Euler[i]);
+	}
+	_EulerKalman[2]->Clear(0);
+	for(int i = 0; i < 3; i++){
+		DriftCorrectionPid[i]->clear();
+	}
 }
 
 float* Quaternion::getQuaternion(){
@@ -128,122 +152,57 @@ void Quaternion::getQuaternionConjugate(float* conjugate,float* quaternion){
 }
 
 void Quaternion::Update(){
-	if(Omega::getInstance()->getIsValided() == false){
+	if(Omega::getInstance(DevIndex)->getIsValided() == false){
 		return;
 	}
-	if(Acceleration::getInstance()->getIsValided() == false){
+	if(Acceleration::getInstance(DevIndex)->getIsValided() == false){
 		return;
 	}
-	prevR = getRotationMatrix();
+
 	float DeltaQuaternion[4] = {0,0,0,0};
 	DeltaQuaternion[0] = 0;
-	for(int i = 1; i < 4; i++){
-		DeltaQuaternion[i] = MathTools::DegreeToRadian(Omega::getInstance()->getOmega(i - 1));
-	}
-	Vector3f g;
-	g(0) = 0;
-	g(1) = 0;
-	g(2) = 1;
-	Matrix3f m = getRotationMatrix();
-	g = m.transpose()*g;
-	Vector3f e;
-	e(0) = m(2,0);
-	e(1) = m(2,1);
-	e(2) = m(2,2);
-	Vector3f f_ = g.cross(e);
-
-	float f[3] = {f_(0),f_(1),f_(2)};
-
-	float acc[3];
 	for(int i = 0; i < 3; i++){
-		acc[i] = Acceleration::getInstance()->getMovingAverageFilter(i)->getAverage();
+		DeltaQuaternion[i + 1] = MathTools::DegreeToRadian(Omega::getInstance(DevIndex)->getOmega(i));
 	}
-
-	Vector::Scale(acc, acc, 1 / GRAVITY);
-	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
-
-	bool valid = mag < 1.2 && mag > 0.8 ? true : false;
-
-	if(valid){
-		float z[3];
-		z[0] = 2 * (_Quaternion[1] * _Quaternion[3] - _Quaternion[0] * _Quaternion[2]);
-		z[1] = 2 * (_Quaternion[0] * _Quaternion[1] + _Quaternion[2] * _Quaternion[3]);
-		z[2] = 1 - 2 * (_Quaternion[1] * _Quaternion[1] + _Quaternion[2] * _Quaternion[2]);
-
-		Vector::CrossProduct(z, acc, z);
-
-		for(int i = 0; i < 3; i++){
-			_EulerKalman[i]->Filtering(&f[i], z[i], f[i]);
-			DeltaQuaternion[i+1] += DriftCorrectionPid[i]->pid(0, f[i]);
-		}
-	}
-
-
-//	float DeltaQuaternion[4] = {0,0,0,0};
-//	DeltaQuaternion[0] = 0;
-//	for(int i = 1; i < 4; i++){
-//		DeltaQuaternion[i] = MathTools::DegreeToRadian(Omega::getInstance()->getOmega(i - 1));
-//	}
-//	Vector3d acc(3);
-//	for(int i = 0; i < 3; i++){
-//		acc[i] = Acceleration::getInstance()->getMovingAverageFilter(i)->getAverage();
-//	}
-//	acc = acc * (1.0 / GRAVITY);
-//
-//	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
-//
-//	bool valid = mag < 1.2 && mag > 0.8 ? true : false;
-//
-//	if(valid){
-//		Vector3d z;
-//		z(0) = 2 * (_Quaternion[1] * _Quaternion[3] - _Quaternion[0] * _Quaternion[2]);
-//		z(1) = 2 * (_Quaternion[0] * _Quaternion[1] + _Quaternion[2] * _Quaternion[3]);
-//		z(2) = 1 - 2 * (_Quaternion[1] * _Quaternion[1] + _Quaternion[2] * _Quaternion[2]);
-//
-//		z = z.cross(acc);
-//		Vector3d x;
-//		Vector3d _f[7];
-//		Vector3d _z[7];
-//		Vector3d _Z;
-//		_EulerUKF->getSigmaPoints(_f);
-//		for(int i = 0; i < 7; i++){
-//			Vector3d g;
-//			Vector3d f;
-//			Vector3d e;
-//			g(0) = 0;
-//			g(1) = 0;
-//			g(2) = 1;
-//			f(0) = 0;
-//			f(1) = 0;
-//			f(2) = 0;
-//			e(0) = _f[i](0,0);
-//			e(1) = _f[i](1,0);
-//			e(2) = _f[i](2,0);
-//			f = g.cross(e);
-//			f(2) = e(2);
-//			_z[i] = f;
-//		}
-//		_Z = z;
-//		x = _EulerUKF->Filtering(_f, _z, _Z);
-//		for(int i = 0; i < 3; i++){
-//			DeltaQuaternion[i+1] += DriftCorrectionPid[i]->pid(0, x(i));
-//		}
-//	}
-
 
 	QuaternionMultiplication(DeltaQuaternion, _Quaternion, DeltaQuaternion);
 
-
 	for(int i = 0; i < 4; i++){
-		DeltaQuaternion[i] *= Interval /2;
+		DeltaQuaternion[i] *= Interval / 2.0f;
 		_Quaternion[i] += DeltaQuaternion[i];
 	}
 
-
 	Normalization(_Quaternion, _Quaternion);
 
-	deltaR = QuaternionToMatrix(_Quaternion) * prevR.transpose();
+	Matrix3f m = QuaternionToMatrix(_Quaternion);
+	Vector3f acc;
+	for(int i = 0; i < 3; i++){
+		acc[i] = Acceleration::getInstance(DevIndex)->getAcc(i);//->getMovingAverageFilter(i)->getAverage();
+		acc[i] *= 1.0 / GRAVITY;
+	}
+	acc[2] = -acc[2];
 
+	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+
+	Valid = mag < 1.2 && mag > 0.8 ? true : false;
+
+	if(Valid){
+		Vector3f v;
+		v[0] = m(2,0);
+		v[1] = m(2,1);
+		v[2] = m(2,2);
+		for(int i = 0; i < 3; i++){
+			_EulerKalman[i]->Filtering(&v[i], v[i], acc[i]);
+		}
+		Vector3f z = v.cross(acc);
+		for(int i = 0; i < 3; i++){
+			 v[i] += DriftCorrectionPid[i]->pid(0, z[i]);
+			 m(2,i) = v[i];
+		}
+
+		MatrixToQuaternion(m, _Quaternion);
+		Normalization(_Quaternion, _Quaternion);
+	}
 	QuaternionToEuler(_Quaternion, _Euler);
 }
 
@@ -270,33 +229,65 @@ void Quaternion::QuaternionMultiplication(float* quaternion, float* quaternion1,
 }
 
 void Quaternion::EulerToQuaternion(float* euler, float* quaternion){
-	float CosHalfRoll = cosf(euler[0] / 2), SinHalfRoll = sinf(euler[0] / 2);
-	float CosHalfPitch = cosf(euler[1] / 2), SinHalfPitch = sinf(euler[1] / 2);
-	float CosHalfYaw = cosf(euler[2] / 2), SinHalfYaw = sinf(euler[2] / 2);
+	float fixedAngles[3];
+	MatrixToFixedAngles(EulerToMatrix(euler), fixedAngles);
+	FixedAnglesToQuaternion(fixedAngles, quaternion);
+}
+
+void Quaternion::FixedAnglesToQuaternion(float* fixedAngles, float* quaternion){
+	float CosHalfRoll = cosf(fixedAngles[0] / 2.0f), SinHalfRoll = sinf(fixedAngles[0] / 2.0f);
+	float CosHalfPitch = cosf(fixedAngles[1] / 2.0f), SinHalfPitch = sinf(fixedAngles[1] / 2.0f);
+	float CosHalfYaw = cosf(fixedAngles[2] / 2.0f), SinHalfYaw = sinf(fixedAngles[2] / 2.0f);
 	quaternion[0] = CosHalfRoll * CosHalfPitch * CosHalfYaw - SinHalfRoll * SinHalfPitch * SinHalfYaw;
 	quaternion[1] = CosHalfRoll * SinHalfPitch * SinHalfYaw + SinHalfRoll * CosHalfPitch * CosHalfYaw;
 	quaternion[2] = CosHalfRoll * SinHalfPitch * CosHalfYaw - SinHalfRoll * CosHalfPitch * SinHalfYaw;
 	quaternion[3] = CosHalfRoll * CosHalfPitch * SinHalfYaw + SinHalfRoll * SinHalfPitch * CosHalfYaw;
 }
 
+void Quaternion::MatrixToQuaternion(Matrix3f m, float* quaternion){
+	float fixedAngles[3];
+	MatrixToFixedAngles(m, fixedAngles);
+	FixedAnglesToQuaternion(fixedAngles, quaternion);
+}
+
+void Quaternion::MatrixToEuler(Matrix3f m, float* euler){
+	euler[0] = atan2f((float)m(0,1), (float)m(0,0));
+	euler[1] = asinf((float)-m(2,0));
+	euler[2] = atan2f((float)m(2,1), (float)m(2,2));
+}
+
 void Quaternion::QuaternionToEuler(float* quaternion, float* euler){
-	euler[2] = atan2f(2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]), 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]));
-	euler[1] = asinf(2 * (quaternion[0] * quaternion[2] - quaternion[1] * quaternion[3]));
 	euler[0] = atan2f(2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]), 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]));
+	euler[1] = asinf(2 * (quaternion[0] * quaternion[2] - quaternion[1] * quaternion[3]));
+	euler[2] = atan2f(2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]), 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]));
+}
+
+Matrix3f Quaternion::EulerToMatrix(float* euler){
+	Matrix3f m;
+	float CosRoll = cosf(euler[0]), SinRoll = sinf(euler[0]);
+	float CosPitch = cosf(euler[1]), SinPitch = sinf(euler[1]);
+	float CosYaw = cosf(euler[2]), SinYaw = sinf(euler[2]);
+	m(0,0) = CosYaw * CosPitch;
+	m(0,1) = -SinYaw * CosRoll + CosYaw * SinPitch * SinRoll;
+	m(0,2) = SinYaw * SinRoll + CosYaw * SinPitch * CosRoll;
+	m(1,0) = SinYaw * CosPitch;
+	m(1,1) = CosYaw * CosRoll + SinYaw * SinPitch * SinRoll;
+	m(1,2) = -CosYaw * SinRoll + SinYaw * SinPitch * CosRoll;
+	m(2,0) = -SinPitch;
+	m(2,1) = CosPitch * SinRoll;
+	m(2,2) = CosPitch * CosRoll;
+	return m;
+}
+
+void Quaternion::MatrixToFixedAngles(Matrix3f m, float* fixedAngles){
+	fixedAngles[0] = atan2f((float)-m(1,2), (float)m(2,2));
+	fixedAngles[1] = asinf((float)m(0,2));
+	fixedAngles[2] = atan2f((float)-m(0,1), (float)m(0,0));
 }
 
 Matrix3f Quaternion::QuaternionToMatrix(float* quaternion){
-	Matrix3f m;
-	m(0,0) = 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
-	m(0,1) = 2 * (quaternion[1] * quaternion[2] - quaternion[0] * quaternion[3]);
-	m(0,2) = 2 * (quaternion[0] * quaternion[2] + quaternion[1] * quaternion[3]);
-	m(1,0) = 2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]);
-	m(1,1) = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[3] * quaternion[3]);
-	m(1,2) = 2 * (quaternion[2] * quaternion[3] - quaternion[0] * quaternion[1]);
-	m(2,0) = 2 * (quaternion[1] * quaternion[3] - quaternion[0] * quaternion[2]);
-	m(2,1) = 2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]);
-	m(2,2) = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]);
-	return m;
+	QuaternionToEuler(_Quaternion, _Euler);
+	return EulerToMatrix(_Euler);
 }
 
 Matrix3f Quaternion::getRotationMatrix(){

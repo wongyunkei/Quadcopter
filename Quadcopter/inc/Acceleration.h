@@ -20,21 +20,22 @@ namespace Sensors{
 
 			#define GRAVITY		9.80665f
 
-			Acceleration();
-			static Acceleration* getInstance();
+			Acceleration(int index);
+			static Acceleration* getInstance(int index);
 			void Update();
-			float getAcc(int);
-			float getVel(int);
-			float getPos(int);
-			void setAcc(int, float);
-			float getRawAcc(int);
-			float getAngle(int);
-			float getFilteredAngle(int);
-			MovingWindowAverageFilter* getMovingAverageFilter(int index);
+			float getAcc(int channel);
+			float getVel(int channel);
+			float getPos(int channel);
+			void setAcc(int channel, float value);
+			float getRawAcc(int channel);
+			float getAngle(int channel);
+			float getFilteredAngle(int channel);
+			MovingWindowAverageFilter* getMovingAverageFilter(int channel);
 			bool getIsValided();
 
 		private:
 			bool isValided;
+			int DevIndex;
 			float Acc[3];
 			float Pos[3];
 			float Vel[3];

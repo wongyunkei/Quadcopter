@@ -23,6 +23,7 @@
 #include <Buzzer.h>
 #include <Fuzzy.h>
 #include <SE3.h>
+#include <Leds.h>
 #include <Eigen/Eigen>
 
 using Eigen::Vector3f;
@@ -36,27 +37,29 @@ Controlling* Controlling::getInstant(){
 int startCount;
 
 void StartingTask(){
+
 	if(Controlling::getInstant()->getStarting()){
+
 		if(startCount == 0){
 			for(int i = 0; i < 4; i++){
-				GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_RESET);
+//				GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_RESET);
 				PWM::getInstant()->Control(i, INIT_PWM);
-				Controlling::getInstant()->setLift(0);
-				Controlling::getInstant()->setTarget(3, 0.6f);
+//				Controlling::getInstant()->setLift(0);
+//				Controlling::getInstant()->setTarget(3, 0.6f);
 //				PWM::getInstant()->Control(i, Controlling::getInstant()->RPM2PWM(i, INIT_RPM));
 			}
 		}
-		if(startCount++ >= 25){
+		if(startCount++ >= 15){
 
 			startCount = 0;
-			Controlling::getInstant()->setLift(0);
+//			Controlling::getInstant()->setLift(MIN_LIFT);
 //			float rpm0 = PhasesMonitoring::getInstance()->getRPM(0);
 //			float rpm1 = PhasesMonitoring::getInstance()->getRPM(1);
 //			float rpm2 = PhasesMonitoring::getInstance()->getRPM(2);
 //			float rpm3 = PhasesMonitoring::getInstance()->getRPM(3);
 			//if(rpm0 > 0 && rpm1 > 0 && rpm2 > 0 && rpm3 > 0){
 				Controlling::getInstant()->setStart(true);
-				Communicating::getInstant()->RFSend(4,1);
+				Communicating::getInstant(Communicating::COM1)->Send(4,1);
 			//}
 //			else{
 //				Controlling::getInstant()->setStart(false);
@@ -82,9 +85,15 @@ void StoppingTask(){
 //		else if(StoppingDelayCount++ <= 200){
 //			Controlling::getInstant()->setInitRPM(Controlling::getInstant()->getInitRPM() - 1);
 //		}
-		if(SE3::getInstance()->getPos()(2) > 0.25f){
-			Controlling::getInstant()->setTarget(3, SE3::getInstance()->getPos()(2) - 0.001f);
-			Controlling::getInstant()->setMaxLift(LANDING_MAX_LIFT);
+//		if(SE3::getInstance()->getPos()(2) > 0.25f){
+//			Controlling::getInstant()->setTarget(3, SE3::getInstance()->getPos()(2) - 0.001f);
+//			Controlling::getInstant()->setMaxLift(LANDING_MAX_LIFT);
+//		}
+		if(Controlling::getInstant()->getLift() > MIN_LIFT){
+			Controlling::getInstant()->setLift(Controlling::getInstant()->getLift() - 20);
+		}
+		else if(StoppingDelayCount < 25){
+			StoppingDelayCount++;
 		}
 		else{
 			StoppingDelayCount = 0;
@@ -111,19 +120,19 @@ void StoppingTask(){
 				Controlling::getInstant()->setMotorValue(i, 0);
 			}
 			Controlling::getInstant()->setStopping(false);
-			Communicating::getInstant()->RFSend(4,0);
-			GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_SET);
+			Communicating::getInstant(Communicating::COM1)->Send(4,0);
+//			GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_SET);
 		}
 	}
 }
 
-Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_RPM), preFzPWM(0), XYPidDelayCount(0), HightPidDelayCount(0), started(false), starting(false), stopping(false), watchDogCount(0), initPWM(INIT_PWM), FzPWM(0), cosRollcosPitch(1), Lift(0.0f){
+Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_RPM), preFzPWM(0), XYPidDelayCount(0), HightPidDelayCount(0), started(false), starting(false), stopping(false), watchDogCount(0), initPWM(INIT_PWM), FzPWM(0), cosRollcosPitch(1), Lift(7000.0f){
 	_mControlling = this;
 	ControlPWM = new PWM();
 	target[0] = 0.0f;
 	target[1] = 0.0f;
 	target[2] = 0.0f;
-	target[3] = 0.6f;
+	target[3] = 0.0f;
 	FzPWM = target[3];
 	thrust[0] = 0;
 	thrust[1] = 0;
@@ -135,7 +144,7 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	offset[3] = 0.0;
 	RPYOffset[0] = 0.0f;
 	RPYOffset[1] = 0.0f;
-	RPYOffset[2] = 15.0f;
+	RPYOffset[2] = 0.0f;
 
 	rotorPWM[0] = initPWM;
 	rotorPWM[1] = initPWM;
@@ -157,12 +166,20 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	MotorValue[2] = 0;
 	MotorValue[3] = 0;
 
-	RPYPid[0] = new Pid(0,1000.0f,2000.0f,0.0,6000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
-	RPYPid[1] = new Pid(1,2000.0f,2000.0f,0.0,6000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
-	RPYPid[2] = new Pid(2,2500.0f,0.0f,0.0,6000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
-	D_RPYPid[0] = new Pid(17,300.0f,0,0,6000.0f,0.002f);
-	D_RPYPid[1] = new Pid(18,300.0f,0,0,6000.0f,0.002f);
-	D_RPYPid[2] = new Pid(19,300.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
+	RPYPid[0] = new Pid(0,0.0f,0.0f,0.0,10000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
+	RPYPid[1] = new Pid(1,0.0f,0.0f,0.0,10000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
+	RPYPid[2] = new Pid(2,0.0f,0.0f,0.0,10000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
+	D_RPYPid[0] = new Pid(17,0.0f,0,0,10000.0f,0.002f);
+	D_RPYPid[1] = new Pid(18,0.0f,0,0,10000.0f,0.002f);
+	D_RPYPid[2] = new Pid(19,0.0f,0,0,10000.0f,0.002f);//(5,0.15,0,0.0,0.002);
+
+
+//	RPYPid[0] = new Pid(0,1000.0f,2000.0f,0.0,6000.0f,0.002f);//(0,0.027,0.0001,0.0,0.002);
+//	RPYPid[1] = new Pid(1,2000.0f,2000.0f,0.0,6000.0f,0.002f);//(1,0.027,0.0001,0,0.002);//(1,0.0135,0.0005,0.00001,0.002);
+//	RPYPid[2] = new Pid(2,2500.0f,0.0f,0.0,6000.0f,0.002f);//(2,0.12,0.001,0.0,0.002);
+//	D_RPYPid[0] = new Pid(17,300.0f,0,0,6000.0f,0.002f);
+//	D_RPYPid[1] = new Pid(18,300.0f,0,0,6000.0f,0.002f);
+//	D_RPYPid[2] = new Pid(19,300.0f,0,0,6000.0f,0.002f);//(5,0.15,0,0.0,0.002);
 
 	HightPid = new Pid(3, 2.0f, 0.0f, 7.0f, 6000.0f, 0.1f);
 
@@ -202,8 +219,8 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	MotorPid[2] = new Pid(10,0.8,0,0.0,0.0,0.002);
 	MotorPid[3] = new Pid(11,0.8,0,0.0,0.0,0.002);
 
-	Task::getInstance()->Attach(40, 0, StartingTask, true, -1);
-	Task::getInstance()->Attach(40, 0, StoppingTask, true, -1);
+	Task::getInstance()->Attach(40, 0, StartingTask, true);
+	Task::getInstance()->Attach(40, 0, StoppingTask, true);
 }
 
 void Controlling::setStarting(bool value){
@@ -260,53 +277,57 @@ void Controlling::ControllingPoll(){
 		}
 
 		float k[3][3] = {{0.0,0.0,0.0},{0.0,0.0,0.0},{0.0,0.0,0.0}};
-		if(FuzzyRPY[0]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(0) + Quaternion::getInstance()->getInitAngles(0), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)), &k[0][0], &k[0][1], &k[0][2])){
+//		if(FuzzyRPY[0]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(0) + Quaternion::getInstance()->getInitAngles(0), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)), &k[0][0], &k[0][1], &k[0][2])){
+//
+//			RPYPid[0]->setPid(k[0][0], k[0][1], 0.0);
+//			D_RPYPid[0]->setPid(k[0][2], 0.0, 0.0);
+//		}
+//		if(FuzzyRPY[1]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(1) + Quaternion::getInstance()->getInitAngles(1), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)), &k[1][0], &k[1][1], &k[1][2])){
+//
+//			RPYPid[1]->setPid(k[1][0], k[1][1], 0.0);
+//			D_RPYPid[1]->setPid(k[1][2], 0.0, 0.0);
+//		}
+//		if(FuzzyRPY[2]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(2) + Quaternion::getInstance()->getInitAngles(2), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(2)), &k[2][0], &k[2][1], &k[2][2])){
+//
+//			RPYPid[2]->setPid(k[2][0], k[2][1], 0.0);
+//			D_RPYPid[2]->setPid(k[2][2], 0.0, 0.0);
+//		}
+//		errXY[0] = 0;
+//		errXY[1] = 0;
+//		if(XYPidDelayCount++ % 4 == 0){
+//			XYPidDelayCount = 0;
+//			errXY[0] = XYPid[0]->pid(0.0f, SE3::getInstance()->getPos()(0));
+//			errXY[1] = XYPid[1]->pid(0.0f, SE3::getInstance()->getPos()(1));
+//		}
 
-			RPYPid[0]->setPid(k[0][0], k[0][1], 0.0);
-			D_RPYPid[0]->setPid(k[0][2], 0.0, 0.0);
-		}
-		if(FuzzyRPY[1]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(1) + Quaternion::getInstance()->getInitAngles(1), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)), &k[1][0], &k[1][1], &k[1][2])){
+		errRPY[0] = RPYPid[0]->pid(MathTools::DegreeToRadian(target[0] + RPYOffset[0]), Quaternion::getInstance(0)->getEuler(0)) - Quaternion::getInstance(0)->getInitAngles(0) + D_RPYPid[0]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(0)));
+		errRPY[1] = RPYPid[1]->pid(MathTools::DegreeToRadian(target[1] + RPYOffset[1]), Quaternion::getInstance(0)->getEuler(1)) - Quaternion::getInstance(0)->getInitAngles(1) + D_RPYPid[1]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(1)));
+		errRPY[2] = RPYPid[2]->pid(MathTools::DegreeToRadian(target[2] + RPYOffset[2]), Quaternion::getInstance(0)->getEuler(2)) + D_RPYPid[2]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(2)));
 
-			RPYPid[1]->setPid(k[1][0], k[1][1], 0.0);
-			D_RPYPid[1]->setPid(k[1][2], 0.0, 0.0);
-		}
-		if(FuzzyRPY[2]->FuzzyAlgorithm(Quaternion::getInstance()->getEuler(2) + Quaternion::getInstance()->getInitAngles(2), MathTools::DegreeToRadian(Omega::getInstance()->getOmega(2)), &k[2][0], &k[2][1], &k[2][2])){
+		cosRollcosPitch = cosf(Quaternion::getInstance(0)->getEuler(0)) * cosf(Quaternion::getInstance(0)->getEuler(1));
 
-			RPYPid[2]->setPid(k[2][0], k[2][1], 0.0);
-			D_RPYPid[2]->setPid(k[2][2], 0.0, 0.0);
-		}
-		errXY[0] = 0;
-		errXY[1] = 0;
-		if(XYPidDelayCount++ % 4 == 0){
-			XYPidDelayCount = 0;
-			errXY[0] = XYPid[0]->pid(0.0f, SE3::getInstance()->getPos()(0));
-			errXY[1] = XYPid[1]->pid(0.0f, SE3::getInstance()->getPos()(1));
-		}
-
-		errRPY[0] = RPYPid[0]->pid(MathTools::DegreeToRadian(target[0] + RPYOffset[0]), Quaternion::getInstance()->getEuler(0)) - Quaternion::getInstance()->getInitAngles(0) + D_RPYPid[0]->pid(0, MathTools::DegreeToRadian(Omega::getInstance()->getOmega(0)));
-		errRPY[1] = RPYPid[1]->pid(MathTools::DegreeToRadian(target[1] + RPYOffset[1]), Quaternion::getInstance()->getEuler(1)) - Quaternion::getInstance()->getInitAngles(1) + D_RPYPid[1]->pid(0, MathTools::DegreeToRadian(Omega::getInstance()->getOmega(1)));
-		errRPY[2] = RPYPid[2]->pid(MathTools::DegreeToRadian(target[2] + RPYOffset[2]), Quaternion::getInstance()->getEuler(2)) + D_RPYPid[2]->pid(0, MathTools::DegreeToRadian(Omega::getInstance()->getOmega(2)));
-
-		cosRollcosPitch = cosf(Quaternion::getInstance()->getEuler(0)) * cosf(Quaternion::getInstance()->getEuler(1));
-
-		if(HightPidDelayCount++ % 50 == 0){
-			HightPidDelayCount = 0;
-			Vector3f pos = SE3::getInstance()->getPos();
-			Lift += HightPid->pid(target[3], pos(2));
-//			Lift *= fabsf(Lift);
-//			Lift += minLift;
-			Lift = MathTools::Trim(minLift, Lift, maxLift);
-		}
+//		if(HightPidDelayCount++ % 50 == 0){
+//			HightPidDelayCount = 0;
+//			Vector3f pos = SE3::getInstance()->getPos();
+//			Lift += HightPid->pid(target[3], pos(2));
+////			Lift *= fabsf(Lift);
+////			Lift += minLift;
+//			Lift = MathTools::Trim(minLift, Lift, maxLift);
+//		}
 
 
 //		MotorTarget[0] = initRPM / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2];
 //		MotorTarget[1] = initRPM / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2];
 //		MotorTarget[2] = initRPM / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2];
 //		MotorTarget[3] = initRPM / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2];
-		MotorTarget[0] = Lift / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2] - errXY[0] - errXY[1];
-		MotorTarget[1] = Lift / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2] - errXY[0] + errXY[1];
-		MotorTarget[2] = Lift / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2] + errXY[0] + errXY[1];
-		MotorTarget[3] = Lift / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2] + errXY[0] - errXY[1];
+//		MotorTarget[0] = Lift / cosRollcosPitch + errRPY[0] - errRPY[1] + errRPY[2];// - errXY[0] - errXY[1];
+//		MotorTarget[1] = Lift / cosRollcosPitch - errRPY[0] - errRPY[1] - errRPY[2];// - errXY[0] + errXY[1];
+//		MotorTarget[2] = Lift / cosRollcosPitch - errRPY[0] + errRPY[1] + errRPY[2];// + errXY[0] + errXY[1];
+//		MotorTarget[3] = Lift / cosRollcosPitch + errRPY[0] + errRPY[1] - errRPY[2];// + errXY[0] - errXY[1];
+		MotorTarget[0] = Lift / cosRollcosPitch + errRPY[0] + errRPY[1] + errRPY[2];// - errXY[0] - errXY[1];
+		MotorTarget[1] = Lift / cosRollcosPitch - errRPY[0] + errRPY[1] - errRPY[2];// - errXY[0] + errXY[1];
+		MotorTarget[2] = Lift / cosRollcosPitch - errRPY[0] - errRPY[1] + errRPY[2];// + errXY[0] + errXY[1];
+		MotorTarget[3] = Lift / cosRollcosPitch + errRPY[0] - errRPY[1] - errRPY[2];// + errXY[0] - errXY[1];
 
 		for(int i = 0; i < 4; i++){
 			PWM::getInstant()->Control(i, MotorTarget[i]);
@@ -314,13 +335,13 @@ void Controlling::ControllingPoll(){
 		}
 	}
 
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT ||
-			fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 20.0f ||
-			fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 20){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+	if(watchDogCount >= WATCHDOGCOUNT_LIMIT){// ||
+//			fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 20.0f ||
+//			fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 20){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 //	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 
 		if(started){
-			Buzzer::getInstance()->Frequency(10, 100, true);
+//			Buzzer::getInstance()->Frequency(10, 100, true);
 			Stopping();
 		}
 	}
@@ -328,8 +349,7 @@ void Controlling::ControllingPoll(){
 
 void Controlling::Starting(){
 
-	Communicating::getInstant()->setCmdData(Battery::getInstance()->getBatteryLevel());
-	if(Battery::getInstance()->getBatteryLevel() > 12.0){
+	if(Battery::getInstance()->getBatteryLevel() > 3.8f){
 		if(!started){
 			startCount = 0;
 			stopping = false;
@@ -346,7 +366,11 @@ void Controlling::Starting(){
 		}
 	}
 	else{
-		Usart::getInstance(USART1)->Print("Low Battery!\n");
+		Communicating::getInstant(0)->Send(4, Battery::getInstance()->getBatteryLevel());
+		Leds::getInstance()->Blink(100, Leds::LED1, false);
+		Leds::getInstance()->Blink(100, Leds::LED2, false);
+		Leds::getInstance()->Blink(100, Leds::LED3, false);
+		Leds::getInstance()->Blink(100, Leds::LED4, false);
 	}
 }
 
