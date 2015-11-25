@@ -31,8 +31,8 @@
 //#include <NRF905.h>
 //#include <stm32f4xx_dma.h>
 #include <Battery.h>
+#include <Sonic.h>
 //#include <PWM.h>
-//#include <Sonic.h>
 //#include <PhasesMonitoring.h>
 //#include <stm32f4xx_it.h>
 //#include <Buzzer.h>
@@ -47,7 +47,22 @@ void Sampling(){
 			MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(2)));
 }
 
+void printParams(){
+//	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[0]);
+	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[1]);
+//	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[2]);
+//	printf("m: ");
+//	AdditionalTools::printfBuffer(0, 3);
+//	printf("acc: ");
+//	AdditionalTools::printfBuffer(1, 3);
+}
+
 void Output(){
+
+//	printf("%g,%g,%g\n", Omega::getInstance(0)->getOmega(0),
+//			Omega::getInstance(0)->getOmega(1),
+//			Omega::getInstance(0)->getOmega(2));
+
 
 	switch(Communicating::getInstant(Communicating::COM1)->getPrintType()){
 		case 0:
@@ -94,11 +109,16 @@ void Output(){
 			Communicating::getInstant(Communicating::COM1)->Send(1, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getAngle(1)));
 			break;
 		case 9:
-			Communicating::getInstant(Communicating::COM1)->Send(0, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getAngle(0)));
-			Communicating::getInstant(Communicating::COM1)->Send(1, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getAngle(1)));
+
+			Communicating::getInstant(Communicating::COM1)->Send(0, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getFilteredAngle(0)));
+			Communicating::getInstant(Communicating::COM1)->Send(1, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getFilteredAngle(1)));
 			break;
 
 	}
+}
+
+void PrintBattery(){
+	Communicating::getInstant(Communicating::COM1)->Send(4, Battery::getInstance()->getBatteryLevel());
 }
 
 void Update(){
@@ -259,45 +279,68 @@ void ControlTask(){
 //}
 //
 
+void SonicUpdate(){
+	Sonic::getInstance()->Update();
+}
+
+void PrintSonic(){
+	Usart::getInstance(USART1)->Print("%g\n", Sonic::getInstance()->getDistance());
+}
+
 int main(){
 
 	Delay::DelayMS(100);
 
-	Task* mTask = new Task(false);
+	Task* mTask = new Task(true);
 	Leds* mLeds = new Leds();
 	Battery* mBattery = new Battery();
 	Controlling* mControlling = new Controlling();
 	Usart* mUsart1 = new Usart(USART1, 115200);
 	Usart::setPrintUsart(USART1);
-	printf("%g\n", mBattery->getBatteryLevel());
-	Communicating* mCommunicating = new Communicating(Communicating::COM1, USART1, false);
-
-	I2C* mI2C2 = new I2C(I2C2, I2C::SPEED_400K);
-	MPU6050* mMPU6050 = new MPU6050(0, mI2C2);
-	Acceleration* mAcceleration = new Acceleration(0);
-	Omega* mOmega = new Omega(0);
-//	HMC5883L mHMC5883L(66);
+	mUsart1->Print("Started\n");
+	Sonic* sonic = new Sonic();
+	mLeds->Blink(100, Leds::LED1, true);
+	mTask->Attach(100, 0, SonicUpdate, true);
+//	printf("%g\n", mBattery->getBatteryLevel());
+//	Communicating* mCommunicating = new Communicating(Communicating::COM1, USART1, false);
 //
-	mTask->Attach(2, 0, initUpdate, false, 500, false);
-	mTask->Run();
+//	I2C* mI2C2 = new I2C(I2C2, I2C::SPEED_400K);
+//	MPU6050* mMPU6050 = new MPU6050(0, mI2C2);
+//	Acceleration* mAcceleration = new Acceleration(0);
+//	Omega* mOmega = new Omega(0);
+////	HMC5883L mHMC5883L(66);
+////
+//	mTask->Attach(2, 0, initUpdate, false, 500, false);
+//	mTask->Run();
+//
+//	Quaternion* mQuaternion = new Quaternion(0, 0.002f);
+//	mQuaternion->resetQuaternion();
+//
+//	if(mBattery->getBatteryLevel() > 3.7f){
+//		mLeds->Blink(100, Leds::LED1, true);
+//		mLeds->Blink(100, Leds::LED2, true);
+//		mLeds->Blink(100, Leds::LED3, true);
+//		mLeds->Blink(100, Leds::LED4, true);
+//	}
+//	else{
+//		mLeds->LedsControl(Leds::LED1, false);
+//		mLeds->LedsControl(Leds::LED2, false);
+//		mLeds->LedsControl(Leds::LED3, false);
+//		mLeds->LedsControl(Leds::LED4, false);
+//	}
+//
+//	mTask->Attach(2, 0, Update, true);
+////	mTask->Attach(66, 0, CompassUpdate, true);
+//////	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
+//	mTask->Attach(2, 1, ControlTask, true);
+//////	mTask->Attach(8, 3, SE3Update, true, -1);
+//	mTask->Attach(5, 0, ReceiveTask, true);
+//	mTask->Attach(10, 1, SendTask, true);
+//	mTask->Attach(20, 11, Output, true);
+//	mTask->Attach(500, 23, printParams, true);
+////	mTask->Attach(1000, 110, PrintBattery, true);
+////	mTask->Attach(10, 0, Sampling, true);
 
-	Quaternion* mQuaternion = new Quaternion(0, 0.002f);
-	if(mBattery->getBatteryLevel() > 3.8f){
-		mLeds->Blink(100, Leds::LED1, true);
-		mLeds->Blink(100, Leds::LED2, true);
-		mLeds->Blink(100, Leds::LED3, true);
-		mLeds->Blink(100, Leds::LED4, true);
-	}
-
-	mTask->Attach(2, 0, Update, true);
-//	mTask->Attach(66, 0, CompassUpdate, true);
-////	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
-	mTask->Attach(2, 1, ControlTask, true);
-////	mTask->Attach(8, 3, SE3Update, true, -1);
-	mTask->Attach(20, 0, ReceiveTask, true);
-	mTask->Attach(10, 1, SendTask, true);
-	mTask->Attach(100, 11, Output, true);
-//	mTask->Attach(10, 0, Sampling, true);
 	mTask->Run();
 
 	return 0;

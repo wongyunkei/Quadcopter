@@ -26,9 +26,9 @@ namespace Control{
 			#define CT	0.12
 			#define CD	0.05
 			#define __K	23
-			#define INIT_PWM		3000.0f
+			#define INIT_PWM		2500.0f
 			#define INIT_RPM		0.0f
-			#define MIN_LIFT		3000.0f
+			#define MIN_LIFT		2500.0f
 			#define MAX_LIFT		10000.0f
 			#define LANDING_MAX_LIFT		5000.0f
 			#define MAX_RPM			5000.0f

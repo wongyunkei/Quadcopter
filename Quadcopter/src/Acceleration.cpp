@@ -16,9 +16,9 @@
 Acceleration* _mAcceleration[6];
 
 Acceleration::Acceleration(int index) : DevIndex(index), isValided(false){
-	accMovingAverage[0] = new MovingWindowAverageFilter(20);
-	accMovingAverage[1] = new MovingWindowAverageFilter(20);
-	accMovingAverage[2] = new MovingWindowAverageFilter(20);
+	accMovingAverage[0] = new MovingWindowAverageFilter(100);
+	accMovingAverage[1] = new MovingWindowAverageFilter(100);
+	accMovingAverage[2] = new MovingWindowAverageFilter(100);
 	Pos[0] = 0.0f;
 	Pos[1] = 0.0f;
 	Pos[2] = 0.0f;
@@ -26,13 +26,9 @@ Acceleration::Acceleration(int index) : DevIndex(index), isValided(false){
 	Vel[1] = 0.0f;
 	Vel[2] = 0.0f;
 	_mAcceleration[index] = this;
-
-	float R[3][2] = {{0.001f, -1},
-					{0.001f, -1},
-					{0.001f, -1}};
-	AccKalman[0] = new Kalman(0.0001f, R[0], MPU6050::getInstance(0)->getRawAcc(0), 0.0f);
-	AccKalman[1] = new Kalman(0.0001f, R[1], MPU6050::getInstance(0)->getRawAcc(1), 0.0f);
-	AccKalman[2] = new Kalman(0.0001f, R[2], MPU6050::getInstance(0)->getRawAcc(2), 0.0f);
+	AccKalman[0] = new Kalman(MPU6050::getInstance(0)->getRawAcc(0), 0.000001f, 0.001f, 0, true);
+	AccKalman[1] = new Kalman(MPU6050::getInstance(0)->getRawAcc(1), 0.000001f, 0.001f, 0, true);
+	AccKalman[2] = new Kalman(MPU6050::getInstance(0)->getRawAcc(2), 0.000001f, 0.001f, 0, true);
 }
 
 Acceleration* Acceleration::getInstance(int index){
@@ -51,7 +47,8 @@ void Acceleration::Update(){
 			if(temp == temp){
 				Acc[i] = temp;
 				accMovingAverage[i]->Update(Acc[i]);
-				AccKalman[i]->Filtering(&Acc[i], Acc[i], 0.0f);
+				AccKalman[i]->Filtering(Acc[i], 0.0f);
+				Acc[i] = AccKalman[i]->getCorrectedData();
 				isValided = true;
 			}
 			else{

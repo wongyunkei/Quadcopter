@@ -8,7 +8,7 @@
 #ifndef QUATERNION_H_
 #define QUATERNION_H_
 
-#include <Kalman.h>
+#include <AdaptiveKalman.h>
 #include <UKF.h>
 #include <Pid.h>
 
@@ -41,7 +41,8 @@ namespace Math{
 			float Interval;
 			int DevIndex;
 			float _Quaternion[4];
-			Kalman* _EulerKalman[3];
+//			Kalman* _EulerKalman[3];
+			AdaptiveKalman* _EulerKalman[3];
 			UKF* _EulerUKF;
 			float _Euler[3];
 			float InitAngles[2];

@@ -31,8 +31,8 @@ HMC5883L::HMC5883L(float interval) : Interval(interval), inited(0), RawHeadOffse
 	RawMagneticFieldOffset[1] = YOFFSET;
 	RawMagneticFieldOffset[2] = ZOFFSET;
 	FastInitialization();
-	float R[2] = {0.1, -1};
-	CompassKalman = new Kalman(0.0001f, R, RawHead, 1.0f);
+//	float R[2] = {0.1, -1};
+//	CompassKalman = new Kalman(0.0001f, R, RawHead, 1.0f);
 }
 
 void HMC5883L::FastInitialization(){
@@ -122,7 +122,7 @@ bool HMC5883L::Update(){
 	float b = -RawMagneticField[2] - 1 + RawMagneticField[1] * RawMagneticField[1];
 	RawHead = atan2f(b, a) - RawHeadOffset;
 	//printf("%g\n", MathTools::CalcLength(RawMagneticField, 3));
-	CompassKalman->Filtering(&RawHead, RawHead, 0.0f);
+//	CompassKalman->Filtering(&RawHead, RawHead, 0.0f);
 	isValided = true;
 //	MPU6050::getInstance()->setI2CBypass(false);
 	return true;

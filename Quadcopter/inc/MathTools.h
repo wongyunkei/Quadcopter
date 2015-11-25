@@ -23,7 +23,7 @@ namespace Math{
 			static float Sign(float);
 			static float DegreeToRadian(float);
 			static float RadianToDegree(float);
-			static float Trim(float, float, float);
+			static float Trim(float lowerBound, float value, float upperBound);
 			static float CutOff(float, float, float);
 			static float QuadRoot(float);
 			static float OctRoot(float);

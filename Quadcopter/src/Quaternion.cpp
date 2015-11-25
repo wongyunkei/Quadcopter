@@ -21,6 +21,8 @@
 #include <Controlling.h>
 #include <Delay.h>
 #include <AdditionalTools.h>
+#include <Leds.h>
+#include <Communicating.h>
 
 Quaternion* _mQuaternion[6];
 
@@ -47,15 +49,17 @@ Quaternion::Quaternion(int index, float interval) : DevIndex(index), Interval(in
 //	R[0] = 0.000128;
 //	R[1] = 0.001349584;
 //	_EulerKalman[2] = new Kalman(0.0001, R, 0, 1.0);
+	Matrix3f m = QuaternionToMatrix(_Quaternion);
 
-	float R[2] = {0.362194628f, 1.0f};
-	_EulerKalman[0] = new Kalman(0.0001f, R, _Euler[0], 0.0f);
-	R[0] = 0.069756417f;
-	R[1] = 0.1f;
-	_EulerKalman[1] = new Kalman(0.0001f, R, _Euler[1], 0.0f);
-	R[0] = 0.077777865f;
-	R[1] = 0.1f;
-	_EulerKalman[2] = new Kalman(0.0001f, R, 0, 0.0f);
+//	float R[2] = {0.00011f, 0.00001f};
+//	_EulerKalman[0] = new Kalman(0.000001f, R, m(2,0), 0.0f);
+//	_EulerKalman[1] = new Kalman(0.000001f, R, m(2,1), 0.0f);
+//	_EulerKalman[2] = new Kalman(0.000001f, R, m(2,2), 0.0f);
+//
+	_EulerKalman[0] = new AdaptiveKalman(m(2,0), 1.0f, 0.001f, 0.000001f);
+	_EulerKalman[1] = new AdaptiveKalman(m(2,1), 1.0f, 0.001f, 0.000001f);
+	_EulerKalman[2] = new AdaptiveKalman(m(2,2), 1.0f, 0.001f, 0.000001f);
+
 
 
 //	Vector3d x;
@@ -72,9 +76,9 @@ Quaternion::Quaternion(int index, float interval) : DevIndex(index), Interval(in
 //	r(2,2) = 0.5;
 //	_EulerUKF = new UKF(x, p, q, r);
 
-	DriftCorrectionPid[0] = new Pid(5,0.1f,0.00001f,0,1000,interval);
-	DriftCorrectionPid[1] = new Pid(6,0.1f,0.00001f,0,1000,interval);
-	DriftCorrectionPid[2] = new Pid(7,0.1f,0.00001f,0,1000,interval);
+	DriftCorrectionPid[0] = new Pid(5,2.5f,0.0f,0,1000,interval);
+	DriftCorrectionPid[1] = new Pid(6,2.5f,0.0f,0,1000,interval);
+	DriftCorrectionPid[2] = new Pid(7,2.5f,0.0f,0,1000,interval);
 	prevR.setZero();
 }
 
@@ -111,33 +115,40 @@ void resetUpdate(int index){
 	Quaternion::getInstance(index)->Update();
 }
 
+void resetTask(){
+	Controlling::getInstant()->setRPYOffset(0, -MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)));
+	Controlling::getInstant()->setRPYOffset(1, -MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)));
+	Controlling::getInstant()->setRPYOffset(2, -MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(2)));
+}
+
 void Quaternion::resetQuaternionTask(){
-	for(int i = 0; i < 500; i++){
-		MPU6050::getInstance(DevIndex)->Update();
-		Acceleration::getInstance(DevIndex)->Update();
-		Omega::getInstance(DevIndex)->Update();
-		Quaternion::getInstance(DevIndex)->Update();
-		Delay::DelayMS(2);
-	}
+//	for(int i = 0; i < 500; i++){
+//		MPU6050::getInstance(DevIndex)->Update();
+//		Acceleration::getInstance(DevIndex)->Update();
+//		Omega::getInstance(DevIndex)->Update();
+//		Quaternion::getInstance(DevIndex)->Update();
+//		Delay::DelayMS(Interval*1000);
+//	}
 	Controlling::getInstant()->setRPYOffset(0, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(0)));
 	Controlling::getInstant()->setRPYOffset(1, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(1)));
 	Controlling::getInstant()->setRPYOffset(2, -MathTools::RadianToDegree(Quaternion::getInstance(DevIndex)->getEuler(2)));
 }
 
 void Quaternion::resetQuaternion(){
-
 	InitAngles[0] = _Euler[0] = Acceleration::getInstance(DevIndex)->getFilteredAngle(0);
 	InitAngles[1] = _Euler[1] = Acceleration::getInstance(DevIndex)->getFilteredAngle(1);
 	_Euler[2] = 0;
 	EulerToQuaternion(_Euler, _Quaternion);
-//	resetQuaternionTask();
-	for(int i = 0; i < 2; i++){
-		_EulerKalman[i]->Clear(_Euler[i]);
-	}
-	_EulerKalman[2]->Clear(0);
+	Matrix3f m = QuaternionToMatrix(_Quaternion);
+
 	for(int i = 0; i < 3; i++){
-		DriftCorrectionPid[i]->clear();
+		_EulerKalman[i]->Clear(m(2,i));
 	}
+	Task::getInstance()->Attach(500, 499, resetTask, false, 1);
+//	resetQuaternionTask();
+//	for(int i = 0; i < 3; i++){
+//		DriftCorrectionPid[i]->clear();
+//	}
 }
 
 float* Quaternion::getQuaternion(){
@@ -177,28 +188,36 @@ void Quaternion::Update(){
 	Matrix3f m = QuaternionToMatrix(_Quaternion);
 	Vector3f acc;
 	for(int i = 0; i < 3; i++){
-		acc[i] = Acceleration::getInstance(DevIndex)->getAcc(i);//->getMovingAverageFilter(i)->getAverage();
+		acc[i] = Acceleration::getInstance(DevIndex)->getMovingAverageFilter(i)->getAverage();
 		acc[i] *= 1.0 / GRAVITY;
+
 	}
 	acc[2] = -acc[2];
 
-	float mag = MathTools::Sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
+	float mag = sqrtf(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]);
 
-	Valid = mag < 1.2 && mag > 0.8 ? true : false;
-
+	Valid = mag < 1.05f && mag > 0.95f ? true : false;
+	for(int i = 0; i < 3; i++){
+		acc[i] = MathTools::Trim(-1, acc[i], 1);
+	}
 	if(Valid){
+//	if(false){
 		Vector3f v;
 		v[0] = m(2,0);
 		v[1] = m(2,1);
 		v[2] = m(2,2);
 		for(int i = 0; i < 3; i++){
-			_EulerKalman[i]->Filtering(&v[i], v[i], acc[i]);
+			_EulerKalman[i]->Filtering(v[i], acc[i]);
+			float t[3] = {_EulerKalman[i]->getQ(), _EulerKalman[i]->getR1(), _EulerKalman[i]->getR2()};
+			AdditionalTools::setBuffer(0, t, 3);
+			m(2,i) = _EulerKalman[i]->getCorrectedData();
 		}
-		Vector3f z = v.cross(acc);
-		for(int i = 0; i < 3; i++){
-			 v[i] += DriftCorrectionPid[i]->pid(0, z[i]);
-			 m(2,i) = v[i];
-		}
+
+//		Vector3f z = v.cross(acc);
+//		for(int i = 0; i < 3; i++){
+////			 v[i] += DriftCorrectionPid[i]->pid(0, z[i]);
+////			 m(2,i) = v[i];
+//		}
 
 		MatrixToQuaternion(m, _Quaternion);
 		Normalization(_Quaternion, _Quaternion);
@@ -207,7 +226,7 @@ void Quaternion::Update(){
 }
 
 void Quaternion::Normalization(float* quaternion, float* quaternionNorm){
-	float mag = sqrt(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
+	float mag = sqrtf(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
 
 	for(int i = 0; i < 4; i++){
 		quaternionNorm[i] = quaternion[i] / mag;
@@ -251,14 +270,20 @@ void Quaternion::MatrixToQuaternion(Matrix3f m, float* quaternion){
 }
 
 void Quaternion::MatrixToEuler(Matrix3f m, float* euler){
-	euler[0] = atan2f((float)m(0,1), (float)m(0,0));
+	euler[0] = atan2f((float)m(2,1), (float)m(2,2));
 	euler[1] = asinf((float)-m(2,0));
-	euler[2] = atan2f((float)m(2,1), (float)m(2,2));
+	euler[2] = atan2f((float)m(0,1), (float)m(0,0));
 }
 
 void Quaternion::QuaternionToEuler(float* quaternion, float* euler){
+//	float r32 = 2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]);
+//	float r33 = 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]);
+//	float r2_32 = r32 * r32;
+//	float r2_33 = r33 * r33;
+//	float l = sqrtf(r2_32 + r2_33);
 	euler[0] = atan2f(2 * (quaternion[0] * quaternion[1] + quaternion[2] * quaternion[3]), 1 - 2 * (quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2]));
 	euler[1] = asinf(2 * (quaternion[0] * quaternion[2] - quaternion[1] * quaternion[3]));
+//	euler[1] = atan2f(2 * (quaternion[0] * quaternion[2] - quaternion[1] * quaternion[3]), l);
 	euler[2] = atan2f(2 * (quaternion[0] * quaternion[3] + quaternion[1] * quaternion[2]), 1 - 2 * (quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]));
 }
 

@@ -22,9 +22,9 @@ namespace Time{
 
 			Task(bool onWatchDog);
 			static Task* getInstance();
-			void Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true, bool isInstantaneous = false);
+			void Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
 //			void Attach(pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
-			void DeAttach(pTask, bool isInstantaneous = false);
+			void DeAttach(pTask);
 			void Run(bool isPrintTaskNum = false);
 			void resetBreakCount(pTask fn);
 			void printDeration(int index);

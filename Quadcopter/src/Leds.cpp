@@ -24,10 +24,15 @@ Leds::Leds(){
 //	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(Leds_GPIO, &GPIO_InitStructure);
 	_mLeds = this;
+
+	LedsControl(Leds::LED1, false);
+	LedsControl(Leds::LED2, false);
+	LedsControl(Leds::LED3, false);
+	LedsControl(Leds::LED4, false);
 }
 
 Leds* Leds::getInstance(){
@@ -39,19 +44,19 @@ void Leds::LedsControl(LEDS leds , bool onState){
 	switch(leds){
 
 		case LED1:
-			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_0, onState ? Bit_SET : Bit_RESET);
+			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_0, onState ? Bit_RESET : Bit_SET);
 			break;
 
 		case LED2:
-			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_1, onState ? Bit_SET : Bit_RESET);
+			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_1, onState ? Bit_RESET : Bit_SET);
 			break;
 
 		case LED3:
-			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_2, onState ? Bit_SET : Bit_RESET);
+			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_2, onState ? Bit_RESET : Bit_SET);
 			break;
 
 		case LED4:
-			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_3, onState ? Bit_SET : Bit_RESET);
+			GPIO_WriteBit(Leds_GPIO, GPIO_Pin_3, onState ? Bit_RESET : Bit_SET);
 			break;
 
 		default:
@@ -83,13 +88,13 @@ void Leds::Toggle(LEDS leds){
 		GPIO_ToggleBits(Leds_GPIO, GPIO_Pin_0);
 	}
 	else if(leds == LED2){
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_1);
+		GPIO_ToggleBits(Leds_GPIO, GPIO_Pin_1);
 	}
 	else if(leds == LED3){
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_2);
+		GPIO_ToggleBits(Leds_GPIO, GPIO_Pin_2);
 	}
 	else if(leds == LED4){
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_3);
+		GPIO_ToggleBits(Leds_GPIO, GPIO_Pin_3);
 	}
 }
 
@@ -100,10 +105,10 @@ void Leds::Blink(uint16_t period, LEDS leds, bool onState, int count){
 		case LED1:
 			if(onState){
 				if(count >= 0){
-					Task::getInstance()->Attach(period, 0, Blink_Led1, false, 2 * count);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led1, false, 2 * count);
 				}
 				else{
-					Task::getInstance()->Attach(period, 0, Blink_Led1, true);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led1, true);
 				}
 			}
 			else{
@@ -114,10 +119,10 @@ void Leds::Blink(uint16_t period, LEDS leds, bool onState, int count){
 		case LED2:
 			if(onState){
 				if(count >= 0){
-					Task::getInstance()->Attach(period, 0, Blink_Led2, false, 2 * count);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led2, false, 2 * count);
 				}
 				else{
-					Task::getInstance()->Attach(period, 0, Blink_Led2, true);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led2, true);
 				}
 			}
 			else{
@@ -129,10 +134,10 @@ void Leds::Blink(uint16_t period, LEDS leds, bool onState, int count){
 		case LED3:
 			if(onState){
 				if(count >= 0){
-					Task::getInstance()->Attach(period, 0, Blink_Led3, false, 2 * count);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led3, false, 2 * count);
 				}
 				else{
-					Task::getInstance()->Attach(period, 0, Blink_Led3, true);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led3, true);
 				}
 			}
 			else{
@@ -143,10 +148,10 @@ void Leds::Blink(uint16_t period, LEDS leds, bool onState, int count){
 		case LED4:
 			if(onState){
 				if(count >= 0){
-					Task::getInstance()->Attach(period, 0, Blink_Led4, false, 3 * count);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led4, false, 2 * count);
 				}
 				else{
-					Task::getInstance()->Attach(period, 0, Blink_Led4, true);
+					Task::getInstance()->Attach(period / 2, 0, Blink_Led4, true);
 				}
 			}
 			else{

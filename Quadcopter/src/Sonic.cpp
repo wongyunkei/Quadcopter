@@ -31,7 +31,7 @@ Sonic::Sonic() : distance(0){
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
@@ -74,7 +74,7 @@ Sonic::Sonic() : distance(0){
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	GPIO_ResetBits(GPIOC, GPIO_Pin_0);
 	float R[2] = {0.0001, -1};
-	SonicKalman = new Kalman(0.000001f, R, 0, 1);
+//	SonicKalman = new Kalman(0.000001f, R, 0, 1);
 }
 
 Kalman* Sonic::getSonicKalman(){
@@ -109,7 +109,7 @@ void TIM2_IRQHandler(void){
 		else{
 			float value = TIM_GetCapture2(TIM2);
 			float temp = 0;
-			Sonic::getInstance()->getSonicKalman()->Filtering(&temp, value / 5800.0f, 0.0f);
+//			Sonic::getInstance()->getSonicKalman()->Filtering(&temp, value / 5800.0f, 0.0f);
 			Sonic::getInstance()->setDistance(temp);
 		}
 	}

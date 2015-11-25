@@ -14,12 +14,9 @@ Omega* _mOmega[6];
 Omega::Omega(int index) : DevIndex(index), isValided(false){
 	_mOmega[index] = this;
 
-	float R[3][2] = {{0.001f, -1},
-					{0.001f, -1},
-					{0.001f, -1}};
-	OmegaKalman[0] = new Kalman(0.0001f, R[0], MPU6050::getInstance(0)->getRawOmega(0), 1);
-	OmegaKalman[1] = new Kalman(0.0001f, R[1], MPU6050::getInstance(0)->getRawOmega(1), 1);
-	OmegaKalman[2] = new Kalman(0.0001f, R[2], MPU6050::getInstance(0)->getRawOmega(2), 1);
+	OmegaKalman[0] = new Kalman(MPU6050::getInstance(0)->getRawOmega(0), 0.000001f, 0.0001f, 0, true);
+	OmegaKalman[1] = new Kalman(MPU6050::getInstance(0)->getRawOmega(1), 0.000001f, 0.0001f, 0, true);
+	OmegaKalman[2] = new Kalman(MPU6050::getInstance(0)->getRawOmega(2), 0.000001f, 0.0001f, 0, true);
 }
 
 Omega* Omega::getInstance(int index){
@@ -33,8 +30,9 @@ void Omega::Update(){
 		if(MPU6050::getInstance(DevIndex)->getIsValided()){
 			if(temp == temp){
 				_Omega[i] = temp;
-//				OmegaKalman[i]->Filtering(&_Omega[i], MPU6050::getInstance(0)->getRawOmega(i), 0.0f);
-//				_Omega[i] = MathTools::CutOff(_Omega[i], 0.0f, 5.0f);
+				OmegaKalman[i]->Filtering(MPU6050::getInstance(0)->getRawOmega(i), 0.0f);
+				_Omega[i] = OmegaKalman[i]->getCorrectedData();
+				_Omega[i] = MathTools::CutOff(_Omega[i], 0.0f, 5.0f);
 				isValided = true;
 			}
 			else{

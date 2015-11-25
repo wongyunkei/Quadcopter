@@ -25,6 +25,7 @@
 #include <SE3.h>
 #include <Leds.h>
 #include <Eigen/Eigen>
+#include <Delay.h>
 
 using Eigen::Vector3f;
 
@@ -90,9 +91,9 @@ void StoppingTask(){
 //			Controlling::getInstant()->setMaxLift(LANDING_MAX_LIFT);
 //		}
 		if(Controlling::getInstant()->getLift() > MIN_LIFT){
-			Controlling::getInstant()->setLift(Controlling::getInstant()->getLift() - 20);
+			Controlling::getInstant()->setLift(Controlling::getInstant()->getLift() - 100);
 		}
-		else if(StoppingDelayCount < 25){
+		else if(StoppingDelayCount < 15){
 			StoppingDelayCount++;
 		}
 		else{
@@ -335,21 +336,22 @@ void Controlling::ControllingPoll(){
 		}
 	}
 
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT){// ||
-//			fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 20.0f ||
-//			fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 20){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+	if(watchDogCount >= WATCHDOGCOUNT_LIMIT ||
+			fabsf(target[0] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 10.0f + fabs(RPYOffset[0]) ||
+			fabsf(target[1] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 10.0f + fabs(RPYOffset[1])){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 //	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
 
 		if(started){
 //			Buzzer::getInstance()->Frequency(10, 100, true);
 			Stopping();
+
 		}
 	}
 }
 
 void Controlling::Starting(){
 
-	if(Battery::getInstance()->getBatteryLevel() > 3.8f){
+	if(Battery::getInstance()->getBatteryLevel() > 3.7f){
 		if(!started){
 			startCount = 0;
 			stopping = false;
@@ -366,11 +368,11 @@ void Controlling::Starting(){
 		}
 	}
 	else{
-		Communicating::getInstant(0)->Send(4, Battery::getInstance()->getBatteryLevel());
-		Leds::getInstance()->Blink(100, Leds::LED1, false);
-		Leds::getInstance()->Blink(100, Leds::LED2, false);
-		Leds::getInstance()->Blink(100, Leds::LED3, false);
-		Leds::getInstance()->Blink(100, Leds::LED4, false);
+		Leds::getInstance()->LedsControl(Leds::LED1, false);
+		Leds::getInstance()->LedsControl(Leds::LED2, false);
+		Leds::getInstance()->LedsControl(Leds::LED3, false);
+		Leds::getInstance()->LedsControl(Leds::LED4, false);
+		Delay::DelayMS(500);
 	}
 }
 

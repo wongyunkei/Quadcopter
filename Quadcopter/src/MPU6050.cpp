@@ -40,9 +40,9 @@ MPU6050::MPU6050(int index, I2C* i2c) : isValided(false){
 	RawAccOffset[2] = RAWACCPOSZ * RawAccScale[2] - GRAVITY;
 	FastInitialization();
 
-	RawOmegaOffset[0] = 0.0f;
-	RawOmegaOffset[1] = -2.3f;
-	RawOmegaOffset[2] = -0.7f;
+	RawOmegaOffset[0] = 0.3f;
+	RawOmegaOffset[1] = -2.5f;
+	RawOmegaOffset[2] = -0.9f;
 }
 
 void MPU6050::FastInitialization(){
@@ -128,7 +128,7 @@ bool MPU6050::Update(){
 		RawAcc[i] -= RawAccOffset[i];
 //		RawOmega[i] -= getGyroTemperatureCompensation(i, temperature);
 		RawOmega[i] -= RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 5.0f);
+//		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0f);
 	}
 	isValided = true;
 	return true;

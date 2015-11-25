@@ -49,7 +49,7 @@ uint16_t Ticks::getTimeout(){
 
 Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp(0) {
 
-	SysTick_Config(16800);
+	SysTick_Config(168000);
 	_mTicks = this;
 	if(onWatchDog){
 		IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);

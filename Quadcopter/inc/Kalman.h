@@ -13,10 +13,13 @@ namespace Math{
 	class Kalman{
 
 		public:
-
-			Kalman(float, float*, float, float);
-			void Filtering(float*, float, float);
+			Kalman(float x, float q, float r1, float r2, bool isOneDim);
+			void Filtering(float, float);
 			void Clear(float x);
+			void setCorrectedData(float data);
+			float getCorrectedData();
+			bool getIsOneDim();
+			void setIsOneDim(bool value);
 			float getQ();
 			void setQ(float q);
 			float getR1();
@@ -35,7 +38,7 @@ namespace Math{
 			float _K[2];
 			float _yk[2];
 			float _Sk[2][2];
-			bool isOneDim;
+			bool IsOneDim;
 			void MeasurementResidual(float, float);
 			void MeasurementResidualCovariance();
 			void StatePredict();

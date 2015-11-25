@@ -33,80 +33,42 @@ void Task::resetBreakCount(pTask fn){
 	}
 }
 
-void Task::Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout, bool keepLoopping, bool isInstantaneous){
-//	if(isInstantaneous){
-//		if(mInstantaneousTasksNum == MAX_TASKS_NUM){
-//			printf("\nCannot attach any more instantaneous tasks!\n");
-//			return;
-//		}
-//
-//		mInstantaneousTask[TasksNum] = fn;
-//
-//		InstantaneousTaskPeriod[TasksNum] = period;
-//		InstantaneousPhaseShift[TasksNum] = phaseShift;
-//		InstantaneousIsPeriodic[TasksNum] = isPeriodic;
-//		_InstantaneousBreakCout[TasksNum] = BreakCout;
-//
-//		mInstantaneousTasksNum++;
-//	}
-//	else{
-		if(TasksNum == MAX_TASKS_NUM){
-			printf("\nCannot attach any more tasks!\n");
-			return;
-		}
+void Task::Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout, bool keepLoopping){
 
-		mTask[TasksNum] = fn;
+	if(TasksNum == MAX_TASKS_NUM){
+		printf("\nCannot attach any more tasks!\n");
+		return;
+	}
 
-		TaskPeriod[TasksNum] = period;
-		PhaseShift[TasksNum] = phaseShift;
-		IsPeriodic[TasksNum] = isPeriodic;
-		_BreakCout[TasksNum] = BreakCout;
+	mTask[TasksNum] = fn;
 
-		TasksNum++;
-//	}
+	TaskPeriod[TasksNum] = period;
+	PhaseShift[TasksNum] = phaseShift;
+	IsPeriodic[TasksNum] = isPeriodic;
+	_BreakCout[TasksNum] = BreakCout;
+
+	TasksNum++;
 	KeepLoopping = keepLoopping;
 }
 
-//void Task::Attach(pTask fn, bool isPeriodic, int BreakCout, bool keepLoopping){
-//	Attach(0, 0, fn, isPeriodic, BreakCout, keepLoopping, true);
-//}
+void Task::DeAttach(pTask fn){
 
-void Task::DeAttach(pTask fn, bool isInstantaneous){
+	for(int i = 0; i < TasksNum; i++){
 
-//	if(isInstantaneous){
-//		for(int i = 0; i < mInstantaneousTasksNum; i++){
-//
-//			if(mInstantaneousTask[i] == fn){
-//
-//				for(int j = 0; j < mInstantaneousTasksNum - i - 1; j++){
-//
-//					mInstantaneousTask[i] = mInstantaneousTask[i + 1];
-//					InstantaneousTaskPeriod[i] = InstantaneousTaskPeriod[i + 1];
-//					InstantaneousPhaseShift[i] = InstantaneousPhaseShift[i + 1];
-//					_InstantaneousBreakCout[i] = _InstantaneousBreakCout[i + 1];
-//				}
-//				mInstantaneousTasksNum--;
-//				return;
-//			}
-//		}
-//	}
-//	else{
-		for(int i = 0; i < TasksNum; i++){
+		if(mTask[i] == fn){
 
-			if(mTask[i] == fn){
+			for(int j = i; j < TasksNum - 1; j++){
 
-				for(int j = 0; j < TasksNum - i - 1; j++){
-
-					mTask[i] = mTask[i + 1];
-					TaskPeriod[i] = TaskPeriod[i + 1];
-					PhaseShift[i] = PhaseShift[i + 1];
-					_BreakCout[i] = _BreakCout[i + 1];
-				}
-				TasksNum--;
-				return;
+				mTask[j] = mTask[j + 1];
+				TaskPeriod[j] = TaskPeriod[j + 1];
+				PhaseShift[j] = PhaseShift[j + 1];
+				_BreakCout[j] = _BreakCout[j + 1];
+				IsPeriodic[j] = IsPeriodic[j + 1];
 			}
+			TasksNum--;
+			return;
 		}
-//	}
+	}
 }
 
 void Task::printDeration(int index){
@@ -121,28 +83,6 @@ void Task::Run(bool isPrintTaskNum){
 	bool isBreak = false;
 
 	do{
-//		for(int i = 0; i < mInstantaneousTasksNum; i++){
-//			if(_InstantaneousBreakCout[i] != 0){
-//				mInstantaneousTask[i];
-//				if(!InstantaneousIsPeriodic[i]){
-//					if(_InstantaneousBreakCout[i] > 0){
-//						_InstantaneousBreakCout[i]--;
-//					}
-//				}
-//			}
-//		}
-//
-//		for(int i = 0; i < mInstantaneousTasksNum; i++){
-//			if(!InstantaneousIsPeriodic[i]){
-//				if(_InstantaneousBreakCout[i] == 0){
-//					DeAttach(mInstantaneousTask[i], true);
-//					if(!KeepLoopping){
-//						isBreak = true;
-//					}
-//				}
-//			}
-//		}
-
 		if(pTicks->getTicks() != ticksImg){
 			ticksImg = pTicks->getTicks();
 			if(OnWatchDog){
@@ -150,7 +90,7 @@ void Task::Run(bool isPrintTaskNum){
 			}
 
 			for(int i = 0; i < TasksNum; i++){
-				if(pTicks->TicksComp(TaskPeriod[i] * 10, PhaseShift[i] * 10, ticksImg)){
+				if(pTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
 					duration[i][0] = pTicks->getTicks();
 					hangCount = 0;
 					currentTaskNum = i;

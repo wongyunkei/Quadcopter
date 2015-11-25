@@ -9,26 +9,35 @@
 #include <stdio.h>
 #include <MathTools.h>
 
-Kalman::Kalman(float Q, float* R, float X, float P) : _Q(0), correctX(0), predictX(0), correctP(0), predictP(0), isOneDim(false){
-	_Q = Q;
-	_R[0] = R[0];
-	_R[1] = R[1];
+Kalman::Kalman(float x, float q, float r1, float r2, bool isOneDim) : _Q(q), correctX(x), predictX(0), correctP(0), predictP(0), IsOneDim(isOneDim){
+	_R[0] = r1;
+	_R[1] = r2;
 	_K[0] = 0;
 	_K[1] = 0;
-	correctX = X;
-	predictX = 0;
-	correctP = P;
-	predictP = 0;
 	_yk[0] = 0;
 	_yk[1] = 0;
 	_Sk[0][0] = 0;
 	_Sk[0][1] = 0;
 	_Sk[1][0] = 0;
 	_Sk[1][1] = 0;
-	isOneDim = _R[1] < 0 ? true : false;
 }
 
-void Kalman::Filtering(float* output, float data1, float data2){
+void Kalman::setCorrectedData(float data){
+	correctX = data;
+}
+float Kalman::getCorrectedData(){
+	return correctX;
+}
+
+bool Kalman::getIsOneDim(){
+	return IsOneDim;
+}
+
+void Kalman::setIsOneDim(bool value){
+	IsOneDim = value;
+}
+
+void Kalman::Filtering(float data1, float data2){
 
 	StatePredict();
 	CovariancePredict();
@@ -37,18 +46,17 @@ void Kalman::Filtering(float* output, float data1, float data2){
 	Gain();
 	StateUpdate();
 	CovarianceUpdate();
-	*output = correctX;
 }
 
 void Kalman::MeasurementResidual(float Z1, float Z2){
 	_yk[0] = Z1 - predictX;
-	if(!isOneDim){
+	if(!IsOneDim){
 		_yk[1] = Z2 - predictX;
 	}
 }
 void Kalman::MeasurementResidualCovariance(){
 	_Sk[0][0] = predictP + _R[0];
-	if(!isOneDim){
+	if(!IsOneDim){
 		_Sk[0][1] = _Sk[1][0] = predictP;
 		_Sk[1][1] = predictP + _R[1];
 	}
@@ -61,7 +69,7 @@ void Kalman::CovariancePredict(){
 }
 void Kalman::StateUpdate(){
 
-	if(!isOneDim){
+	if(!IsOneDim){
 		correctX = predictX + _K[0] * _yk[0] + _K[1] * _yk[1];
 	}
 	else{
@@ -70,7 +78,7 @@ void Kalman::StateUpdate(){
 }
 void Kalman::CovarianceUpdate(){
 
-	if(!isOneDim){
+	if(!IsOneDim){
 		correctP = (1 - _K[0] + _K[1]) * predictP;
 	}
 	else{
@@ -78,7 +86,7 @@ void Kalman::CovarianceUpdate(){
 	}
 }
 void Kalman::Gain(){
-	if(!isOneDim){
+	if(!IsOneDim){
 
 		float inv_Sk[2][2];
 		float inv_det = MathTools::TrimResolution(_Sk[0][0] *_Sk[1][1] - _Sk[0][1] *_Sk[1][0]);
