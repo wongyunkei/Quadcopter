@@ -36,7 +36,6 @@ namespace System{
 			Sonic::SonicConfiguration* SonicConf3;
 			Sonic::SonicConfiguration* SonicConf4;
 		private:
-
 	};
 
 };

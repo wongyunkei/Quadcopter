@@ -37,7 +37,6 @@ Communicating::Com::Com(Interface interface, uint32_t addr) : _interface(interfa
 }
 
 Communicating::Communicating(Com* com) : _com(com), WatchDog(0), Cmd(0), Data(0),isToken(false), BufferCount(0), PrintType(0), CmdData(0), txBufferCount(0){
-
 }
 
 int Communicating::getTxBufferCount(){

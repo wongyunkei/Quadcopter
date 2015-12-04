@@ -275,6 +275,15 @@ void PrintSonic3(){
 	App::mApp->mCommunicating1->Send(0, App::mApp->mSonicKalman->getCorrectedData());
 }
 
+void PrintSonic4(){
+	float d = App::mApp->mSonic1->getDeltaUS() - App::mApp->mSonic2->getDeltaUS();
+	App::mApp->mCommunicating1->Send(1, d);
+}
+
+void TestPrint(){
+	App::mApp->mUART1->Print("Test\n");
+}
+
 App::App(){
 	Delay::DelayMS(100);
 	mApp = this;
@@ -295,8 +304,13 @@ App::App(){
 	mSonic1 = new Sonic(mConfig->SonicConf1);
 	mSonic2 = new Sonic(mConfig->SonicConf2);
 	mLed1->Blink(true, 100);
+	mLed2->Blink(true, 250);
+	mLed3->Blink(true, 500);
+	mLed4->Blink(true, 1000);
+//	mTask->Attach(100, 0, TestPrint, true);
 	mTask->Attach(2, 0, SonicUpdate, true);
 	mTask->Attach(20, 3, PrintSonic3, true);
+	mTask->Attach(20, 13, PrintSonic4, true);
 	mSonicKalman = new Kalman(0, 0.000001, 0.001);
 //	mTask->Attach(100, 53, PrintSonic2, true);
 //	printf("%g\n", mBattery->getBatteryLevel());
