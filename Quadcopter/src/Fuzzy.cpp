@@ -9,8 +9,8 @@
 #include <Math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <Usart.h>
 #include <Communicating.h>
+#include <UART.h>
 
 Fuzzy* _mFuzzy[10];
 

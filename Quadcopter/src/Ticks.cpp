@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Ticks.h>
 #include <stm32f4xx.h>
 #include <stm32f4xx_iwdg.h>
@@ -14,23 +15,22 @@
 #include <Controlling.h>
 #include <Delay.h>
 
-
-Ticks* _mTicks;
+uint16_t Ticks::maxTicks = 10000;
 
 void SysTick_Handler(void){
-	_mTicks->TicksIncrement();
-	if(_mTicks->getTicks() >= MAX_TICKS){
-		_mTicks->setTicks(0);
+	App::mApp->mTicks->TicksIncrement();
+	if(App::mApp->mTicks->getTicks() >= Ticks::maxTicks){
+		App::mApp->mTicks->setTicks(0);
 	}
-	if(Task::getInstance()->IsPrintTaskNum){
-		if(Task::getInstance()->hangCount++ > 10000){
+	if(App::mApp->mTask->IsPrintTaskNum){
+		if(App::mApp->mTask->hangCount++ > 10000){
 			for(int i = 0; i < 4; i++){
 				PWM::getInstant()->Control(i, 0);
 			}
-			Communicating::getInstant(Communicating::COM1)->Send(5,Task::getInstance()->currentTaskNum);
+			App::mApp->mCommunicating1->Send(5,App::mApp->mTask->currentTaskNum);
 
-			while(Communicating::getInstant(Communicating::COM1)->getTxBufferCount() >= 4){
-				Communicating::getInstant(Communicating::COM1)->SendPoll();
+			while(App::mApp->mCommunicating1->getTxBufferCount() >= 4){
+				App::mApp->mCommunicating1->SendPoll();
 				Delay::DelayMS(10);
 			}
 		}
@@ -43,14 +43,13 @@ uint16_t Ticks::getTimeout(){
 		return getTicks() - timeoutStartTimestamp;
 	}
 	else{
-		return MAX_TICKS - timeoutStartTimestamp + getTicks();
+		return maxTicks - timeoutStartTimestamp + getTicks();
 	}
 }
 
-Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp(0) {
+Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp(0), OnWatchDog(onWatchDog){
 
 	SysTick_Config(168000);
-	_mTicks = this;
 	if(onWatchDog){
 		IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
 		IWDG_SetPrescaler(IWDG_Prescaler_256);
@@ -58,10 +57,6 @@ Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp
 		IWDG_ReloadCounter();
 		IWDG_Enable();
 	}
-}
-
-Ticks* Ticks::getInstance(){
-	return _mTicks;
 }
 
 bool Ticks::TicksComp(uint16_t period, uint16_t phaseShift, uint16_t ticksImg){
@@ -75,17 +70,14 @@ bool Ticks::TicksComp(uint16_t period, uint16_t phaseShift, uint16_t ticksImg){
 }
 
 void Ticks::TicksIncrement(){
-
 	ticks++;
 }
 
 void Ticks::setTicks(uint16_t setValue){
-
 	ticks = setValue;
 }
 
 uint16_t Ticks::getTicks(){
-
 	return ticks;
 }
 

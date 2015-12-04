@@ -15,12 +15,9 @@ namespace Time{
 
 	class Ticks{
 
-		#define MAX_TICKS 10000
-
 		public:
 
 			Ticks(bool onWatchDog);
-			static Ticks* getInstance();
 			void TicksIncrement();
 			bool TicksComp(uint16_t, uint16_t, uint16_t);
 			void setTicks(uint16_t);
@@ -30,6 +27,8 @@ namespace Time{
 			void setTimeout(uint16_t);
 			bool Timeout();
 			uint16_t getTimeout();
+			static uint16_t maxTicks;
+			bool OnWatchDog;
 
 		private:
 

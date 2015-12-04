@@ -9,19 +9,31 @@
 #define SONIC_H_
 
 #include <Kalman.h>
+#include <Configuration.h>
 
 namespace Sensors{
 	class Sonic{
 		public:
-			Sonic();
-			static Sonic* getInstance();
+			class SonicConfiguration{
+				public:
+					SonicConfiguration(Configuration* trigger, Configuration* echo, uint8_t echoSource);
+					Configuration* _trigger;
+					Configuration* _echo;
+					uint8_t _echoSource;
+				private:
+			};
+
+			Sonic(SonicConfiguration* conf);
+			static void Reset();
+			static int OverFlowCount;
 			void Update();
-			double getDistance();
-			void setDistance(double);
-			Kalman* getSonicKalman();
+			void TriggerSet();
+			void TriggerReset();
+			float getDeltaUS();
+			void setDeltaUS(float);
 		private:
-			double distance;
-			Kalman* SonicKalman;
+			float DeltaUS;
+			SonicConfiguration* Conf;
 	};
 };
 

@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Spi.h>
 #include <Delay.h>
 #include <stdio.h>
@@ -12,8 +13,8 @@
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <Ticks.h>
-#include <Usart.h>
 #include <Task.h>
+#include <UART.h>
 
 #define CS_GPIO	GPIOD
 #define CS_RCC	RCC_AHB1Periph_GPIOD
@@ -33,7 +34,7 @@ void resetSpi1Task(){
 	if(spiDelayCount++ > 10){
 		spiDelayCount = 0;
 		Spi(SPI1, Spi::getInstance(SPI1)->getPrescaler(), Spi::getInstance(SPI1)->getSpiMode(), true);
-		Task::getInstance()->DeAttach(resetSpi1Task);
+		App::mApp->mTask->DeAttach(resetSpi1Task);
 	}
 }
 
@@ -41,7 +42,7 @@ void resetSpi2Task(){
 	if(spiDelayCount++ > 10){
 		spiDelayCount = 0;
 		Spi(SPI2, Spi::getInstance(SPI2)->getPrescaler(), Spi::getInstance(SPI2)->getSpiMode(), true);
-		Task::getInstance()->DeAttach(resetSpi2Task);
+		App::mApp->mTask->DeAttach(resetSpi2Task);
 	}
 }
 
@@ -67,7 +68,7 @@ void Spi::resetSpi(){
 		//NSS
 		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
 		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetSpi1Task, true);
+		App::mApp->mTask->Attach(10, 0, resetSpi1Task, true);
 	}
 	else if(Spix == SPI2){
 
@@ -80,7 +81,7 @@ void Spi::resetSpi(){
 		//NSS
 		GPIO_InitStructure.GPIO_Pin = CS0_PIN | CS1_PIN | CS2_PIN | CS3_PIN | CS4_PIN | CS5_PIN;
 		GPIO_Init(CS_GPIO, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetSpi2Task, true);
+		App::mApp->mTask->Attach(10, 0, resetSpi2Task, true);
 	}
 }
 
@@ -249,17 +250,17 @@ Spi* Spi::getInstance(SPI_TypeDef* spi){
 }
 
 bool Spi::Byte(uint8_t byte, uint8_t* data){
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return false;
 		}
 	}
 
 	SPI_I2S_SendData(Spix, byte);
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_RXNE) == RESET){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return false;
 		}
 	}

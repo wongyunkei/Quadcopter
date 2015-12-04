@@ -18,39 +18,26 @@
 #include <inttypes.h>
 #include <SE3.h>
 #include <Delay.h>
-#include <Leds.h>
+#include <Led.h>
 #include <NRF905.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <MPU6050.h>
 
-Communicating* _com[4];
-
-Communicating::Communicating(COM com, USART_TypeDef* usart, bool rf) : WatchDog(0), Cmd(0), Data(0), isRF(rf),isToken(false), BufferCount(0), PrintType(0), CmdData(0), txBufferCount(0){
-	_com[com] = this;
-	Com = usart;
-
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	GPIO_SetBits(GPIOB, GPIO_Pin_9);
+Communicating::Com::Com(Interface interface, uint32_t addr) : _interface(interface){
+	switch(interface){
+		case __UART:
+			_UART = (UART*)addr;
+			break;
+		case __SPI:
+			break;
+		case __I2C:
+			break;
+	}
 }
 
-void Communicating::clearWatchDog(){
-	Controlling::getInstant()->clearWatchDogCount();
-}
+Communicating::Communicating(Com* com) : _com(com), WatchDog(0), Cmd(0), Data(0),isToken(false), BufferCount(0), PrintType(0), CmdData(0), txBufferCount(0){
 
-int Communicating::getWatchDog(){
-	return WatchDog;
-}
-
-Communicating* Communicating::getInstant(int index){
-	return _com[index];
 }
 
 int Communicating::getTxBufferCount(){
@@ -59,23 +46,17 @@ int Communicating::getTxBufferCount(){
 
 void Communicating::ReceivePoll(){
 	int length;
-	if(isRF){
-		length = NRF905::getInstance()->getBufferCount();
-//		NRF905::getInstance()->Read(Buffer + BufferCount, length);
-	}else{
-		length = Usart::getInstance(Com)->getBufferCount();
-		Usart::getInstance(Com)->Read(Buffer + BufferCount, length);
+	switch(_com->_interface){
+		case Com::__UART:
+			length = _com->_UART->getBufferCount();
+			_com->_UART->Read(Buffer + BufferCount, length);
+			break;
+		case Com::__SPI:
+			break;
+		case Com::__I2C:
+			break;
 	}
 
-//	if(length == 0){
-//		WatchDog++;
-//	}
-//	if(WatchDog > 1000){
-//		WatchDog = 0;
-//		GPIO_ResetBits(GPIOB, GPIO_Pin_9);
-//		Delay::DelayMS(20);
-//		GPIO_SetBits(GPIOB, GPIO_Pin_9);
-//	}
 	BufferCount += length;
 
 	for(int j = 0; j < 10; j++){
@@ -129,74 +110,28 @@ void Communicating::ReceivePoll(){
 	}
 }
 
-
-//
-//
-//	if(BufferCount > 0){
-//		for(int i = 0; i < BufferCount; i++){
-//			for(int j = 0; j < BufferCount; j++){
-//				Usart::setPrintUsart(USART3);
-//				printf("b%d:%d,", j, Buffer[j]);
-//
-//			}
-//			if(Buffer[i] == '$'){
-//				isToken = true;
-//				if(BufferCount - i >= 3){
-//
-//					isToken = false;
-//					for(int j = 0; j < 3; j++){
-//						Bytes[j] = Buffer[i + j + 1] - 1;
-//					}
-//					Usart::setPrintUsart(USART3);
-//					printf("b0:%d b1:%d b2:%d\n", Bytes[0], Bytes[1], Bytes[2]);
-//					Cmd = Bytes[0];
-//					int halfInt = ((int)Bytes[1] << 8) | (int)Bytes[2];
-//					Data = MathTools::HalfIntToFloat(halfInt);
-//					Usart::setPrintUsart(USART3);
-//					printf("Cmd:%d Data:%g\n", Cmd, Data);
-////					uint16_t checkSum = 0;
-////					for(int j = 0; j < 5; j++){
-////						checkSum += (Bytes[j]);
-////					}
-////					if(checkSum == (uint16_t)(((uint16_t)Bytes[5] << 8) | (uint16_t)Bytes[6])){
-//
-////						union{
-////							float f;
-////							uint32_t d;
-////						} x;
-////						x.d = ((uint32_t)((uint32_t)Bytes[4]) << 24) | (uint32_t)(((uint32_t)Bytes[3]) << 16) | (uint32_t)(((uint32_t)Bytes[2]) << 8) | (uint32_t)((uint32_t)Bytes[1]);
-////						Data = x.f;
-//						Execute(Cmd, Data);
-////					}
-//					BufferCount = 0;
-//				}
-//			}
-//		}
-//	}
-//}
-
-void Communicating::SendPoll(bool isUseDMA){
-	if((!isUseDMA || !Usart::getInstance(Com)->getIsDmaBusy()) && txBufferCount >= 4){
-		char D[txBufferCount];
-		for(int i = 0; i < txBufferCount; i++){
-			D[i] = txBuffer[i];
-		}
-		if(isRF){
-			NRF905::getInstance()->Write("%s", D);
-		}
-		else{
-			if(isUseDMA){
-				Usart::getInstance(Com)->Print("%s\n", D);
+void Communicating::SendPoll(){
+	switch(_com->_interface){
+		case Com::__UART:
+			if((!_com->_UART->Conf->_UseDMA || !_com->_UART->getIsDmaBusy()) && txBufferCount >= 4){
+				char D[txBufferCount];
+				for(int i = 0; i < txBufferCount; i++){
+					D[i] = txBuffer[i];
+				}
+				if(_com->_UART->Conf->_UseDMA){
+					_com->_UART->Print("%s\n", D);
+				}
+				else{
+					_com->_UART->setPrintUART();
+					printf("%s\n", D);
+				}
+				txBufferCount = 0;
 			}
-			else{
-				Usart::setPrintUsart(Com);
-				printf("%s\n", D);
-			}
-		}
-		txBufferCount = 0;
-//		for(int i = 0; i < txBufferCount; i++){
-//			txBuffer[i] = txBuffer[i + 4];
-//		}
+			break;
+		case Com::__SPI:
+			break;
+		case Com::__I2C:
+			break;
 	}
 }
 
@@ -205,7 +140,6 @@ void Communicating::Execute(int cmd, float data){
 	switch(cmd){
 
 		case CMD::WATCHDOG:
-			clearWatchDog();
 			break;
 		case CMD::PRINT_MODE:
 			PrintType = (uint32_t)data;
@@ -467,18 +401,6 @@ void Communicating::Execute(int cmd, float data){
 
 }
 
-uint32_t Communicating::getPrintType(){
-	return PrintType;
-}
-
-float Communicating::getCmdData(){
-	return CmdData;
-}
-
-void Communicating::setCmdData(float value){
-	CmdData = value;
-}
-
 void Communicating::Send(int cmd, float data){
 	char bytes[4];
 	int halfInt = MathTools::FloatToHalfInt(data);
@@ -489,17 +411,4 @@ void Communicating::Send(int cmd, float data){
 	for(int i = 0; i < 4; i++){
 		txBuffer[txBufferCount++] = bytes[i];
 	}
-}
-
-void Communicating::floatToBytes(float f, char* bytes){
-	union{
-		float d;
-		uint32_t u;
-	} x;
-	x.d = f;
-
-	bytes[3] = (char)((x.u & 0xff000000) >> 24);
-	bytes[2] = (char)((x.u & 0x00ff0000) >> 16);
-	bytes[1] = (char)((x.u & 0x0000ff00) >> 8);
-	bytes[0] = (char)((x.u & 0x000000ff) >> 0);
 }

@@ -1,11 +1,11 @@
 /*
- * Usart.cpp
+ * UART.cpp
  *
  *  Created on: 2014¦~8¤ë4¤é
  *      Author: YunKei
  */
 
-#include <Usart.h>
+#include <App.h>
 #include <stm32f4xx_usart.h>
 #include <stdio.h>
 #include <stm32f4xx_it.h>
@@ -15,15 +15,14 @@
 #include <Delay.h>
 #include <Leds.h.bak>
 #include <Task.h>
+#include <UART.h>
 
 extern USART_TypeDef* STDOUT_USART;
 extern USART_TypeDef* STDERR_USART;
 extern USART_TypeDef* STDIN_USART;
 
-Usart* _mUsart1;
-Usart* _mUsart3;
-Usart* _mUart4;
-Usart* _mUart5;
+UART::UARTConfiguration::UARTConfiguration(USART_TypeDef* UARTx, uint32_t baudrate, Configuration* tx, uint8_t txSource, Configuration* rx, uint8_t rxSource, bool UseDMA) : _UARTx(UARTx), _baudrate(baudrate), _tx(tx), _rx(rx), _txSource(txSource), _rxSource(rxSource), _UseDMA(UseDMA){
+};
 
 void DMA2_Stream7_IRQHandler(void)
 {
@@ -31,14 +30,14 @@ void DMA2_Stream7_IRQHandler(void)
 	{
 		DMA_ClearITPendingBit (DMA2_Stream7, DMA_IT_TCIF7);
 		DMA_Cmd(DMA2_Stream7, DISABLE);
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while (USART_GetFlagStatus(USART1,USART_FLAG_TC)==RESET){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				break;
 			}
 		}
 		USART_ClearFlag(USART1,USART_FLAG_TC);
-		Usart::getInstance(USART1)->setIsDmaBusy(false);
+		App::mApp->mUART1->setIsDmaBusy(false);
 	}
 }
 
@@ -48,14 +47,14 @@ void DMA1_Stream3_IRQHandler(void)
 	{
 		DMA_ClearITPendingBit (DMA1_Stream3, DMA_IT_TCIF3);
 		DMA_Cmd(DMA1_Stream3, DISABLE);
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while (USART_GetFlagStatus(USART3,USART_FLAG_TC)==RESET){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				break;
 			}
 		}
 		USART_ClearFlag(USART3,USART_FLAG_TC);
-		Usart::getInstance(USART3)->setIsDmaBusy(false);
+		App::mApp->mUART3->setIsDmaBusy(false);
 	}
 }
 
@@ -65,17 +64,17 @@ void DMA1_Stream1_IRQHandler(void)
 	{
 		DMA_ClearITPendingBit (DMA1_Stream1, DMA_IT_TCIF1);
 		DMA_Cmd(DMA1_Stream1, DISABLE);
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while(USART_GetFlagStatus(USART3, USART_FLAG_RXNE) == SET){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				break;
 			}
 		}
 		for(int i = 0; i < 5; i++){
-			Usart::getInstance(USART3)->getBuffer()[Usart::getInstance(USART3)->getBufferCount()] = Usart::getInstance(USART3)->getRxBuffer()[i];
-			Usart::getInstance(USART3)->setBufferCount(Usart::getInstance(USART3)->getBufferCount() + 1);
-			if(Usart::getInstance(USART3)->getBufferCount() == 2047){
-				Usart::getInstance(USART3)->setBufferCount(0);
+			App::mApp->mUART3->getBuffer()[App::mApp->mUART3->getBufferCount()] = App::mApp->mUART3->getRxBuffer()[i];
+			App::mApp->mUART3->setBufferCount(App::mApp->mUART3->getBufferCount() + 1);
+			if(App::mApp->mUART3->getBufferCount() == 2047){
+				App::mApp->mUART3->setBufferCount(0);
 			}
 		}
 
@@ -89,17 +88,17 @@ void DMA2_Stream2_IRQHandler(void)
 	{
 		DMA_ClearITPendingBit (DMA2_Stream2, DMA_IT_TCIF2);
 		DMA_Cmd(DMA2_Stream2, DISABLE);
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == SET){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				break;
 			}
 		}
 		for(int i = 0; i < 5; i++){
-			Usart::getInstance(USART1)->getBuffer()[Usart::getInstance(USART1)->getBufferCount()] = Usart::getInstance(USART1)->getRxBuffer()[i];
-			Usart::getInstance(USART1)->setBufferCount(Usart::getInstance(USART1)->getBufferCount() + 1);
-			if(Usart::getInstance(USART1)->getBufferCount() == 2047){
-				Usart::getInstance(USART1)->setBufferCount(0);
+			App::mApp->mUART1->getBuffer()[App::mApp->mUART1->getBufferCount()] = App::mApp->mUART1->getRxBuffer()[i];
+			App::mApp->mUART1->setBufferCount(App::mApp->mUART1->getBufferCount() + 1);
+			if(App::mApp->mUART1->getBufferCount() == 2047){
+				App::mApp->mUART1->setBufferCount(0);
 			}
 		}
 		DMA_Cmd(DMA2_Stream2, ENABLE);
@@ -109,65 +108,65 @@ void DMA2_Stream2_IRQHandler(void)
 
 void USART1_IRQHandler(){
 
-	Usart::getInstance(USART1)->getBuffer()[Usart::getInstance(USART1)->getBufferCount()] = USART_ReceiveData(USART1);
-	Usart::getInstance(USART1)->setBufferCount(Usart::getInstance(USART1)->getBufferCount() + 1);
-	if(Usart::getInstance(USART1)->getBufferCount() == 2047){
-		Usart::getInstance(USART1)->setBufferCount(0);
+	App::mApp->mUART1->getBuffer()[App::mApp->mUART1->getBufferCount()] = USART_ReceiveData(USART1);
+	App::mApp->mUART1->setBufferCount(App::mApp->mUART1->getBufferCount() + 1);
+	if(App::mApp->mUART1->getBufferCount() == 2047){
+		App::mApp->mUART1->setBufferCount(0);
 	}
 }
 
 void USART3_IRQHandler(){
 
-	Usart::getInstance(USART3)->getBuffer()[Usart::getInstance(USART3)->getBufferCount()] = USART_ReceiveData(USART3);
-	Usart::getInstance(USART3)->setBufferCount(Usart::getInstance(USART3)->getBufferCount() + 1);
-	if(Usart::getInstance(USART3)->getBufferCount() == 2047){
-		Usart::getInstance(USART3)->setBufferCount(0);
+	App::mApp->mUART3->getBuffer()[	App::mApp->mUART3->getBufferCount()] = USART_ReceiveData(USART3);
+	App::mApp->mUART3->setBufferCount(	App::mApp->mUART3->getBufferCount() + 1);
+	if(	App::mApp->mUART3->getBufferCount() == 2047){
+		App::mApp->mUART3->setBufferCount(0);
 	}
 }
 
 void UART4_IRQHandler(){
 
-	Usart::getInstance(UART4)->getBuffer()[Usart::getInstance(UART4)->getBufferCount()] = USART_ReceiveData(UART4);
-	Usart::getInstance(UART4)->setBufferCount(Usart::getInstance(UART4)->getBufferCount() + 1);
-	if(Usart::getInstance(UART4)->getBufferCount() == 2047){
-		Usart::getInstance(UART4)->setBufferCount(0);
+	App::mApp->mUART4->getBuffer()[App::mApp->mUART4->getBufferCount()] = USART_ReceiveData(UART4);
+	App::mApp->mUART4->setBufferCount(App::mApp->mUART4->getBufferCount() + 1);
+	if(App::mApp->mUART4->getBufferCount() == 2047){
+		App::mApp->mUART4->setBufferCount(0);
 	}
 }
 
 void UART5_IRQHandler(){
 
-	Usart::getInstance(UART5)->getBuffer()[Usart::getInstance(UART5)->getBufferCount()] = USART_ReceiveData(UART5);
-	Usart::getInstance(UART5)->setBufferCount(Usart::getInstance(UART5)->getBufferCount() + 1);
-	if(Usart::getInstance(UART5)->getBufferCount() == 2047){
-		Usart::getInstance(UART5)->setBufferCount(0);
+	App::mApp->mUART5->getBuffer()[App::mApp->mUART5->getBufferCount()] = USART_ReceiveData(UART5);
+	App::mApp->mUART5->setBufferCount(App::mApp->mUART5->getBufferCount() + 1);
+	if(App::mApp->mUART5->getBufferCount() == 2047){
+		App::mApp->mUART5->setBufferCount(0);
 	}
 }
 
-bool Usart::getIsDmaBusy(){
+bool UART::getIsDmaBusy(){
 	return isDmaBusy;
 }
 
-void Usart::setIsDmaBusy(bool value){
+void UART::setIsDmaBusy(bool value){
 	isDmaBusy = value;
 }
 
-void Usart::setBufferCount(int value){
+void UART::setBufferCount(int value){
 	BufferCount = value;
 }
 
-int Usart::getBufferCount(){
+int UART::getBufferCount(){
 	return BufferCount;
 }
 
-char* Usart::getBuffer(){
+char* UART::getBuffer(){
 	return pBuffer;
 }
 
-char* Usart::getRxBuffer(){
+char* UART::getRxBuffer(){
 	return rxBuffer;
 }
 
-int Usart::Read(char* buffer, int length){
+int UART::Read(char* buffer, int length){
 
 	for(int i = 0; i < length; i++){
 		if(pBuffer >= Buffer + 2047){
@@ -180,99 +179,13 @@ int Usart::Read(char* buffer, int length){
 	return BufferCount;
 }
 
-Usart* Usart::getInstance(USART_TypeDef* UARTx){
-	Usart* usart = 0;
-	if (UARTx == USART1){
-		usart = _mUsart1;
-	}
-	else if (UARTx == USART3){
-		usart = _mUsart3;
-	}
-	else if (UARTx == UART4){
-		usart = _mUart4;
-	}
-	else if (UARTx == UART5){
-		usart = _mUart5;
-	}
-	return usart;
+void UART::setPrintUART(){
+	STDOUT_USART = Conf->_UARTx;
+	STDERR_USART = Conf->_UARTx;
+	STDIN_USART = Conf->_UARTx;
 }
 
-void Usart::setPrintUsart(USART_TypeDef* UARTx){
-	STDOUT_USART = UARTx;
-	STDERR_USART = UARTx;
-	STDIN_USART = UARTx;
-}
-
-int usartDelayCount;
-
-void resetTask1(){
-	if(usartDelayCount++ > 10){
-		usartDelayCount = 0;
-		Usart(USART1, Usart::getInstance(USART1)->getBaudrate(), true);
-		Task::getInstance()->DeAttach(resetTask1);
-	}
-}
-
-void resetTask3(){
-	if(usartDelayCount++ > 10){
-		usartDelayCount = 0;
-		Usart(USART3, Usart::getInstance(USART3)->getBaudrate(), true);
-		Task::getInstance()->DeAttach(resetTask3);
-	}
-}
-
-void resetTask4(){
-	if(usartDelayCount++ > 10){
-		usartDelayCount = 0;
-		Usart(UART4, Usart::getInstance(UART4)->getBaudrate(), true);
-		Task::getInstance()->DeAttach(resetTask4);
-	}
-}
-
-void resetTask5(){
-	if(usartDelayCount++ > 10){
-		usartDelayCount = 0;
-		Usart(UART5, Usart::getInstance(UART5)->getBaudrate(), true);
-		Task::getInstance()->DeAttach(resetTask5);
-	}
-}
-
-void Usart::reset(){
-	GPIO_InitTypeDef GPIO_InitStructure;
-
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	usartDelayCount = 0;
-	if (_Usart == USART1)
-	{
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_9;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetTask1, true, -1);
-	}
-	else if(_Usart == USART3){
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11;
-		GPIO_Init(GPIOC, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetTask3, true, -1);
-
-	}
-	else if (_Usart == UART4)
-	{
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetTask4, true, -1);
-	}
-	else if (_Usart == UART5)
-	{
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-		GPIO_Init(GPIOC, &GPIO_InitStructure);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
-		Task::getInstance()->Attach(10, 0, resetTask5, true, -1);
-	}
-}
-
-Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _baudrate(baudrate), BufferCount(0), pBuffer(Buffer), isDmaBusy(false){
+UART::UART(UARTConfiguration* conf) : Conf(conf), BufferCount(0), pBuffer(Buffer), isDmaBusy(false){
 
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
@@ -284,7 +197,7 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
-	USART_InitStructure.USART_BaudRate = _baudrate;
+	USART_InitStructure.USART_BaudRate = conf->_baudrate;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -295,28 +208,26 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
-	if (UARTx == USART1)
+	if (conf->_UARTx == USART1)
 	{
-		if(!createdInstance){
-			_mUsart1 = this;
-		}
 		USART_DeInit(USART1);
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOB, ENABLE);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource6, GPIO_AF_USART1);
-		GPIO_PinAFConfig(GPIOB, GPIO_PinSource7, GPIO_AF_USART1);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
-		GPIO_Init(GPIOB, &GPIO_InitStructure);
-//		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-//		GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_USART1);
-//		GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_USART1);
-//		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_9;
-//		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		RCC_AHB1PeriphClockCmd(conf->_tx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_tx->_port, conf->_txSource, GPIO_AF_USART1);
+		GPIO_InitStructure.GPIO_Pin = conf->_tx->_pin;
+		GPIO_Init(conf->_tx->_port, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_rx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_rx->_port, conf->_rxSource, GPIO_AF_USART1);
+		GPIO_InitStructure.GPIO_Pin = conf->_rx->_pin;
+		GPIO_Init(conf->_rx->_port, &GPIO_InitStructure);
+
 		USART_Init(USART1, &USART_InitStructure);
 		USART_Cmd(USART1, ENABLE);
-		//NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
 
-		RCC_AHB1PeriphClockCmd (RCC_AHB1Periph_DMA2, ENABLE);
+		NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+
+		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_DMA2, ENABLE);
 		DMA_DeInit(DMA2_Stream7);
 
 		DMA_InitStructure.DMA_BufferSize = 32;
@@ -377,22 +288,24 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 		DMA_ITConfig (DMA2_Stream2, DMA_IT_TC, ENABLE);
 		DMA_Cmd(DMA2_Stream2, ENABLE);
 	}
-	else if(UARTx == USART3){
+	else if(conf->_UARTx == USART3){
 
-		if(!createdInstance){
-			_mUsart3 = this;
-		}
 		USART_DeInit(USART3);
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-		GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART3);
-		GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART3);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11;
-		GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_tx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_tx->_port, conf->_txSource, GPIO_AF_USART3);
+		GPIO_InitStructure.GPIO_Pin = conf->_tx->_pin;
+		GPIO_Init(conf->_tx->_port, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_rx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_rx->_port, conf->_rxSource, GPIO_AF_USART3);
+		GPIO_InitStructure.GPIO_Pin = conf->_rx->_pin;
+		GPIO_Init(conf->_rx->_port, &GPIO_InitStructure);
+
 		USART_Init(USART3, &USART_InitStructure);
 
-//		USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-//		NVIC_EnableIRQ(USART3_IRQn);
+		NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
 
 		USART_Cmd(USART3, ENABLE);
 
@@ -458,57 +371,57 @@ Usart::Usart(USART_TypeDef* UARTx, uint32_t baudrate, bool createdInstance) : _b
 		DMA_Cmd(DMA1_Stream1, ENABLE);
 
 	}
-	else if (UARTx == UART4)
+	else if (conf->_UARTx == UART4)
 	{
-		if(!createdInstance){
-			_mUart4 = this;
-		}
 		USART_DeInit(UART4);
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_UART4);
-		GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_UART4);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-		GPIO_Init(GPIOA, &GPIO_InitStructure);
+		RCC_AHB1PeriphClockCmd(conf->_tx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_tx->_port, conf->_txSource, GPIO_AF_UART4);
+		GPIO_InitStructure.GPIO_Pin = conf->_tx->_pin;
+		GPIO_Init(conf->_tx->_port, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_rx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_rx->_port, conf->_rxSource, GPIO_AF_UART4);
+		GPIO_InitStructure.GPIO_Pin = conf->_rx->_pin;
+		GPIO_Init(conf->_rx->_port, &GPIO_InitStructure);
+
+		NVIC_InitStructure.NVIC_IRQChannel = UART4_IRQn;
+
 		USART_Init(UART4, &USART_InitStructure);
 		USART_Cmd(UART4, ENABLE);
-		NVIC_InitStructure.NVIC_IRQChannel = UART4_IRQn;
 	}
-	else if (UARTx == UART5)
+	else if (conf->_UARTx == UART5)
 	{
-		if(!createdInstance){
-			_mUart5 = this;
-		}
 		USART_DeInit(UART5);
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
-		RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-		GPIO_PinAFConfig(GPIOC, GPIO_PinSource12, GPIO_AF_UART5);
-		GPIO_PinAFConfig(GPIOD, GPIO_PinSource2, GPIO_AF_UART5);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-		GPIO_Init(GPIOC, &GPIO_InitStructure);
-		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-		GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_tx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_tx->_port, conf->_txSource, GPIO_AF_UART5);
+		GPIO_InitStructure.GPIO_Pin = conf->_tx->_pin;
+		GPIO_Init(conf->_tx->_port, &GPIO_InitStructure);
+
+		RCC_AHB1PeriphClockCmd(conf->_rx->_rcc, ENABLE);
+		GPIO_PinAFConfig(conf->_rx->_port, conf->_rxSource, GPIO_AF_UART5);
+		GPIO_InitStructure.GPIO_Pin = conf->_rx->_pin;
+		GPIO_Init(conf->_rx->_port, &GPIO_InitStructure);
+
+		NVIC_InitStructure.NVIC_IRQChannel = UART5_IRQn;
+
 		USART_Init(UART5, &USART_InitStructure);
 		USART_Cmd(UART5, ENABLE);
-		NVIC_InitStructure.NVIC_IRQChannel = UART5_IRQn;
 	}
 
-	if(UARTx == UART4 || UARTx == UART5 ){
-		USART_ITConfig(UARTx, USART_IT_RXNE, ENABLE);
+	if(!conf->_UseDMA || conf->_UARTx == UART4 || conf->_UARTx == UART5){
+		USART_ITConfig(conf->_UARTx, USART_IT_RXNE, ENABLE);
 		NVIC_Init(&NVIC_InitStructure);
 	}
 	setvbuf(stdin, NULL, _IONBF, 0);
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
-    _Usart = UARTx;
+    setPrintUART();
 }
 
-uint32_t Usart::getBaudrate(){
-	return _baudrate;
-}
-
-void Usart::Print(const char* pstr, ...)
+void UART::Print(const char* pstr, ...)
 {
 	int length = 0;
 	va_list arglist;
@@ -526,28 +439,30 @@ void Usart::Print(const char* pstr, ...)
 		length++;
 	}
 
-	if(_Usart == USART1){
-		if(!Usart::getInstance(USART1)->getIsDmaBusy()){
-			Usart::getInstance(USART1)->setIsDmaBusy(true);
+	if(Conf->_UARTx == USART1){
+		if(!App::mApp->mUART1->getIsDmaBusy()){
+			App::mApp->mUART1->setIsDmaBusy(true);
 			DMA_SetCurrDataCounter(DMA2_Stream7, length);
 			DMA_Cmd(DMA2_Stream7, ENABLE);
 		}
 	}
-	else if(_Usart == USART3){
-		if(!Usart::getInstance(USART3)->getIsDmaBusy()){
-			Usart::getInstance(USART3)->setIsDmaBusy(true);
+	else if(Conf->_UARTx == USART3){
+		if(!App::mApp->mUART3->getIsDmaBusy()){
+			App::mApp->mUART3->setIsDmaBusy(true);
 			DMA_SetCurrDataCounter(DMA1_Stream3, length);
 			DMA_Cmd(DMA1_Stream3, ENABLE);
 		}
 	}
-
-//	while(*fp){
-//		Ticks::getInstance()->setTimeout(3);
-//		while (USART_GetFlagStatus(_Usart, USART_FLAG_TXE) == RESET){
-//			if(Ticks::getInstance()->Timeout()){
-//				return;
-//			}
-//		}
-//		USART_SendData(_Usart, *(fp++));
-//	}
+	else if(Conf->_UARTx == UART4 || Conf->_UARTx == UART5){
+		fp = txBuffer;
+		for(int i = 0; i < length; i++){
+			App::mApp->mTicks->setTimeout(3);
+			while (USART_GetFlagStatus(Conf->_UARTx, USART_FLAG_TXE) == RESET){
+				if(App::mApp->mTicks->Timeout()){
+					return;
+				}
+			}
+			USART_SendData(Conf->_UARTx, *(fp++));
+		}
+	}
 }

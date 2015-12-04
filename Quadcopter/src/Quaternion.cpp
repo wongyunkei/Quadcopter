@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Quaternion.h>
 #include <MathTools.h>
 #include <math.h>
@@ -15,14 +16,14 @@
 #include <MPU6050.h>
 #include <stdio.h>
 #include <Pid.h>
-#include <Usart.h>
 #include <Task.h>
 #include <HMC5883L.h>
 #include <Controlling.h>
 #include <Delay.h>
 #include <AdditionalTools.h>
-#include <Leds.h>
 #include <Communicating.h>
+#include <Led.h>
+#include <UART.h>
 
 Quaternion* _mQuaternion[6];
 
@@ -144,7 +145,7 @@ void Quaternion::resetQuaternion(){
 	for(int i = 0; i < 3; i++){
 		_EulerKalman[i]->Clear(m(2,i));
 	}
-	Task::getInstance()->Attach(500, 499, resetTask, false, 1);
+	App::mApp->mTask->Attach(500, 499, resetTask, false, 1);
 //	resetQuaternionTask();
 //	for(int i = 0; i < 3; i++){
 //		DriftCorrectionPid[i]->clear();

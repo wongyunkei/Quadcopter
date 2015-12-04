@@ -5,113 +5,170 @@
  *      Author: YunKei
  */
 
-#include <math.h>
 #include <Sonic.h>
-#include <MathTools.h>
 #include <stm32f4xx.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <stm32f4xx_it.h>
 #include <stm32f4xx_tim.h>
-#include <Delay.h>
-#include <Usart.h>
+#include <App.h>
 #include <stdio.h>
-#include <Kalman.h>
 
-Sonic* _mSonic;
+Sonic::SonicConfiguration::SonicConfiguration(Configuration* trigger, Configuration* echo, uint8_t echoSource) : _trigger(trigger), _echo(echo), _echoSource(echoSource){
+}
 
-Sonic::Sonic() : distance(0){
-	_mSonic = this;
+int Sonic::OverFlowCount = 0;
+
+Sonic::Sonic(SonicConfiguration* conf) : DeltaUS(0), Conf(conf){
 	GPIO_InitTypeDef GPIO_InitStructure;
 	TIM_ICInitTypeDef TIM_ICInitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+	RCC_AHB1PeriphClockCmd(conf->_echo->_rcc, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
 
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
+	GPIO_InitStructure.GPIO_Pin = conf->_echo->_pin;
+	GPIO_Init(conf->_echo->_port, &GPIO_InitStructure);
 
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_TIM2);
+	GPIO_PinAFConfig(conf->_echo->_port, conf->_echoSource, GPIO_AF_TIM1);
 
-	TIM_TimeBaseStructure.TIM_Prescaler = 84 - 1;
+	TIM_TimeBaseStructure.TIM_Prescaler = 0;
 	TIM_TimeBaseStructure.TIM_Period = 10000 - 1;
 	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
 	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-	TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+	TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
 
 	TIM_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_BothEdge;
 	TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
 	TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
 	TIM_ICInitStructure.TIM_ICFilter = 0xf;
 
+	TIM_ICInitStructure.TIM_Channel = TIM_Channel_1;
+	TIM_ICInit(TIM1, &TIM_ICInitStructure);
 	TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
-	TIM_ICInit(TIM2, &TIM_ICInitStructure);
+	TIM_ICInit(TIM1, &TIM_ICInitStructure);
+	TIM_ICInitStructure.TIM_Channel = TIM_Channel_3;
+	TIM_ICInit(TIM1, &TIM_ICInitStructure);
+	TIM_ICInitStructure.TIM_Channel = TIM_Channel_4;
+	TIM_ICInit(TIM1, &TIM_ICInitStructure);
 
-	NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0 ;
+	NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE ;
 	NVIC_Init(&NVIC_InitStructure);
 
-	TIM_Cmd(TIM2, ENABLE);
+	NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_TIM10_IRQn;
+	NVIC_Init(&NVIC_InitStructure);
 
-	TIM_ITConfig(TIM2, TIM_IT_CC2, ENABLE);
+	TIM_ITConfig(TIM1, TIM_IT_Update | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
 
-
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);
+	RCC_AHB1PeriphClockCmd(conf->_trigger->_rcc, ENABLE);
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	GPIO_ResetBits(GPIOC, GPIO_Pin_0);
-	float R[2] = {0.0001, -1};
-//	SonicKalman = new Kalman(0.000001f, R, 0, 1);
+	GPIO_InitStructure.GPIO_Pin = conf->_trigger->_pin;
+	GPIO_Init(conf->_trigger->_port, &GPIO_InitStructure);
+	GPIO_ResetBits(conf->_trigger->_port, conf->_trigger->_pin);
+
+	TIM_Cmd(TIM1, ENABLE);
 }
 
-Kalman* Sonic::getSonicKalman(){
-	return SonicKalman;
+void Sonic::Reset(){
+	OverFlowCount = 0;
+	TIM_SetCounter(TIM1, 0);
 }
 
-Sonic* Sonic::getInstance(){
-	return _mSonic;
+void Sonic::setDeltaUS(float value){
+	DeltaUS = value;
 }
 
-void Sonic::setDistance(double value){
-	distance = value;
-}
-
-double Sonic::getDistance(){
-	return distance;
+float Sonic::getDeltaUS(){
+	return DeltaUS;
 }
 
 void Sonic::Update(){
-	GPIO_SetBits(GPIOC, GPIO_Pin_0);
+	GPIO_SetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
 	Delay::DelayUS(10);
-	GPIO_ResetBits(GPIOC, GPIO_Pin_0);
+	GPIO_ResetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
 }
 
-void TIM2_IRQHandler(void){
+void Sonic::TriggerSet(){
+	GPIO_SetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
+}
 
-	if(TIM_GetITStatus(TIM2, TIM_IT_CC2) != RESET){
-		TIM_ClearITPendingBit(TIM2, TIM_IT_CC2);
-		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_1) == SET){
-			TIM_SetCounter(TIM2, 0);
+void Sonic::TriggerReset(){
+	GPIO_ResetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
+}
+
+void TIM1_CC_IRQHandler(){
+	if(TIM_GetITStatus(TIM1, TIM_IT_CC1) != RESET){
+		static float timestamp;
+		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf1->_echo->_port, App::mApp->mConfig->SonicConf1->_echo->_pin) == SET){
+			timestamp = TIM_GetCapture1(TIM1) + 10000 * Sonic::OverFlowCount;
 		}
 		else{
-			float value = TIM_GetCapture2(TIM2);
-			float temp = 0;
-//			Sonic::getInstance()->getSonicKalman()->Filtering(&temp, value / 5800.0f, 0.0f);
-			Sonic::getInstance()->setDistance(temp);
+			float value = TIM_GetCapture1(TIM1) + 10000 * Sonic::OverFlowCount;
+			value -= timestamp;
+//			value /= 168.0;
+			App::mApp->mSonic1->setDeltaUS(value);
 		}
+		TIM_ClearITPendingBit(TIM1, TIM_IT_CC1);
+	}
+
+	if(TIM_GetITStatus(TIM1, TIM_IT_CC2) != RESET){
+		static float timestamp;
+		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf2->_echo->_port, App::mApp->mConfig->SonicConf2->_echo->_pin) == SET){
+			timestamp = TIM_GetCapture2(TIM1) + 10000 * Sonic::OverFlowCount;
+		}
+		else{
+			float value = TIM_GetCapture2(TIM1) + 10000 * Sonic::OverFlowCount;
+			value -= timestamp;
+//			value /= 168.0;
+			App::mApp->mSonic2->setDeltaUS(value);
+		}
+		TIM_ClearITPendingBit(TIM1, TIM_IT_CC2);
+	}
+
+	if(TIM_GetITStatus(TIM1, TIM_IT_CC3) != RESET){
+		static float timestamp;
+		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf3->_echo->_port, App::mApp->mConfig->SonicConf3->_echo->_pin) == SET){
+			timestamp = TIM_GetCapture3(TIM1) + 10000 * Sonic::OverFlowCount;
+		}
+		else{
+			float value = TIM_GetCapture3(TIM1) + 10000 * Sonic::OverFlowCount;
+			value -= timestamp;
+			value /= 168.0;
+			App::mApp->mSonic3->setDeltaUS(value);
+		}
+		TIM_ClearITPendingBit(TIM1, TIM_IT_CC3);
+	}
+
+	if(TIM_GetITStatus(TIM1, TIM_IT_CC4) != RESET){
+		static float timestamp;
+		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf4->_echo->_port, App::mApp->mConfig->SonicConf4->_echo->_pin) == SET){
+			timestamp = TIM_GetCapture4(TIM1) + 10000 * Sonic::OverFlowCount;
+		}
+		else{
+			float value = TIM_GetCapture4(TIM1) + 10000 * Sonic::OverFlowCount;
+			value -= timestamp;
+			value /= 168.0;
+			App::mApp->mSonic4->setDeltaUS(value);
+		}
+		TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
 	}
 }
 
+void TIM1_UP_TIM10_IRQHandler(){
+	if(TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET){
+		Sonic::OverFlowCount++;
+		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
+	}
+}

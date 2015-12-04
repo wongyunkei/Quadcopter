@@ -5,24 +5,27 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Task.h>
 #include <Ticks.h>
 #include <stdio.h>
-#include <Usart.h>
 #include <stdio.h>
 #include <stm32f4xx_iwdg.h>
 #include <Communicating.h>
-#include <Leds.h.bak>
+#include <UART.h>
 
-Task* _mTask;
+uint16_t Task::maxTaskNum = 1024;
 
-Task::Task(bool onWatchDog) : pTicks(0), OnWatchDog(onWatchDog), TasksNum(0), hangCount(0), currentTaskNum(0), IsPrintTaskNum(false), KeepLoopping(true), Count(-1){
-	pTicks = new Ticks(onWatchDog);
-	_mTask = this;
-}
-
-Task* Task::getInstance(){
-	return _mTask;
+Task::Task() : mTicks(App::mApp->mTicks), OnWatchDog(App::mApp->mTicks->OnWatchDog), TasksNum(0), hangCount(0), currentTaskNum(0), IsPrintTaskNum(false), KeepLoopping(true), Count(-1){
+	duration = new int*[maxTaskNum];
+	for(int i = 0; i < maxTaskNum; i++){
+		duration[i] = new int[2];
+	}
+	mTask = new pTask[maxTaskNum];
+	TaskPeriod = new float[maxTaskNum];
+	PhaseShift = new float[maxTaskNum];
+	IsPeriodic = new bool[maxTaskNum];
+	_BreakCout = new int[maxTaskNum];
 }
 
 void Task::resetBreakCount(pTask fn){
@@ -35,7 +38,7 @@ void Task::resetBreakCount(pTask fn){
 
 void Task::Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout, bool keepLoopping){
 
-	if(TasksNum == MAX_TASKS_NUM){
+	if(TasksNum == maxTaskNum){
 		printf("\nCannot attach any more tasks!\n");
 		return;
 	}
@@ -83,20 +86,20 @@ void Task::Run(bool isPrintTaskNum){
 	bool isBreak = false;
 
 	do{
-		if(pTicks->getTicks() != ticksImg){
-			ticksImg = pTicks->getTicks();
+		if(mTicks->getTicks() != ticksImg){
+			ticksImg = mTicks->getTicks();
 			if(OnWatchDog){
 				IWDG_ReloadCounter();
 			}
 
 			for(int i = 0; i < TasksNum; i++){
-				if(pTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
-					duration[i][0] = pTicks->getTicks();
+				if(mTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
+					duration[i][0] = mTicks->getTicks();
 					hangCount = 0;
 					currentTaskNum = i;
 					if(_BreakCout[i] != 0){
 						mTask[i]();
-						duration[i][1] = pTicks->getTicks();
+						duration[i][1] = mTicks->getTicks();
 						if(!IsPeriodic[i]){
 							if(_BreakCout[i] > 0){
 								_BreakCout[i]--;

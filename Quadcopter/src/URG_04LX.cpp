@@ -9,7 +9,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <Usart.h>
 #include <URG_04LX.h>
 #include <Delay.h>
 #include <Leds.h.bak>
@@ -18,13 +17,14 @@
 #include <stm32f4xx_exti.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
+#include <UART.h>
 
 #define URG_04LX_UART	UART4
 
 uint16_t distance[683];
 uint16_t returnNumBytes = 0;
 uint16_t length = 0;
-Usart* mURG_04LX_UART;
+//Usart* mURG_04LX_UART;
 
 void switch_printf_uart(USART_TypeDef* UARTx){
 	STDOUT_USART = UARTx;
@@ -33,13 +33,13 @@ void switch_printf_uart(USART_TypeDef* UARTx){
 }
 
 void URG_04LX_init(void){
-	mURG_04LX_UART = new Usart(URG_04LX_UART, 19200);
+//	mURG_04LX_UART = new Usart(URG_04LX_UART, 19200);
 	switch_printf_uart(URG_04LX_UART);
 	Delay::DelayMS(100);
 	printf("S1152000000000\n");
 	Delay::DelayMS(100);
-	delete mURG_04LX_UART;
-	mURG_04LX_UART = new Usart(URG_04LX_UART, 115200);
+//	delete mURG_04LX_UART;
+//	mURG_04LX_UART = new Usart(URG_04LX_UART, 115200);
 	Delay::DelayMS(100);
 }
 
@@ -110,10 +110,10 @@ void URG_04LX_read_distance(float start_angle, float end_angle){
 
 unsigned char URG_04LX_poll(void){
 
-	if(Usart::getInstance(URG_04LX_UART)->getBufferCount() >= returnNumBytes){
+//	if(Usart::getInstance(URG_04LX_UART)->getBufferCount() >= returnNumBytes){
 		unsigned char str[2048];
 //		Usart::getInstance(URG_04LX_UART)->Read(str, returnNumBytes);
 		return URG_04LX_extract_distance(str);
-	}
+//	}
 	return -128;
 }

@@ -13,8 +13,8 @@ namespace Math{
 	class Kalman{
 
 		public:
-			Kalman(float x, float q, float r1, float r2, bool isOneDim);
-			void Filtering(float, float);
+			Kalman(float x, float q, float r1, bool isOneDim = true, float r2 = 0);
+			void Filtering(float, float = 0);
 			void Clear(float x);
 			void setCorrectedData(float data);
 			float getCorrectedData();

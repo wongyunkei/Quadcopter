@@ -17,8 +17,9 @@
 #include <Delay.h>
 #include <AdditionalTools.h>
 #include <Buzzer.h>
-#include <Leds.h.bak>
 #include <Task.h>
+#include <App.h>
+#include <Led.h>
 
 I2C* _mI2C1;
 I2C* _mI2C2;
@@ -71,7 +72,7 @@ I2C::I2C(I2C_TypeDef* I2Cx, CLOCK clock, bool createdInstance):CreatedInstance(c
 }
 
 void I2C::ResetI2C(){
-	Leds::getInstance()->Toggle(Leds::LED2);
+	App::mApp->mLed2->Toggle();
 	ErrorCount++;
 	I2C_DeInit(_I2Cx);
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -126,43 +127,43 @@ I2C* I2C::getInstance(I2C_TypeDef* I2Cx){
 
 bool I2C::Write(uint8_t addr, uint8_t reg, uint8_t data){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(I2C_GetFlagStatus(_I2Cx, I2C_FLAG_BUSY)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Transmitter);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_SendData(_I2Cx, reg);
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_SendData(_I2Cx, data);
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
@@ -173,27 +174,27 @@ bool I2C::Write(uint8_t addr, uint8_t reg, uint8_t data){
 
 uint8_t I2C::Read(uint8_t addr, uint8_t reg){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(I2C_GetFlagStatus(_I2Cx, I2C_FLAG_BUSY)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
 	}
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Transmitter);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
@@ -201,9 +202,9 @@ uint8_t I2C::Read(uint8_t addr, uint8_t reg){
 
 	I2C_SendData(_I2Cx, reg);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
@@ -211,18 +212,18 @@ uint8_t I2C::Read(uint8_t addr, uint8_t reg){
 
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Receiver);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
@@ -230,9 +231,9 @@ uint8_t I2C::Read(uint8_t addr, uint8_t reg){
 
 	I2C_AcknowledgeConfig(_I2Cx, DISABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return 0;
 		}
@@ -245,26 +246,26 @@ uint8_t I2C::Read(uint8_t addr, uint8_t reg){
 
 bool I2C::BurstWrite(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(I2C_GetFlagStatus(_I2Cx, I2C_FLAG_BUSY)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 			}
 	}
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Transmitter);
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
@@ -272,9 +273,9 @@ bool I2C::BurstWrite(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 	I2C_SendData(_I2Cx, reg);
 
 	for(int i = 0; i < length; i++){
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				ResetI2C();
 				return false;
 			}
@@ -287,27 +288,27 @@ bool I2C::BurstWrite(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 
 bool I2C::BurstRead(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(I2C_GetFlagStatus(_I2Cx, I2C_FLAG_BUSY)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Transmitter);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
@@ -315,9 +316,9 @@ bool I2C::BurstRead(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 
 	I2C_SendData(_I2Cx, reg);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
@@ -325,18 +326,18 @@ bool I2C::BurstRead(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 
 	I2C_GenerateSTART(_I2Cx, ENABLE);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_MODE_SELECT)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
 	}
 	I2C_Send7bitAddress(_I2Cx, addr << 1, I2C_Direction_Receiver);
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			ResetI2C();
 			return false;
 		}
@@ -349,9 +350,9 @@ bool I2C::BurstRead(uint8_t addr, uint8_t reg, uint8_t length, uint8_t* pdata){
 		else if(i < length - 1){
 			I2C_AcknowledgeConfig(_I2Cx, ENABLE);
 		}
-		Ticks::getInstance()->setTimeout(3);
+		App::mApp->mTicks->setTimeout(3);
 		while(!I2C_CheckEvent(_I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED)){
-			if(Ticks::getInstance()->Timeout()){
+			if(App::mApp->mTicks->Timeout()){
 				ResetI2C();
 				return false;
 			}

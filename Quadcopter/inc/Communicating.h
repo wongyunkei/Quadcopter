@@ -8,8 +8,8 @@
 #ifndef COMMUNICATING_H_
 #define COMMUNICATING_H_
 
-#include <Usart.h>
-#include <stm32f4xx_usart.h>
+#include <UART.h>
+#include <stm32f4xx.h>
 #include <inttypes.h>
 
 namespace Communication{
@@ -17,7 +17,16 @@ namespace Communication{
 	class Communicating{
 
 		public:
-
+			class Com{
+				public:
+					enum Interface{__UART, __SPI, __I2C};
+					Com(Interface interface, uint32_t addr);
+					Interface _interface;
+					UART* _UART;
+	//				SPI* _SPI;
+	//				I2C* _I2C;
+				private:
+			};
 			enum COM{COM1,COM2,COM3,COM4,COM5,COM6};
 
 			enum CMD{
@@ -71,24 +80,16 @@ namespace Communication{
 				TARGET_YAW
 			};
 
-			Communicating(COM com, USART_TypeDef*, bool);
-			static Communicating* getInstant(int index);
+			Communicating(Com* com);
 			void ReceivePoll();
-			void SendPoll(bool isUseDMA = true);
+			void SendPoll();
 			void Execute(int, float);
-			uint32_t getPrintType();
 			void Send(int, float);
-			float getCmdData();
-			void setCmdData(float value);
 			void SendCmd(char, float);
-			void floatToBytes(float, char*);
 			int getTxBufferCount();
-			void clearWatchDog();
-			int getWatchDog();
 
 		private:
-			USART_TypeDef* Com;
-			bool isRF;
+			Com* _com;
 			int WatchDog;
 			bool isToken;
 			char Buffer[2048];

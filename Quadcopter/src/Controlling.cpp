@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Controlling.h>
 #include <Communicating.h>
 #include <Quaternion.h>
@@ -23,9 +24,9 @@
 #include <Buzzer.h>
 #include <Fuzzy.h>
 #include <SE3.h>
-#include <Leds.h>
 #include <Eigen/Eigen>
 #include <Delay.h>
+#include <Led.h>
 
 using Eigen::Vector3f;
 
@@ -60,7 +61,7 @@ void StartingTask(){
 //			float rpm3 = PhasesMonitoring::getInstance()->getRPM(3);
 			//if(rpm0 > 0 && rpm1 > 0 && rpm2 > 0 && rpm3 > 0){
 				Controlling::getInstant()->setStart(true);
-				Communicating::getInstant(Communicating::COM1)->Send(4,1);
+				App::mApp->mCommunicating1->Send(4,1);
 			//}
 //			else{
 //				Controlling::getInstant()->setStart(false);
@@ -121,7 +122,7 @@ void StoppingTask(){
 				Controlling::getInstant()->setMotorValue(i, 0);
 			}
 			Controlling::getInstant()->setStopping(false);
-			Communicating::getInstant(Communicating::COM1)->Send(4,0);
+			App::mApp->mCommunicating1->Send(4,0);
 //			GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_SET);
 		}
 	}
@@ -220,8 +221,8 @@ Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_
 	MotorPid[2] = new Pid(10,0.8,0,0.0,0.0,0.002);
 	MotorPid[3] = new Pid(11,0.8,0,0.0,0.0,0.002);
 
-	Task::getInstance()->Attach(40, 0, StartingTask, true);
-	Task::getInstance()->Attach(40, 0, StoppingTask, true);
+	App::mApp->mTask->Attach(40, 0, StartingTask, true);
+	App::mApp->mTask->Attach(40, 0, StoppingTask, true);
 }
 
 void Controlling::setStarting(bool value){
@@ -368,10 +369,10 @@ void Controlling::Starting(){
 		}
 	}
 	else{
-		Leds::getInstance()->LedsControl(Leds::LED1, false);
-		Leds::getInstance()->LedsControl(Leds::LED2, false);
-		Leds::getInstance()->LedsControl(Leds::LED3, false);
-		Leds::getInstance()->LedsControl(Leds::LED4, false);
+		App::mApp->mLed1->LedControl(false);
+		App::mApp->mLed2->LedControl(false);
+		App::mApp->mLed3->LedControl(false);
+		App::mApp->mLed4->LedControl(false);
 		Delay::DelayMS(500);
 	}
 }

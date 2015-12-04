@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Pid.h>
 #include <stdio.h>
 #include <Ticks.h>
@@ -52,7 +53,7 @@ void Pid::clear(){
 }
 
 float Pid::pid(float target, float current){
-	float t = Ticks::getInstance()->getTicks();
+	float t = App::mApp->mTicks->getTicks();
 	t /= 1000.0f;
 	if(PreTimeStamp > 0){
 		Period = t < PreTimeStamp ? (10000 - PreTimeStamp + t) : t - PreTimeStamp;

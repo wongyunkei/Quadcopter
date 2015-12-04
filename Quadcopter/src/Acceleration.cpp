@@ -6,7 +6,7 @@
  */
 
 #include <Acceleration.h>
-#include <Leds.h>
+#include <Led.h>
 #include <MathTools.h>
 #include <Math.h>
 #include <stdio.h>

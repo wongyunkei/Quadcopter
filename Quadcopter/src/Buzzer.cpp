@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <Buzzer.h>
 #include <Task.h>
 #include <stm32f4xx.h>
@@ -52,8 +53,8 @@ void BuzzerOff(){
 		Buzzer::getInstance()->setDuration(Buzzer::getInstance()->getDuration() - 1);
 	}
 	else if(Buzzer::getInstance()->getDuration() == 0){
-		Task::getInstance()->DeAttach(BuzzerOn);
-		Task::getInstance()->DeAttach(BuzzerOff);
+		App::mApp->mTask->DeAttach(BuzzerOn);
+		App::mApp->mTask->DeAttach(BuzzerOff);
 	}
 }
 
@@ -64,8 +65,8 @@ void Buzzer::Toggle(){
 void Buzzer::Frequency(float freq, int d, bool onState){
 
 	if(onState){
-		Task::getInstance()->Attach((int)(1000.0f / freq), 0, BuzzerOn, true, -1);
-		Task::getInstance()->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, true, -1);
+		App::mApp->mTask->Attach((int)(1000.0f / freq), 0, BuzzerOn, true, -1);
+		App::mApp->mTask->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, true, -1);
 		if(d == -1){
 			setDuration(-1);
 		}
@@ -75,7 +76,7 @@ void Buzzer::Frequency(float freq, int d, bool onState){
 	}
 	else{
 		GPIO_WriteBit(BUZZER_PORT, BUZZER_PIN, Bit_RESET);
-		Task::getInstance()->DeAttach(BuzzerOn);
-		Task::getInstance()->DeAttach(BuzzerOff);
+		App::mApp->mTask->DeAttach(BuzzerOn);
+		App::mApp->mTask->DeAttach(BuzzerOff);
 	}
 }

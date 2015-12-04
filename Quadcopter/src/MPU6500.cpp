@@ -13,7 +13,8 @@
 #include <MathTools.h>
 #include <Acceleration.h>
 #include <Delay.h>
-#include <Usart.h>
+#include <App.h>
+#include <UART.h>
 
 MPU6500* _mMPU6500[6];
 
@@ -51,36 +52,36 @@ void MPU6500::setSensitivity(SENSITIVITY value){
 	Sensitivity = value;
 	switch(Sensitivity){
 		case SENSITIVITY::SENSITIVITY_250:
-			Ticks::getInstance()->setTimeout(3);
+			App::mApp->mTicks->setTimeout(3);
 			while(!spix->WriteCmd(DevIndex, GYRO_CONFIG, 0x00)){
-				if(Ticks::getInstance()->Timeout()){
+				if(App::mApp->mTicks->Timeout()){
 					return;
 				}
 			}
 			break;
 
 		case SENSITIVITY::SENSITIVITY_500:
-			Ticks::getInstance()->setTimeout(3);
+			App::mApp->mTicks->setTimeout(3);
 			while(!spix->WriteCmd(DevIndex, GYRO_CONFIG, 0x08)){
-				if(Ticks::getInstance()->Timeout()){
+				if(App::mApp->mTicks->Timeout()){
 					return;
 				}
 			}
 			break;
 
 		case SENSITIVITY::SENSITIVITY_1000:
-			Ticks::getInstance()->setTimeout(3);
+			App::mApp->mTicks->setTimeout(3);
 			while(!spix->WriteCmd(DevIndex, GYRO_CONFIG, 0x10)){
-				if(Ticks::getInstance()->Timeout()){
+				if(App::mApp->mTicks->Timeout()){
 					return;
 				}
 			}
 			break;
 
 		case SENSITIVITY::SENSITIVITY_2000:
-			Ticks::getInstance()->setTimeout(3);
+			App::mApp->mTicks->setTimeout(3);
 			while(!spix->WriteCmd(DevIndex, GYRO_CONFIG, 0x18)){
-				if(Ticks::getInstance()->Timeout()){
+				if(App::mApp->mTicks->Timeout()){
 					return;
 				}
 			}
@@ -90,37 +91,37 @@ void MPU6500::setSensitivity(SENSITIVITY value){
 
 void MPU6500::FastInitialization(){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!spix->WriteCmd(DevIndex, PWR_MGMT_1, 0x00)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!spix->WriteCmd(DevIndex, SMPLRT_DIV, 0x07)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!spix->WriteCmd(DevIndex, CONFIG, 0x00)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!spix->WriteCmd(DevIndex, GYRO_CONFIG, 0x18)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!spix->WriteCmd(DevIndex, ACCEL_CONFIG, 0x18)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}

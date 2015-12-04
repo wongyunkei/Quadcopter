@@ -15,15 +15,10 @@ namespace Time{
 
 	class Task{
 
-		#define MAX_TASKS_NUM	256
-		typedef void (*pTask)(void);
-
 		public:
-
-			Task(bool onWatchDog);
-			static Task* getInstance();
+			typedef void (*pTask)();
+			Task();
 			void Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
-//			void Attach(pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
 			void DeAttach(pTask);
 			void Run(bool isPrintTaskNum = false);
 			void resetBreakCount(pTask fn);
@@ -33,27 +28,19 @@ namespace Time{
 			int hangCount;
 			int Count;
 
+			static uint16_t maxTaskNum;
 			uint16_t TasksNum;
-//			uint16_t mInstantaneousTasksNum;
-			int duration[MAX_TASKS_NUM][2];
-			pTask mTask[MAX_TASKS_NUM];
-//			pTask mInstantaneousTask[MAX_TASKS_NUM];
+			int** duration;
+			pTask* mTask;
 
 		private:
-
-			Ticks* pTicks;
-
-//			uint16_t InstantaneousTaskPeriod[MAX_TASKS_NUM];
-//			uint16_t InstantaneousPhaseShift[MAX_TASKS_NUM];
-//			uint16_t InstantaneousIsPeriodic[MAX_TASKS_NUM];
-//			int _InstantaneousBreakCout[MAX_TASKS_NUM];
-
-			float TaskPeriod[MAX_TASKS_NUM];
-			float PhaseShift[MAX_TASKS_NUM];
-			bool IsPeriodic[MAX_TASKS_NUM];
-			int _BreakCout[MAX_TASKS_NUM];
+			float* TaskPeriod;
+			float* PhaseShift;
+			bool* IsPeriodic;
+			int* _BreakCout;
 			bool KeepLoopping;
 			bool OnWatchDog;
+			Ticks* mTicks;
 	};
 };
 

@@ -5,6 +5,7 @@
  *      Author: YunKei
  */
 
+#include <App.h>
 #include <MPU6050.h>
 #include <I2C.h>
 #include <Task.h>
@@ -20,9 +21,9 @@ void MPU6050::setI2CBypass(int index, bool onState){
 	if(onState){
 		data = 0x02;
 	}
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_INT_PIN_CFG,data)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
@@ -47,34 +48,34 @@ MPU6050::MPU6050(int index, I2C* i2c) : isValided(false){
 
 void MPU6050::FastInitialization(){
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_PWR_MGMT_1,0x00)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
 
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_SMPLRT_DIV,0x07)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_CONFIG,0x00)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x18)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_ACCEL_CONFIG,0x18)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}

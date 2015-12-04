@@ -12,6 +12,7 @@
 #include <math.h>
 #include <MathTools.h>
 #include <MPU6050.h>
+#include <App.h>
 
 #define HMC5883L_I2C	I2C2
 
@@ -51,9 +52,9 @@ void HMC5883L::FastInitialization(){
 //			return;
 //		}
 //	}
-	Ticks::getInstance()->setTimeout(3);
+	App::mApp->mTicks->setTimeout(3);
 	while(!I2C::getInstance(HMC5883L_I2C)->Write(ADDRESS,MODE_REG,0x00)){
-		if(Ticks::getInstance()->Timeout()){
+		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
 	}

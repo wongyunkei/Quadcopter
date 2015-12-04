@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <MathTools.h>
 
-Kalman::Kalman(float x, float q, float r1, float r2, bool isOneDim) : _Q(q), correctX(x), predictX(0), correctP(0), predictP(0), IsOneDim(isOneDim){
+Kalman::Kalman(float x, float q, float r1, bool isOneDim, float r2) : _Q(q), correctX(x), predictX(0), correctP(0), predictP(0), IsOneDim(isOneDim){
 	_R[0] = r1;
 	_R[1] = r2;
 	_K[0] = 0;
@@ -88,8 +88,8 @@ void Kalman::CovarianceUpdate(){
 void Kalman::Gain(){
 	if(!IsOneDim){
 
-		float inv_Sk[2][2];
-		float inv_det = MathTools::TrimResolution(_Sk[0][0] *_Sk[1][1] - _Sk[0][1] *_Sk[1][0]);
+		double inv_Sk[2][2];
+		double inv_det = _Sk[0][0] *_Sk[1][1] - _Sk[0][1] *_Sk[1][0];
 		inv_Sk[0][0] = _Sk[1][1] / inv_det;
 		inv_Sk[0][1] = _Sk[0][1] / -inv_det;
 		inv_Sk[1][0] = _Sk[1][0] / -inv_det;

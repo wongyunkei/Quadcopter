@@ -10,10 +10,10 @@
 #include <Spi.h>
 #include <stm32f4xx_gpio.h>
 #include <Task.h>
-#include <Usart.h>
 #include <stm32f4xx_it.h>
 #include <Buzzer.h>
-#include <Leds.h.bak>
+#include <App.h>
+#include <UART.h>
 
 NRF905 * _mNRF905;
 
@@ -61,7 +61,7 @@ void resetNRF905Task(){
 		int txpw = NRF905::getInstance()->getTXPW();
 
 		NRF905(channel,	freq, power, rxPower, retrans, rxAddress, txAddress, rxpw, txpw, true);
-		Task::getInstance()->DeAttach(resetNRF905Task);
+		App::mApp->mTask->DeAttach(resetNRF905Task);
 	}
 }
 
@@ -71,7 +71,7 @@ void NRF905::resetNRF905(){
 	clrTrxce();
 	Spi::getInstance(RF_SPI)->resetSpi();
 	rfDelayCount = 0;
-	Task::getInstance()->Attach(10, 0, resetNRF905Task, true, -1);
+	App::mApp->mTask->Attach(10, 0, resetNRF905Task, true, -1);
 }
 
 void NRF905::setStandby(){
@@ -262,7 +262,7 @@ void EXTI_IRQHandler()
     		NRF905::getInstance()->setIsTransmiting(false);
     	}
     	else{
-    		Leds::getInstance()->Toggle(Leds::LED2);
+    		App::mApp->mLed2->Toggle();
     		if(NRF905::getInstance()->getBufferCount() + NRF905::getInstance()->getRXPW() >= 2047){
     			NRF905::getInstance()->setBufferCount(0);
     		}
