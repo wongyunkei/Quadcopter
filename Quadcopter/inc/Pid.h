@@ -35,6 +35,4 @@ namespace Math{
 	};
 };
 
-using namespace Math;
-
 #endif /* PID_H_ */

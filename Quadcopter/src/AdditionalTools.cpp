@@ -8,6 +8,8 @@
 #include <AdditionalTools.h>
 #include <stdio.h>
 
+using namespace Utility;
+
 float buffer[10][10];
 
 void AdditionalTools::setBuffer(int index, float* buf, int length){
@@ -32,3 +34,13 @@ void AdditionalTools::printfBuffer(int index, int length){
 	}
 }
 
+void AdditionalTools::printMatix(char* label, MatrixXf M,int rows, int cols){
+	printf("%s:\n", label);
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			printf("%g\t", M(i,j));
+		}
+		printf("\n");
+	}
+	printf("\n");
+}

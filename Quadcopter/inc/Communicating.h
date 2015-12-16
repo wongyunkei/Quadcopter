@@ -104,6 +104,4 @@ namespace Communication{
 	};
 };
 
-using namespace Communication;
-
 #endif /* COMMUNICATING_H_ */

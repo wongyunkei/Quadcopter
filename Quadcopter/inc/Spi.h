@@ -43,6 +43,4 @@ namespace Communication{
 	};
 };
 
-using namespace Communication;
-
 #endif /* SPI_H_ */

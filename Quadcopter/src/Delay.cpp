@@ -7,6 +7,8 @@
 
 #include <Delay.h>
 
+using namespace Time;
+
 void Delay::Simple100Delay(){
 
 	__asm__ __volatile__("MOV	R0,#40\n\t"

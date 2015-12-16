@@ -24,6 +24,4 @@ namespace System{
 	};
 };
 
-using namespace System;
-
 #endif /* CONFIGURATION_H_ */

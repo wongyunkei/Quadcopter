@@ -7,6 +7,9 @@
 
 #include <App.h>
 
+using namespace System;
+using namespace Sensors;
+
 App* App::mApp = 0;
 
 //void Sampling(){
@@ -88,12 +91,7 @@ App* App::mApp = 0;
 //	Communicating::getInstant(Communicating::COM1)->Send(4, Battery::getInstance()->getBatteryLevel());
 //}
 //
-//void Update(){
-//	MPU6050::getInstance(0)->Update();
-//	Omega::getInstance(0)->Update();
-//	Acceleration::getInstance(0)->Update();
-//	Quaternion::getInstance(0)->Update();
-//}
+
 //
 ////void CompassUpdate(){
 ////	HMC5883L::getInstance()->Update();
@@ -104,20 +102,7 @@ App* App::mApp = 0;
 ////	SE3::getInstance()->Update();
 ////}
 ////
-//void initUpdate(){
-//	MPU6050::getInstance(0)->Update();
-//	Omega::getInstance(0)->Update();
-//	Acceleration::getInstance(0)->Update();
-////	HMC5883L::getInstance()->Update();
-//}
-////
-void ReceiveTask(){
-	App::mApp->mCommunicating1->ReceivePoll();
-}
 
-void SendTask(){
-	App::mApp->mCommunicating1->SendPoll();
-}
 //
 //void ControlTask(){
 //	Controlling::getInstant()->ControllingPoll();
@@ -246,12 +231,20 @@ void SendTask(){
 ////
 
 void SonicUpdate(){
-	App::mApp->mSonic1->TriggerSet();
-	App::mApp->mSonic2->TriggerSet();
-	Delay::DelayUS(10);
-	App::mApp->mSonic1->TriggerReset();
-	App::mApp->mSonic2->TriggerReset();
-	Sonic::Reset();
+//	App::mApp->mSonic1->TriggerSet();
+//	App::mApp->mSonic2->TriggerSet();
+//	Delay::DelayUS(10);
+//	App::mApp->mSonic1->TriggerReset();
+//	App::mApp->mSonic2->TriggerReset();
+//	Sonic::Reset();
+	static bool state;
+	if(state){
+		App::mApp->mPWM->Control1(5000);
+	}
+	else{
+		App::mApp->mPWM->Control1(0);
+	}
+	state = !state;
 }
 
 void PrintSonic(){
@@ -264,24 +257,62 @@ void PrintSonic1(){
 	App::mApp->mCommunicating1->Send(0, d1);
 }
 
-void PrintSonic2(){
-	float d2 = App::mApp->mSonic2->getDeltaUS() * 0.34;
-	App::mApp->mCommunicating1->Send(1, d2);
+void InitADCUpdate(){
+//	double Volt = 4 * App::mApp->mADC->getVoltage();
+//	App::mApp->mADCKalman->Filtering(Volt);
+//	App::mApp->initVolt += App::mApp->mADCKalman->getCorrectedData();
+//	App::mApp->initVolt /= 2;
+//	App::mApp->mGPIO1->LedControl(true);
+//	Delay::DelayUS(1);
+//	App::mApp->mGPIO1->LedControl(false);
 }
 
-void PrintSonic3(){
-	float d = App::mApp->mSonic1->getDeltaUS() - App::mApp->mSonic2->getDeltaUS();
-	App::mApp->mSonicKalman->Filtering(d);
-	App::mApp->mCommunicating1->Send(0, App::mApp->mSonicKalman->getCorrectedData());
+void ADCUpdate(){
+//	double Volt = 4 * App::mApp->mADC->getVoltage();
+//	App::mApp->mADCKalman->Filtering(Volt);
+//	App::mApp->mGPIO1->LedControl(true);
+//	Delay::DelayUS(1);
+//	App::mApp->mGPIO1->LedControl(false);
 }
 
-void PrintSonic4(){
-	float d = App::mApp->mSonic1->getDeltaUS() - App::mApp->mSonic2->getDeltaUS();
-	App::mApp->mCommunicating1->Send(1, d);
+void ADCPrint(){
+//	App::mApp->mCommunicating1->Send(0, App::mApp->mADCKalman->getCorrectedData() - App::mApp->initVolt);
 }
 
-void TestPrint(){
-	App::mApp->mUART1->Print("Test\n");
+void initUpdate(){
+	App::mApp->mMPU6050->Update();
+	App::mApp->mAcceleration->Update();
+	App::mApp->mOmega->Update();
+}
+void Update(){
+	App::mApp->mMPU6050->Update();
+	App::mApp->mAcceleration->Update();
+	App::mApp->mOmega->Update();
+	App::mApp->mQuaternion->Update();
+}
+
+void ReceiveTask(){
+	App::mApp->mCommunicating1->ReceivePoll();
+}
+
+void SendTask(){
+	App::mApp->mCommunicating1->SendPoll();
+}
+
+void Output(){
+	static int index = 0;
+//	printf("%g,%g,%g\n", (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[0])),
+//			(float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[0])));//,
+//					(float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2])));
+	App::mApp->mCommunicating1->Send(index, //App::mApp->mMPU6050->getRawOmega()[index]);
+//			(float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[index])));
+			(float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])));
+	if(index == 2){
+		index = 0;
+	}
+	else{
+		index++;
+	}
 }
 
 App::App(){
@@ -294,24 +325,42 @@ App::App(){
 	mLed2 = new Led(mConfig->LedConf2);
 	mLed3 = new Led(mConfig->LedConf3);
 	mLed4 = new Led(mConfig->LedConf4);
-//	Battery* mBattery = new Battery();
+//	mGPIO1 = new Led(mConfig->GPIOConf1);
 //	Controlling* mControlling = new Controlling();
 	mUART1 = new UART(mConfig->UART1Conf1);
 	mUART1->Print("Started\n");
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
+//	mADC = new ADConverter(mConfig->ADCConf1);
+	mI2C2 = new I2C(mConfig->I2C2Con1);
+	mMPU6050 = new MPU6050(mI2C2);
+	mAcceleration = new Acceleration(mMPU6050);
+	mOmega = new Omega(mMPU6050);
+	mTask->Attach(2, 0, initUpdate, false, 500, false);
+	mTask->Run();
+	mQuaternion = new Quaternion(mAcceleration, mOmega, 0.002f);
+	mQuaternion->Reset();
+	mTask->Attach(2, 0, Update, true);
 	mTask->Attach(20, 0, ReceiveTask, true);
-	mTask->Attach(10, 1, SendTask, true);
-	mSonic1 = new Sonic(mConfig->SonicConf1);
-	mSonic2 = new Sonic(mConfig->SonicConf2);
+	mTask->Attach(10, 0, SendTask, true);
+//	mSonic1 = new Sonic(mConfig->SonicConf1);
+//	mSonic2 = new Sonic(mConfig->SonicConf2);
 	mLed1->Blink(true, 100);
-	mLed2->Blink(true, 250);
-	mLed3->Blink(true, 500);
-	mLed4->Blink(true, 1000);
+	mTask->Attach(20, 0, Output, true);
+	mTask->Run();
+//	mPWM = new PWM(mConfig->mPWMConf1);
 //	mTask->Attach(100, 0, TestPrint, true);
-	mTask->Attach(2, 0, SonicUpdate, true);
-	mTask->Attach(20, 3, PrintSonic3, true);
-	mTask->Attach(20, 13, PrintSonic4, true);
-	mSonicKalman = new Kalman(0, 0.000001, 0.001);
+
+//	App::mApp->mPWM->Control1(5000);
+//	mADCKalman = new Kalman(0, 0.000001, 0.000001);
+//	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
+//	mTask->Run();
+//	initVolt = 0;
+//	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
+//	mTask->Attach(1, 0, ADCUpdate, true);
+//	mTask->Attach(20, 0, ADCPrint, true);
+//	mTask->Attach(100, 0, SonicUpdate, true);
+//	mTask->Attach(20, 3, PrintSonic3, true);
+//	mTask->Attach(20, 13, PrintSonic4, true);
 //	mTask->Attach(100, 53, PrintSonic2, true);
 //	printf("%g\n", mBattery->getBatteryLevel());
 //
@@ -321,8 +370,6 @@ App::App(){
 //	Omega* mOmega = new Omega(0);
 ////	HMC5883L mHMC5883L(66);
 ////
-//	mTask->Attach(2, 0, initUpdate, false, 500, false);
-//	mTask->Run();
 //
 //	Quaternion* mQuaternion = new Quaternion(0, 0.002f);
 //	mQuaternion->resetQuaternion();

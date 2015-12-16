@@ -23,6 +23,4 @@ namespace Math{
 	};
 };
 
-using namespace Math;
-
 #endif /* MOVINGWINDOWAVERAGEFILTER_H_ */

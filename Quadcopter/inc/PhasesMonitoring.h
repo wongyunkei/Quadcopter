@@ -71,6 +71,4 @@ namespace Sensors{
 	};
 };
 
-using namespace Sensors;
-
 #endif /* PHASESMONITORING_H_ */

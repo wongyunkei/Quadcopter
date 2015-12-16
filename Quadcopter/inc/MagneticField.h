@@ -42,8 +42,4 @@ namespace Sensors{
 	};
 };
 
-using namespace Sensors;
-
-
-
 #endif /* MAGNETICFIELD_H_ */

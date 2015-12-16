@@ -12,6 +12,12 @@
 #include <AdditionalTools.h>
 #include <Led.h>
 
+using namespace Math;
+
+float MathTools::PI = 3.14159f;
+float MathTools::DEGREE_PER_RADIAN = 57.2958f;
+float MathTools::RADIAN_PER_DEGREE = 0.01745f;
+
 int MathTools::FloatToHalfInt(float _float){
 	union{
 		float f;

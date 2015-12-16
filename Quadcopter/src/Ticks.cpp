@@ -24,9 +24,7 @@ void SysTick_Handler(void){
 	}
 	if(App::mApp->mTask->IsPrintTaskNum){
 		if(App::mApp->mTask->hangCount++ > 10000){
-			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, 0);
-			}
+
 			App::mApp->mCommunicating1->Send(5,App::mApp->mTask->currentTaskNum);
 
 			while(App::mApp->mCommunicating1->getTxBufferCount() >= 4){

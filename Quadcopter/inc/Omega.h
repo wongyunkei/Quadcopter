@@ -8,32 +8,30 @@
 #ifndef OMEGA_H_
 #define OMEGA_H_
 
-#include <Kalman.h>
+#include <MPU6050.h>
+#include <Eigen/Eigen>
+using Eigen::Vector3f;
 
 namespace Sensors{
+	class MPU6050;
+};
+
+namespace Inertia{
 
 	class Omega{
 
 		public:
-
-			Omega(int index);
-			static Omega* getInstance(int index);
+			Omega(Sensors::MPU6050* mMPU6050);
 			void Update();
-			float getOmega(int channel);
-			void setOmega(int channel, float value);
-			float getRawOmega(int channel);
+			Vector3f getOmega();
+			void setOmega(Vector3f value);
 			bool getIsValided();
 
 		private:
+			Sensors::MPU6050* _mMPU6050;
 			bool isValided;
-			int DevIndex;
-			float _Omega[3];
-			float _RawOmega[3];
-			Kalman* OmegaKalman[3];
+			Vector3f _Omega;
 	};
 };
-
-using namespace Sensors;
-
 
 #endif /* OMEGA_H_ */

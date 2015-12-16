@@ -7,6 +7,8 @@
 
 #include <Configuration.h>
 
+using namespace System;
+
 Configuration::Configuration(uint32_t rcc, GPIO_TypeDef* port, uint16_t pin) : _rcc(rcc), _port(port), _pin(pin){
 }
 

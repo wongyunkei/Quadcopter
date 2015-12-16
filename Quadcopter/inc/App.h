@@ -10,6 +10,7 @@
 
 #include <stm32f4xx.h>
 #include <inttypes.h>
+#include <MathTools.h>
 #include <stdio.h>
 #include <Delay.h>
 #include <Config.h>
@@ -17,36 +18,28 @@
 #include <Task.h>
 #include <Led.h>
 #include <UART.h>
+#include <PWM.h>
+#include <ADConverter.h>
 #include <Sonic.h>
+#include <I2C.h>
 #include <Kalman.h>
-//#include <Battery.h>
-//#include <stm32f4xx_gpio.h>
-//#include <stm32f4xx_rcc.h>
-//#include <stm32f4xx_usart.h>
-//#include <stdlib.h>
-//#include <string.h>
+#include <MPU6050.h>
+#include <Acceleration.h>
+#include <Omega.h>
+#include <Quaternion.h>
 
-//#include <I2C.h>
-//#include <MPU6050.h>
-//#include <Controlling.h>
-//#include <Acceleration.h>
-//#include <Omega.h>
-//#include <Quaternion.h>
-//#include <MathTools.h>
-//#include <AdditionalTools.h>
-////#include <Vector.h>
-//#include <Communicating.h>
-////#include <NRF905.h>
-////#include <stm32f4xx_dma.h>
-//#include <Battery.h>
-////#include <PWM.h>
-////#include <PhasesMonitoring.h>
-////#include <stm32f4xx_it.h>
-////#include <Buzzer.h>
-////#include <PX4FLOW.h>
-////#include <SE3.h>
-////#include <Kalman.h>
-////#include <HMC5883L.h>
+using namespace Time;
+using namespace Math;
+using namespace Sensors;
+using namespace Inertia;
+
+namespace Sensors{
+	class MPU6050;
+};
+
+namespace Inertia{
+	class Acceleration;
+};
 
 namespace System{
 	class App{
@@ -59,6 +52,7 @@ namespace System{
 			Led* mLed2;
 			Led* mLed3;
 			Led* mLed4;
+			Led* mGPIO1;
 			UART* mUART1;
 			UART* mUART3;
 			UART* mUART4;
@@ -67,16 +61,23 @@ namespace System{
 			Communicating* mCommunicating2;
 			Communicating* mCommunicating3;
 			Communicating* mCommunicating4;
+			PWM* mPWM;
+			ADConverter* mADC;
 			Sonic* mSonic1;
 			Sonic* mSonic2;
 			Sonic* mSonic3;
 			Sonic* mSonic4;
-			Kalman* mSonicKalman;
+			Kalman* mADCKalman;
+			I2C* mI2C1;
+			I2C* mI2C2;
+			MPU6050* mMPU6050;
+			Acceleration* mAcceleration;
+			Omega* mOmega;
+			Quaternion* mQuaternion;
 			App();
+			double initVolt;
 		private:
 	};
 };
-
-using namespace System;
 
 #endif /* APP_H_ */

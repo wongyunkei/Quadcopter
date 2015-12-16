@@ -37,6 +37,4 @@ namespace Sensors{
 	};
 };
 
-using namespace Sensors;
-
 #endif /* PX4FLOW_H_ */

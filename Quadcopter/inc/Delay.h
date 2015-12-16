@@ -25,6 +25,4 @@ namespace Time{
 	};
 };
 
-using namespace Time;
-
 #endif /* DELAY_H_ */

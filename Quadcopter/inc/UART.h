@@ -12,6 +12,8 @@
 #include <stm32f4xx_usart.h>
 #include <Configuration.h>
 
+using namespace System;
+
 namespace Communication{
 
 	class UART{
@@ -54,7 +56,5 @@ namespace Communication{
 			int BufferCount;
 	};
 };
-
-using namespace Communication;
 
 #endif /* UART_H_ */

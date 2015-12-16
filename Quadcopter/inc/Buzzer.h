@@ -31,6 +31,4 @@ namespace Debug{
 	};
 };
 
-using namespace Debug;
-
 #endif /* BUZZER_H_ */

@@ -10,6 +10,8 @@
 
 #include <Kalman.h>
 
+using namespace Math;
+
 namespace Sensors{
 
 	class HMC5883L{
@@ -67,7 +69,5 @@ namespace Sensors{
 			Kalman* CompassKalman;
 	};
 };
-
-using namespace Sensors;
 
 #endif /*  MPU6050_H_ */

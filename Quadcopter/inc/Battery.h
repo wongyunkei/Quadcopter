@@ -22,6 +22,4 @@ namespace Debug{
 	};
 };
 
-using namespace Debug;
-
 #endif /* BATTERY_H_ */

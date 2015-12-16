@@ -8,66 +8,54 @@
 #ifndef QUATERNION_H_
 #define QUATERNION_H_
 
-#include <AdaptiveKalman.h>
-#include <UKF.h>
-#include <Pid.h>
+#include <Kalman.h>
+#include <Omega.h>
+#include <Acceleration.h>
+#include <AdditionalTools.h>
+#include <Eigen/Eigen>
+using Eigen::Matrix3f;
+using Eigen::Matrix4f;
+using Eigen::Vector3f;
+using Eigen::Vector4f;
+
+using namespace Inertia;
+
+namespace Inertia{
+	class Omega;
+};
+
+namespace Inertia{
+	class Acceleration;
+};
 
 namespace Math{
 
 	class Quaternion{
 
 		public:
-			Quaternion(int index, float interval);
-			static Quaternion* getInstance(int index);
-			void Update();
-			float getEuler(int);
-			void setEuler(int, float);
-			float* getQuaternion();
-			void getQuaternionConjugate(float*,float*);
-			void resetQuaternion();
-			Matrix3f getRotationMatrix();
-			Matrix3f getPrevRotationMatrix();
-			Matrix3f getDeltaRotationMatrix();
-			float getInitAngles(int index);
-			Kalman* getKalman(int index);
-			float getTheater();
-			float temp1;
-			float temp2;
-			float temp3;
-
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval);
+			bool Update();
+			Vector3f getEuler();
+			void Reset();
 
 		private:
-
+			Acceleration* _mAcceleration;
+			Omega* _mOmega;
 			float Interval;
-			int DevIndex;
-			float _Quaternion[4];
-//			Kalman* _EulerKalman[3];
-			AdaptiveKalman* _EulerKalman[3];
-			UKF* _EulerUKF;
-			float _Euler[3];
-			float InitAngles[2];
-			float Acc[3];
-			float Angle[2];
-			float prevAngle[2];
-			bool prevValid;
+			Vector3f _Euler;
+			Vector4f _Quaternion;
+			Kalman* _QuaternionKalman;
+
 			bool Valid;
-			Pid* DriftCorrectionPid[3];
-			Matrix3f prevR;
-			Matrix3f deltaR;
-			void Normalization(float*, float*);
-			void QuaternionMultiplication(float*, float*,  float*);
-			void EulerToQuaternion(float*, float*);
-			void QuaternionToEuler(float*, float*);
-			Matrix3f QuaternionToMatrix(float* quaternion);
-			Matrix3f EulerToMatrix(float* euler);
-			void MatrixToEuler(Matrix3f m, float* euler);
-			void MatrixToQuaternion(Matrix3f m, float* quaternion);
-			void MatrixToFixedAngles(Matrix3f m, float* fixedAngles);
-			void FixedAnglesToQuaternion(float* fixedAngles, float* quaternion);
-			void resetQuaternionTask();
+			Vector3f QuaternionToEuler(Vector4f q);
+			Matrix3f QuaternionToMatrix(Vector4f q);
+			Vector4f EulerToQuaternion(Vector3f euler);
+			Matrix3f EulerToMatrix(Vector3f euler);
+			Vector4f FixedAnglesToQuaternion(Vector3f fixedAngles);
+			Vector3f MatrixToFixedAngles(Matrix3f R);
+			Matrix4f calcStateTransMatrix(Vector3f w, float t);
+			Eigen::Matrix<float, 3, 4> calcQuatToEulerMeasMatrix(Vector4f q);
 	};
 };
-
-using namespace Math;
 
 #endif /* QUATERNION_H_ */

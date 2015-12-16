@@ -9,6 +9,9 @@
 #define ADDITIONALTOOLS_H_
 
 #include <inttypes.h>
+#include <Eigen/Eigen>
+using Eigen::MatrixXf;
+using Eigen::VectorXf;
 
 #define _BV(X)					(1L << X)
 #define MSB(X)					((X & 0xff00) >> 8)
@@ -20,10 +23,9 @@ namespace Utility{
 			static void setBuffer(int index, float* buf, int length);
 			static float* getBuffer(int index);
 			static void printfBuffer(int index, int length);
+			static void printMatix(char* label, MatrixXf M,int rows, int cols);
 		private:
 	};
 };
-
-using namespace Utility;
 
 #endif /* ADDITIONALTOOLS_H_ */

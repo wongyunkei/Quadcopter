@@ -22,6 +22,4 @@ namespace Math{
     };
 };
 
-using namespace Math;
-
 #endif /* MATHALGORITHM_H_ */

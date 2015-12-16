@@ -38,6 +38,4 @@ namespace Time{
 	};
 };
 
-using namespace Time;
-
 #endif /* TICKS_H_ */

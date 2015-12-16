@@ -16,9 +16,9 @@ namespace Math{
 
 		public:
 
-			#define PI 3.14159f
-			#define DEGREE_PER_RADIAN 57.2958f
-			#define RADIAN_PER_DEGREE 0.01745f
+			static float PI;
+			static float DEGREE_PER_RADIAN;
+			static float RADIAN_PER_DEGREE;
 			static float Sqrt(float);
 			static float Sign(float);
 			static float DegreeToRadian(float);
@@ -37,7 +37,5 @@ namespace Math{
 
 	};
 };
-
-using namespace Math;
 
 #endif /* MATHTOOLS_H_ */

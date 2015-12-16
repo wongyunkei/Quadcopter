@@ -13,6 +13,8 @@
 #include <Acceleration.h>
 #include <Fuzzy.h>
 
+using namespace Math;
+
 namespace Control{
 
 	class Controlling{
@@ -111,7 +113,5 @@ namespace Control{
 
 	};
 };
-
-using namespace Control;
 
 #endif /* CONTROLLING_H_ */

@@ -7,127 +7,86 @@
 
 #include <Kalman.h>
 #include <stdio.h>
-#include <MathTools.h>
 
-Kalman::Kalman(float x, float q, float r1, bool isOneDim, float r2) : _Q(q), correctX(x), predictX(0), correctP(0), predictP(0), IsOneDim(isOneDim){
-	_R[0] = r1;
-	_R[1] = r2;
-	_K[0] = 0;
-	_K[1] = 0;
-	_yk[0] = 0;
-	_yk[1] = 0;
-	_Sk[0][0] = 0;
-	_Sk[0][1] = 0;
-	_Sk[1][0] = 0;
-	_Sk[1][1] = 0;
+using namespace Math;
+using namespace Utility;
+
+Kalman::Kalman(VectorXf X, MatrixXf Q, MatrixXf R) : predictX(X), correctX(X), _Q(Q), _R(R){
+	correctP = Q;
+	correctP.setIdentity();
+	correctP *= 0.000000000001f;
+	predictP = Q;
+	predictP.setIdentity();
+	predictP *= 0.000000000001f;
 }
 
-void Kalman::setCorrectedData(float data){
+void Kalman::setCorrectedData(VectorXf data){
 	correctX = data;
 }
-float Kalman::getCorrectedData(){
+
+VectorXf Kalman::getCorrectedData(){
 	return correctX;
 }
 
-bool Kalman::getIsOneDim(){
-	return IsOneDim;
-}
-
-void Kalman::setIsOneDim(bool value){
-	IsOneDim = value;
-}
-
-void Kalman::Filtering(float data1, float data2){
-
-	StatePredict();
-	CovariancePredict();
-	MeasurementResidual(data1, data2);
-	MeasurementResidualCovariance();
-	Gain();
-	StateUpdate();
-	CovarianceUpdate();
-}
-
-void Kalman::MeasurementResidual(float Z1, float Z2){
-	_yk[0] = Z1 - predictX;
-	if(!IsOneDim){
-		_yk[1] = Z2 - predictX;
+bool Kalman::Filtering(MatrixXf A, VectorXf X, MatrixXf H, VectorXf Z){
+	StatePredict(A, X);
+	CovariancePredict(A);
+	if(!Gain(H)){
+		return false;
 	}
-}
-void Kalman::MeasurementResidualCovariance(){
-	_Sk[0][0] = predictP + _R[0];
-	if(!IsOneDim){
-		_Sk[0][1] = _Sk[1][0] = predictP;
-		_Sk[1][1] = predictP + _R[1];
-	}
-}
-void Kalman::StatePredict(){
-	predictX = correctX;
-}
-void Kalman::CovariancePredict(){
-	predictP = correctP + _Q;
-}
-void Kalman::StateUpdate(){
-
-	if(!IsOneDim){
-		correctX = predictX + _K[0] * _yk[0] + _K[1] * _yk[1];
-	}
-	else{
-		correctX = predictX + _K[0] * _yk[0];
-	}
-}
-void Kalman::CovarianceUpdate(){
-
-	if(!IsOneDim){
-		correctP = (1 - _K[0] + _K[1]) * predictP;
-	}
-	else{
-		correctP = (1 - _K[0]) * predictP;
-	}
-}
-void Kalman::Gain(){
-	if(!IsOneDim){
-
-		double inv_Sk[2][2];
-		double inv_det = _Sk[0][0] *_Sk[1][1] - _Sk[0][1] *_Sk[1][0];
-		inv_Sk[0][0] = _Sk[1][1] / inv_det;
-		inv_Sk[0][1] = _Sk[0][1] / -inv_det;
-		inv_Sk[1][0] = _Sk[1][0] / -inv_det;
-		inv_Sk[1][1] = _Sk[0][0] / inv_det;
-		_K[0] = predictP * inv_Sk[0][0] + predictP * inv_Sk[1][0];
-		_K[1] = predictP * inv_Sk[0][1] + predictP * inv_Sk[1][1];
-	}
-	else{
-		double inv_Sk = 1.0 / _Sk[0][0];
-		_K[0] = predictP * inv_Sk;
-	}
+	StateUpdate(Z, H);
+	CovarianceUpdate(H);
+	return true;
 }
 
-void Kalman::Clear(float x){
-	predictX = correctX = x;
-	predictP = correctP = 0.0;
+void Kalman::StatePredict(MatrixXf A, VectorXf X){
+	predictX = A * X;
 }
 
-float Kalman::getQ(){
+void Kalman::CovariancePredict(MatrixXf A){
+	predictP = A * correctP * A.transpose() + _Q;
+}
+
+void Kalman::StateUpdate(VectorXf Z, MatrixXf H){
+	correctX = predictX + _K * (Z - H * predictX);
+}
+
+void Kalman::CovarianceUpdate(MatrixXf H){
+	correctP = predictP - _K * H * predictP;
+}
+
+bool Kalman::Gain(MatrixXf H){
+	MatrixXf M = H * predictP * H.transpose() + _R;
+	MatrixXf invM = M.inverse();
+	float sum = invM.sum();
+	if(sum != sum){
+		return false;
+	}
+	_K = predictP * H.transpose() * invM;
+	return true;
+
+}
+
+void Kalman::Clear(VectorXf X){
+	predictX = correctX = X;
+	predictP.setIdentity();
+	predictP *= 0.000000000001f;
+	correctP.setIdentity();
+	correctP *= 0.000000000001f;
+}
+
+MatrixXf Kalman::getQ(){
 	return _Q;
 }
 
-void Kalman::setQ(float q){
-	_Q = q;
+void Kalman::setQ(MatrixXf Q){
+	_Q = Q;
 }
 
-float Kalman::getR1(){
-	return _R[0];
+MatrixXf Kalman::getR(){
+	return _R;
 }
 
-void Kalman::setR1(float r1){
-	_R[0] = r1;
-}
-
-float Kalman::getR2(){
-	return _R[1];
-}
-
-void Kalman::setR2(float r2){
-	_R[1] = r2;
+void Kalman::setR(MatrixXf R){
+	_R = R;
 }

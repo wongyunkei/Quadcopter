@@ -8,43 +8,34 @@
 #ifndef ACCELERATION_H_
 #define ACCELERATION_H_
 
-#include <Kalman.h>
+#include <MPU6050.h>
+#include <MathTools.h>
 #include <MovingWindowAverageFilter.h>
-#include <Vector.h>
+#include <Eigen/Eigen>
+using Eigen::Vector3f;
 
 namespace Sensors{
+	class MPU6050;
+};
+
+namespace Inertia{
 
 	class Acceleration{
 
 		public:
-
-			#define GRAVITY		9.80665f
-
-			Acceleration(int index);
-			static Acceleration* getInstance(int index);
+			static float Gravity;
+			Acceleration(Sensors::MPU6050* mMPU6050);
 			void Update();
-			float getAcc(int channel);
-			float getVel(int channel);
-			float getPos(int channel);
-			void setAcc(int channel, float value);
-			float getRawAcc(int channel);
-			float getAngle(int channel);
-			float getFilteredAngle(int channel);
-			MovingWindowAverageFilter* getMovingAverageFilter(int channel);
+			Vector3f getAcc();
+			void setAcc(Vector3f value);
+			Vector3f getAngle();
 			bool getIsValided();
 
 		private:
+			Sensors::MPU6050* _mMPU6050;
 			bool isValided;
-			int DevIndex;
-			float Acc[3];
-			float Pos[3];
-			float Vel[3];
-			float RawAcc[3];
-			Kalman* AccKalman[3];
-			MovingWindowAverageFilter* accMovingAverage[3];
+			Vector3f Acc;
 	};
 };
-
-using namespace Sensors;
 
 #endif /* ACCELERATION_H_ */

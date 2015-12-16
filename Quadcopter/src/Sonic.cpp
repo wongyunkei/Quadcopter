@@ -14,6 +14,8 @@
 #include <App.h>
 #include <stdio.h>
 
+using namespace Sensors;
+
 Sonic::SonicConfiguration::SonicConfiguration(Configuration* trigger, Configuration* echo, uint8_t echoSource) : _trigger(trigger), _echo(echo), _echoSource(echoSource){
 }
 

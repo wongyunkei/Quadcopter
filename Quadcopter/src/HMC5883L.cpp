@@ -53,11 +53,11 @@ void HMC5883L::FastInitialization(){
 //		}
 //	}
 	App::mApp->mTicks->setTimeout(3);
-	while(!I2C::getInstance(HMC5883L_I2C)->Write(ADDRESS,MODE_REG,0x00)){
-		if(App::mApp->mTicks->Timeout()){
-			return;
-		}
-	}
+//	while(!I2C::getInstance(HMC5883L_I2C)->Write(ADDRESS,MODE_REG,0x00)){
+//		if(App::mApp->mTicks->Timeout()){
+//			return;
+//		}
+//	}
 
 //	MPU6050::getInstance()->setI2CBypass(false);
 //	Update();
@@ -98,11 +98,11 @@ bool HMC5883L::Update(){
 	int16_t temp;
 
 //	MPU6050::getInstance()->setI2CBypass(true);
-	if(!I2C::getInstance(HMC5883L_I2C)->BurstRead(ADDRESS, DATA_OUT_X_MSB, 6, data)){
-		FastInitialization();
-		isValided = false;
-		return false;
-	}
+//	if(!I2C::getInstance(HMC5883L_I2C)->BurstRead(ADDRESS, DATA_OUT_X_MSB, 6, data)){
+//		FastInitialization();
+//		isValided = false;
+//		return false;
+//	}
 
 	for(int i = 0; i < 6; i += 2){
 		int j = i / 2;

@@ -15,7 +15,6 @@
 #include <Pid.h>
 #include <PWM.h>
 #include <Omega.h>
-#include <Vector.h>
 #include <Task.h>
 #include <Battery.h>
 #include <Acceleration.h>
@@ -23,13 +22,13 @@
 #include <PhasesMonitoring.h>
 #include <Buzzer.h>
 #include <Fuzzy.h>
-#include <SE3.h>
 #include <Eigen/Eigen>
 #include <Delay.h>
 #include <Led.h>
 
 using Eigen::Vector3f;
 
+using namespace Math;
 Controlling* _mControlling;
 
 Controlling* Controlling::getInstant(){
@@ -45,7 +44,7 @@ void StartingTask(){
 		if(startCount == 0){
 			for(int i = 0; i < 4; i++){
 //				GPIO_WriteBit(GPIOC, GPIO_Pin_0, Bit_RESET);
-				PWM::getInstant()->Control(i, INIT_PWM);
+//				PWM::getInstant()->Control(i, INIT_PWM);
 //				Controlling::getInstant()->setLift(0);
 //				Controlling::getInstant()->setTarget(3, 0.6f);
 //				PWM::getInstant()->Control(i, Controlling::getInstant()->RPM2PWM(i, INIT_RPM));
@@ -100,7 +99,7 @@ void StoppingTask(){
 		else{
 			StoppingDelayCount = 0;
 			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, 0);
+//				PWM::getInstant()->Control(i, 0);
 			}
 			Controlling::getInstant()->setStart(false);
 			Pid::getInstance(0)->clear();
@@ -130,7 +129,7 @@ void StoppingTask(){
 
 Controlling::Controlling() : minLift(MIN_LIFT), maxLift(MAX_LIFT), initRPM(INIT_RPM), preFzPWM(0), XYPidDelayCount(0), HightPidDelayCount(0), started(false), starting(false), stopping(false), watchDogCount(0), initPWM(INIT_PWM), FzPWM(0), cosRollcosPitch(1), Lift(7000.0f){
 	_mControlling = this;
-	ControlPWM = new PWM();
+//	ControlPWM = new PWM();
 	target[0] = 0.0f;
 	target[1] = 0.0f;
 	target[2] = 0.0f;
@@ -246,7 +245,7 @@ float Controlling::getMotorTarget(int index){
 
 void Controlling::MotorControl(int index, float value){
 	float rpm = value + MotorPid[index]->pid(value, PhasesMonitoring::getInstance()->getRPM(index));
-	PWM::getInstant()->Control(index, RPM2PWM(index, rpm));
+//	PWM::getInstant()->Control(index, RPM2PWM(index, rpm));
 }
 
 float Controlling::RPM2PWM(int index, float rpm){
@@ -302,11 +301,11 @@ void Controlling::ControllingPoll(){
 //			errXY[1] = XYPid[1]->pid(0.0f, SE3::getInstance()->getPos()(1));
 //		}
 
-		errRPY[0] = RPYPid[0]->pid(MathTools::DegreeToRadian(target[0] + RPYOffset[0]), Quaternion::getInstance(0)->getEuler(0)) - Quaternion::getInstance(0)->getInitAngles(0) + D_RPYPid[0]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(0)));
-		errRPY[1] = RPYPid[1]->pid(MathTools::DegreeToRadian(target[1] + RPYOffset[1]), Quaternion::getInstance(0)->getEuler(1)) - Quaternion::getInstance(0)->getInitAngles(1) + D_RPYPid[1]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(1)));
-		errRPY[2] = RPYPid[2]->pid(MathTools::DegreeToRadian(target[2] + RPYOffset[2]), Quaternion::getInstance(0)->getEuler(2)) + D_RPYPid[2]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(2)));
-
-		cosRollcosPitch = cosf(Quaternion::getInstance(0)->getEuler(0)) * cosf(Quaternion::getInstance(0)->getEuler(1));
+//		errRPY[0] = RPYPid[0]->pid(MathTools::DegreeToRadian(target[0] + RPYOffset[0]), Quaternion::getInstance(0)->getEuler(0)) - Quaternion::getInstance(0)->getInitAngles(0) + D_RPYPid[0]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(0)));
+//		errRPY[1] = RPYPid[1]->pid(MathTools::DegreeToRadian(target[1] + RPYOffset[1]), Quaternion::getInstance(0)->getEuler(1)) - Quaternion::getInstance(0)->getInitAngles(1) + D_RPYPid[1]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(1)));
+//		errRPY[2] = RPYPid[2]->pid(MathTools::DegreeToRadian(target[2] + RPYOffset[2]), Quaternion::getInstance(0)->getEuler(2)) + D_RPYPid[2]->pid(0, MathTools::DegreeToRadian(Omega::getInstance(0)->getOmega(2)));
+//
+//		cosRollcosPitch = cosf(Quaternion::getInstance(0)->getEuler(0)) * cosf(Quaternion::getInstance(0)->getEuler(1));
 
 //		if(HightPidDelayCount++ % 50 == 0){
 //			HightPidDelayCount = 0;
@@ -332,22 +331,22 @@ void Controlling::ControllingPoll(){
 		MotorTarget[3] = Lift / cosRollcosPitch + errRPY[0] - errRPY[1] - errRPY[2];// + errXY[0] - errXY[1];
 
 		for(int i = 0; i < 4; i++){
-			PWM::getInstant()->Control(i, MotorTarget[i]);
+//			PWM::getInstant()->Control(i, MotorTarget[i]);
 			//MotorControl(i, MotorTarget[i]);
 		}
 	}
 
-	if(watchDogCount >= WATCHDOGCOUNT_LIMIT ||
-			fabsf(target[0] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 10.0f + fabs(RPYOffset[0]) ||
-			fabsf(target[1] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 10.0f + fabs(RPYOffset[1])){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
-//	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
-
-		if(started){
-//			Buzzer::getInstance()->Frequency(10, 100, true);
-			Stopping();
-
-		}
-	}
+//	if(watchDogCount >= WATCHDOGCOUNT_LIMIT ||
+////			fabsf(target[0] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)/* - Quaternion::getInstance()->getInitAngles(0)*/)) > 10.0f + fabs(RPYOffset[0]) ||
+////			fabsf(target[1] - MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)/* - Quaternion::getInstance()->getInitAngles(1)*/)) > 10.0f + fabs(RPYOffset[1])){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+////	if(watchDogCount >= WATCHDOGCOUNT_LIMIT || fabsf(target[0] + RPYOffset[0] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(0))) > 15.0f || fabsf(target[1] + RPYOffset[1] - MathTools::RadianToDegree(Quaternion::getInstance()->getEuler(1))) > 15){// || ((Sonic::getInstance()->getDistance() - 1.2) > 0)){
+//
+//		if(started){
+////			Buzzer::getInstance()->Frequency(10, 100, true);
+//			Stopping();
+//
+//		}
+//	}
 }
 
 void Controlling::Starting(){
@@ -360,7 +359,7 @@ void Controlling::Starting(){
 		}
 		else{
 			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, 0);
+//				PWM::getInstant()->Control(i, 0);
 			}
 			startCount = 0;
 			started = false;

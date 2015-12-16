@@ -8,8 +8,9 @@
 #ifndef SONIC_H_
 #define SONIC_H_
 
-#include <Kalman.h>
 #include <Configuration.h>
+
+using namespace System;
 
 namespace Sensors{
 	class Sonic{
@@ -36,7 +37,5 @@ namespace Sensors{
 			SonicConfiguration* Conf;
 	};
 };
-
-using namespace Sensors;
 
 #endif /* SONIC_H_ */

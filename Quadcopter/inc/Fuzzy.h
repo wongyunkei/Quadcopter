@@ -33,7 +33,4 @@ namespace Math{
 	};
 };
 
-using namespace Math;
-
-
 #endif /* FUZZY_H_ */

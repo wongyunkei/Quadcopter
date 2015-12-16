@@ -13,6 +13,8 @@
 #include <stm32f4xx_gpio.h>
 #include <Configuration.h>
 
+using namespace System;
+
 namespace Debug{
 
 	class Led{
@@ -34,7 +36,5 @@ namespace Debug{
 			LedConfiguration* Conf;
 	};
 };
-
-using namespace Debug;
 
 #endif /* LED_H_ */

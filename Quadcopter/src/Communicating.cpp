@@ -16,13 +16,16 @@
 #include <MathTools.h>
 #include <Task.h>
 #include <inttypes.h>
-#include <SE3.h>
 #include <Delay.h>
 #include <Led.h>
 #include <NRF905.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <MPU6050.h>
+
+using namespace Communication;
+using namespace Math;
+using namespace Control;
 
 Communicating::Com::Com(Interface interface, uint32_t addr) : _interface(interface){
 	switch(interface){
@@ -150,7 +153,7 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::POWER:
 			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, data);
+//				PWM::getInstant()->Control(i, data);
 			}
 			Send(4, data);
 			break;
@@ -203,9 +206,9 @@ void Communicating::Execute(int cmd, float data){
 			Controlling::getInstant()->setStarting(false);
 			Controlling::getInstant()->setStopping(false);
 			for(int i = 0; i < 4; i++){
-				PWM::getInstant()->Control(i, 0);
+//				PWM::getInstant()->Control(i, 0);
 			}
-			Quaternion::getInstance(0)->resetQuaternion();
+//			Quaternion::getInstance(0)->resetQuaternion();
 //			PX4FLOW::getInstance()->reset();
 //			SE3::getInstance()->reset();
 			Controlling::getInstant()->setTarget(0, 0);

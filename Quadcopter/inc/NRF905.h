@@ -151,6 +151,4 @@ namespace Communication{
 	};
 };
 
-using namespace Communication;
-
 #endif /* NRF905_H_ */

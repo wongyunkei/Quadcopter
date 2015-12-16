@@ -161,6 +161,4 @@ namespace Sensors{
 	};
 };
 
-using namespace Sensors;
-
 #endif /*  MPU6050_H_ */

@@ -44,6 +44,4 @@ namespace Time{
 	};
 };
 
-using namespace Time;
-
 #endif /* TASK_H_ */
