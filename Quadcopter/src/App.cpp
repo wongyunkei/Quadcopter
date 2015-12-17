@@ -267,16 +267,23 @@ void InitADCUpdate(){
 //	App::mApp->mGPIO1->LedControl(false);
 }
 
-void ADCUpdate(){
-//	double Volt = 4 * App::mApp->mADC->getVoltage();
-//	App::mApp->mADCKalman->Filtering(Volt);
-//	App::mApp->mGPIO1->LedControl(true);
-//	Delay::DelayUS(1);
-//	App::mApp->mGPIO1->LedControl(false);
+void Discharging(){
+	static Eigen::Matrix<float, 1, 1> prevX;
+	Eigen::Matrix<float, 1, 1> A;
+	A << 4.0f;
+	Eigen::Matrix<float, 1, 1> H;
+	H << 0.25f;
+	Eigen::Matrix<float, 1, 1> X;
+	X << App::mApp->mADC->getVoltage();
+	App::mApp->mADCKalman->Filtering(A, prevX, H, X);
+	prevX = X;
+	App::mApp->mGPIO1->LedControl(true);
+	Delay::DelayUS(1000);
+	App::mApp->mGPIO1->LedControl(false);
 }
 
 void ADCPrint(){
-//	App::mApp->mCommunicating1->Send(0, App::mApp->mADCKalman->getCorrectedData() - App::mApp->initVolt);
+	App::mApp->mCommunicating1->Send(0, App::mApp->mADCKalman->getCorrectedData()[0]);
 }
 
 void initUpdate(){
@@ -301,17 +308,24 @@ void SendTask(){
 
 void Output(){
 	static int index = 0;
-//	printf("%g,%g,%g\n", (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[0])),
-//			(float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[0])));//,
-//					(float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2])));
-	App::mApp->mCommunicating1->Send(index, //App::mApp->mMPU6050->getRawOmega()[index]);
+	App::mApp->mCommunicating1->Send(index, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])));
 //			(float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[index])));
-			(float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])));
 	if(index == 2){
 		index = 0;
 	}
 	else{
 		index++;
+	}
+}
+void Output1(){
+	static int index = 0;
+	if(index == 0){
+		App::mApp->mCommunicating1->Send(0, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[1])));
+		index = 1;
+	}
+	else if(index == 1){
+		App::mApp->mCommunicating1->Send(1, (float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[1])));
+		index = 0;
 	}
 }
 
@@ -326,7 +340,6 @@ App::App(){
 	mLed3 = new Led(mConfig->LedConf3);
 	mLed4 = new Led(mConfig->LedConf4);
 //	mGPIO1 = new Led(mConfig->GPIOConf1);
-//	Controlling* mControlling = new Controlling();
 	mUART1 = new UART(mConfig->UART1Conf1);
 	mUART1->Print("Started\n");
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
@@ -348,16 +361,21 @@ App::App(){
 	mTask->Attach(20, 0, Output, true);
 	mTask->Run();
 //	mPWM = new PWM(mConfig->mPWMConf1);
-//	mTask->Attach(100, 0, TestPrint, true);
-
 //	App::mApp->mPWM->Control1(5000);
-//	mADCKalman = new Kalman(0, 0.000001, 0.000001);
 //	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
 //	mTask->Run();
 //	initVolt = 0;
 //	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
-//	mTask->Attach(1, 0, ADCUpdate, true);
-//	mTask->Attach(20, 0, ADCPrint, true);
+//	mTask->Attach(1, 0, Discharging, true);
+//	mTask->Attach(20, 3, ADCPrint, true);
+//	Eigen::Matrix<float, 1, 1> d;
+//	d << 0.0f;
+//	Eigen::Matrix<float, 1, 1> Q;
+//	Q << 0.000001f;
+//	Eigen::Matrix<float, 1, 1> R;
+//	R << 0.0001f;
+//	mADCKalman = new Kalman(d, Q, R);
+
 //	mTask->Attach(100, 0, SonicUpdate, true);
 //	mTask->Attach(20, 3, PrintSonic3, true);
 //	mTask->Attach(20, 13, PrintSonic4, true);
@@ -397,7 +415,7 @@ App::App(){
 //	mTask->Attach(500, 23, printParams, true);
 ////	mTask->Attach(1000, 110, PrintBattery, true);
 ////	mTask->Attach(10, 0, Sampling, true);
-	mTask->Run();
+//	mTask->Run();
 }
 
 void HardFault_Handler(){

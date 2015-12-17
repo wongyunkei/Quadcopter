@@ -27,6 +27,7 @@
 #include <Acceleration.h>
 #include <Omega.h>
 #include <Quaternion.h>
+#include <Eigen/Eigen>
 
 using namespace Time;
 using namespace Math;

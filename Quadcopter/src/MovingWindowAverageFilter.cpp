@@ -6,7 +6,7 @@
  */
 
 #include <MovingWindowAverageFilter.h>
-#include <stdio.h>
+using namespace Math;
 
 MovingWindowAverageFilter::MovingWindowAverageFilter(int windowSize) : WindowSize(windowSize), bufferCount(0){
 	buffer = new float[windowSize]{};
