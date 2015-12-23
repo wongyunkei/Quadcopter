@@ -147,6 +147,7 @@ namespace Sensors{
 			void setRawOmegaOffset(Vector3f value);
 			Vector3f getRawOmegaOffset();
 			bool getIsValided();
+			Communication::I2C* i2cx;
 
 		private:
 
@@ -158,7 +159,6 @@ namespace Sensors{
 			static float RawAccNegZ;
 
 			bool isValided;
-			Communication::I2C* i2cx;
 			Vector3f RawAcc;
 			Vector3f RawAccOffset;
 			Vector3f RawAccScale;

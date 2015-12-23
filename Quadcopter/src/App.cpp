@@ -9,281 +9,12 @@
 
 using namespace System;
 using namespace Sensors;
+using namespace Utility;
 
 App* App::mApp = 0;
 
-//void Sampling(){
-//	Usart::getInstance(USART1)->Print("%g,%g,%g\n", MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)),
-//			MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)),
-//			MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(2)));
-//}
-//
-//void printParams(){
-////	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[0]);
-//	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[1]);
-////	Communicating::getInstant(Communicating::COM1)->Send(4, AdditionalTools::getBuffer(0)[2]);
-////	printf("m: ");
-////	AdditionalTools::printfBuffer(0, 3);
-////	printf("acc: ");
-////	AdditionalTools::printfBuffer(1, 3);
-//}
-//
-//void Output(){
-//
-////	printf("%g,%g,%g\n", Omega::getInstance(0)->getOmega(0),
-////			Omega::getInstance(0)->getOmega(1),
-////			Omega::getInstance(0)->getOmega(2));
-//
-//
-//	switch(Communicating::getInstant(Communicating::COM1)->getPrintType()){
-//		case 0:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)(MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(0)) + Controlling::getInstant()->getRPYOffset(0)));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)(MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(1)) + Controlling::getInstant()->getRPYOffset(1)));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, (float)(MathTools::RadianToDegree(Quaternion::getInstance(0)->getEuler(2)) + Controlling::getInstant()->getRPYOffset(2)));
-//			break;
-//		case 1:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, Controlling::getInstant()->getMotorTarget(0));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, Controlling::getInstant()->getMotorTarget(1));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, Controlling::getInstant()->getMotorTarget(2));
-//			Communicating::getInstant(Communicating::COM1)->Send(3, Controlling::getInstant()->getMotorTarget(3));
-//			break;
-//		case 2:
-////			Communicating::getInstant(Communicating::COM1)->Send(8, (float)HMC5883L::getInstance(0)->getRawMagneticField(0));
-////			Communicating::getInstant(Communicating::COM1)->Send(9, (float)HMC5883L::getInstance(0)->getRawMagneticField(1));
-////			Communicating::getInstant(Communicating::COM1)->Send(10, (float)HMC5883L::getInstance(0)->getRawMagneticField(2));
-//			break;
-//		case 3:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)Acceleration::getInstance(0)->getAcc(0));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)Acceleration::getInstance(0)->getAcc(1));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, (float)Acceleration::getInstance(0)->getAcc(2));
-//			break;
-//		case 4:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)Omega::getInstance(0)->getOmega(0));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)Omega::getInstance(0)->getOmega(1));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, (float)Omega::getInstance(0)->getOmega(2));
-//			break;
-//		case 5:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, MPU6050::getInstance(0)->getRawAcc(0));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, MPU6050::getInstance(0)->getRawAcc(1));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, MPU6050::getInstance(0)->getRawAcc(2));
-//			break;
-//		case 6:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)Controlling::getInstant()->getErrRPY(0));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)Controlling::getInstant()->getErrRPY(1));
-//			Communicating::getInstant(Communicating::COM1)->Send(2, (float)Controlling::getInstant()->getErrRPY(2));
-//			break;
-//		case 7:
-//			Communicating::getInstant(Communicating::COM1)->Send(4, (float)Controlling::getInstant()->watchDogCount);
-//			break;
-//		case 8:
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getAngle(0)));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getAngle(1)));
-//			break;
-//		case 9:
-//
-//			Communicating::getInstant(Communicating::COM1)->Send(0, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getFilteredAngle(0)));
-//			Communicating::getInstant(Communicating::COM1)->Send(1, (float)MathTools::RadianToDegree(Acceleration::getInstance(0)->getFilteredAngle(1)));
-//			break;
-//	}
-//}
-//
-//void PrintBattery(){
-//	Communicating::getInstant(Communicating::COM1)->Send(4, Battery::getInstance()->getBatteryLevel());
-//}
-//
-
-//
-////void CompassUpdate(){
-////	HMC5883L::getInstance()->Update();
-////}
-////
-////void SE3Update(){
-////	PX4FLOW::getInstance()->Update();
-////	SE3::getInstance()->Update();
-////}
-////
-
-//
-//void ControlTask(){
-//	Controlling::getInstant()->ControllingPoll();
-//}
-////
-////unsigned char Buffer[2048];
-////unsigned char rfBuffer[2048];
-////int BufferCount;
-////int Timeout;
-////int rfBufferCount;
-////int rfTimeout;
-////
-////
-////void RFTask(){
-////	int uartLength = Usart::getInstance(USART1)->getBufferCount();
-////	if(uartLength > 0){
-////		Usart::getInstance(USART1)->Read(Buffer + BufferCount, uartLength);
-////	}
-////	BufferCount += uartLength;
-////	if(BufferCount >= 8){
-////		unsigned char B[9];
-////		for(int i = 0; i < 8; i++){
-////			B[i] = Buffer[i];
-////		}
-////		B[8] = '\0';
-////		if(NRF905::getInstance()->Write("%s", B)){
-////			BufferCount -= 8;
-////			for(int i = 0; i < BufferCount; i++){
-////				Buffer[i] = Buffer[i + 8];
-////			}
-////		}
-////	}
-////}
-////
-////void UartTask(){
-////	int rfLength = NRF905::getInstance()->getBufferCount();
-////	if(rfLength > 0){
-////		NRF905::getInstance()->Read(rfBuffer + rfBufferCount, rfLength);
-////	}
-////	rfBufferCount += rfLength;
-////
-////	if(rfBufferCount >= 8){
-////		unsigned char B[9];
-////		for(int i = 0; i < 8; i++){
-////			B[i] = rfBuffer[i];
-////		}
-////		B[8] = '\0';
-////		rfBufferCount -= 8;
-////		for(int i = 0; i < rfBufferCount; i++){
-////			rfBuffer[i] = rfBuffer[i + 8];
-////		}
-//////		Usart::getInstance(USART1)->Print("%s", B);
-////		printf("%s", B);
-////
-////	}
-////}
-//
-////int rfResetCount;
-////int usartResetCount;
-////
-////void rfReset(){
-////	if(rfResetCount++ > 10){
-////		rfResetCount = 0;
-////		Leds::getInstance()->Toggle(Leds::LED2);
-////		NRF905::getInstance()->resetNRF905();
-////		rfBufferCount = 0;
-////		Usart::getInstance(USART1)->Print("RF RESETED\n");
-////	}
-////}
-////
-////void usartReset(){
-////	if(usartResetCount++ > 10){
-////		usartResetCount = 0;
-////		Leds::getInstance()->Toggle(Leds::LED2);
-////		//Usart::getInstance(USART3)->reset();
-////		BufferCount = 0;
-////		Usart::getInstance(USART1)->Print("USART RESETED\n");
-////	}
-////}
-////
-////void Test(){
-////	//Usart::getInstance(USART1)->Print("Plot:%g,%g,%g\n", Quaternion::getInstance()->getEuler(0), Quaternion::getInstance()->getEuler(1), Quaternion::getInstance()->getEuler(2));
-////	//Usart::getInstance(USART1)->Print("BatteryLevel:%g\n", Battery::getInstance()->getBatteryLevel());
-////	//Usart::getInstance(USART1)->Print("%d\n", Ticks::getInstance()->getTicks());
-//////	Usart::getInstance(USART1)->Print("Plot:%g,%g,%g,%g\n", Controlling::getInstant()->getFzPWM() * 3600 / K / CT);//,
-//////			Controlling::getInstant()->getRotorPWM(1),
-//////			Controlling::getInstant()->getRotorPWM(2),
-//////			Controlling::getInstant()->getRotorPWM(3));
-////}
-////
-////int main1(){
-////
-////	Delay::DelayMS(100);
-////	Task mTask;
-////	Leds mLeds;
-////
-////	Usart mUsart1(USART1, 256000);
-////	uint8_t rxAddress[4] = {0x01, 0x09, 0x08, 0x07};
-////	uint8_t txAddress[4] = {0x01, 0x00, 0x00, 0x08};
-////	NRF905 mNRF905(8, NRF905::FREQ_433M, NRF905::PWR_POS_10dBM, NRF905::RX_NORMAL_PWR, NRF905::NO_RETRAN, rxAddress, txAddress, 8, 8);
-////
-////	BufferCount = 0;
-////	rfBufferCount = 0;
-////	mLeds.Blink(100, Leds::LED1, true);
-////	mTask.Attach(10, 0, UartTask, true, -1);
-////	mTask.Attach(10, 7, RFTask, true, -1);
-////	mTask.Run();
-////}
-////
-////void SonicUpdateTask(){
-////	Sonic::getInstance()->Update();
-////}
-////
-////void Sampling(){
-//////	Usart::getInstance(USART1)->Print("$,%g,%g,%g,%g,%g,%g\n", Quaternion::getInstance()->temp1[0],
-//////			Quaternion::getInstance()->temp1[1],
-//////			Quaternion::getInstance()->temp1[2],
-//////			Quaternion::getInstance()->temp2[0],
-//////			Quaternion::getInstance()->temp2[1],
-//////			Quaternion::getInstance()->temp2[2]);
-////}
-////
-////void Testing(){
-////	Usart::getInstance(USART1)->Print("%d\n", Ticks::getInstance()->getTicks());
-////}
-////
-
-void SonicUpdate(){
-//	App::mApp->mSonic1->TriggerSet();
-//	App::mApp->mSonic2->TriggerSet();
-//	Delay::DelayUS(10);
-//	App::mApp->mSonic1->TriggerReset();
-//	App::mApp->mSonic2->TriggerReset();
-//	Sonic::Reset();
-	static bool state;
-	if(state){
-		App::mApp->mPWM->Control1(5000);
-	}
-	else{
-		App::mApp->mPWM->Control1(0);
-	}
-	state = !state;
-}
-
-void PrintSonic(){
-	float Speed = 0.5 * (172000.0 / App::mApp->mSonic1->getDeltaUS() - 170000.0 / App::mApp->mSonic2->getDeltaUS());
-	App::mApp->mCommunicating1->Send(0, Speed);
-}
-
-void PrintSonic1(){
-	float d1 = App::mApp->mSonic1->getDeltaUS() * 0.34;
-	App::mApp->mCommunicating1->Send(0, d1);
-}
-
-void InitADCUpdate(){
-//	double Volt = 4 * App::mApp->mADC->getVoltage();
-//	App::mApp->mADCKalman->Filtering(Volt);
-//	App::mApp->initVolt += App::mApp->mADCKalman->getCorrectedData();
-//	App::mApp->initVolt /= 2;
-//	App::mApp->mGPIO1->LedControl(true);
-//	Delay::DelayUS(1);
-//	App::mApp->mGPIO1->LedControl(false);
-}
-
-void Discharging(){
-	static Eigen::Matrix<float, 1, 1> prevX;
-	Eigen::Matrix<float, 1, 1> A;
-	A << 4.0f;
-	Eigen::Matrix<float, 1, 1> H;
-	H << 0.25f;
-	Eigen::Matrix<float, 1, 1> X;
-	X << App::mApp->mADC->getVoltage();
-	App::mApp->mADCKalman->Filtering(A, prevX, H, X);
-	prevX = X;
-	App::mApp->mGPIO1->LedControl(true);
-	Delay::DelayUS(1000);
-	App::mApp->mGPIO1->LedControl(false);
-}
-
-void ADCPrint(){
-	App::mApp->mCommunicating1->Send(0, App::mApp->mADCKalman->getCorrectedData()[0]);
+void ControlTask(){
+	App::mApp->mControlling->ControllingPoll();
 }
 
 void initUpdate(){
@@ -291,11 +22,23 @@ void initUpdate(){
 	App::mApp->mAcceleration->Update();
 	App::mApp->mOmega->Update();
 }
+
+void initCompassUpdate(){
+	App::mApp->mHMC5883L->Update();
+	App::mApp->mCompass->Update();
+}
+
 void Update(){
 	App::mApp->mMPU6050->Update();
+	App::mApp->mHMC5883L->Update();
 	App::mApp->mAcceleration->Update();
 	App::mApp->mOmega->Update();
 	App::mApp->mQuaternion->Update();
+}
+
+void CompassUpdate(){
+	App::mApp->mHMC5883L->Update();
+	App::mApp->mCompass->Update();
 }
 
 void ReceiveTask(){
@@ -308,25 +51,27 @@ void SendTask(){
 
 void Output(){
 	static int index = 0;
-	App::mApp->mCommunicating1->Send(index, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])));
-//			(float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[index])));
-	if(index == 2){
+	float offset[3] = {App::mApp->mControlling->RollOffset, App::mApp->mControlling->PitchOffset, App::mApp->mControlling->YawOffset};
+	switch(App::mApp->mCommunicating1->PrintType){
+		case 0:
+			if(index < 3){
+				App::mApp->mCommunicating1->Send(index, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])) - offset[index]);
+			}
+			break;
+		case 1:
+			App::mApp->mCommunicating1->Send(index, AdditionalTools::getBuffer(index)[0]);
+			break;
+	}
+	if(index == 3){
 		index = 0;
 	}
 	else{
 		index++;
 	}
 }
-void Output1(){
-	static int index = 0;
-	if(index == 0){
-		App::mApp->mCommunicating1->Send(0, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[1])));
-		index = 1;
-	}
-	else if(index == 1){
-		App::mApp->mCommunicating1->Send(1, (float)(MathTools::RadianToDegree(App::mApp->mAcceleration->getAngle()[1])));
-		index = 0;
-	}
+
+void BatteryPrint(){
+	printf("%g\n", 4096 * 0.52 / App::mApp->mADC->getReading());
 }
 
 App::App(){
@@ -339,83 +84,40 @@ App::App(){
 	mLed2 = new Led(mConfig->LedConf2);
 	mLed3 = new Led(mConfig->LedConf3);
 	mLed4 = new Led(mConfig->LedConf4);
-//	mGPIO1 = new Led(mConfig->GPIOConf1);
 	mUART1 = new UART(mConfig->UART1Conf1);
-	mUART1->Print("Started\n");
+	printf("Started\n");
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
-//	mADC = new ADConverter(mConfig->ADCConf1);
+	mADC = new ADConverter(mConfig->ADCConf1);
+	mPWM = new PWM(mConfig->mPWMConf1);
+	mControlling = new Controlling(mPWM);
 	mI2C2 = new I2C(mConfig->I2C2Con1);
 	mMPU6050 = new MPU6050(mI2C2);
+	mHMC5883L = new HMC5883L(mMPU6050);
 	mAcceleration = new Acceleration(mMPU6050);
 	mOmega = new Omega(mMPU6050);
+	mCompass = new Compass(mHMC5883L, mAcceleration);
 	mTask->Attach(2, 0, initUpdate, false, 500, false);
+	mTask->Attach(20, 0, initCompassUpdate, false, 50, false);
 	mTask->Run();
-	mQuaternion = new Quaternion(mAcceleration, mOmega, 0.002f);
+	mCompass->Reset();
+	mQuaternion = new Quaternion(mAcceleration, mOmega, mCompass, 0.002f);
 	mQuaternion->Reset();
 	mTask->Attach(2, 0, Update, true);
-	mTask->Attach(20, 0, ReceiveTask, true);
-	mTask->Attach(10, 0, SendTask, true);
-//	mSonic1 = new Sonic(mConfig->SonicConf1);
-//	mSonic2 = new Sonic(mConfig->SonicConf2);
-	mLed1->Blink(true, 100);
-	mTask->Attach(20, 0, Output, true);
+	mTask->Attach(2, 1, ControlTask, true);
+	mTask->Attach(20, 0, CompassUpdate, true);
+	mTask->Attach(20, 3, ReceiveTask, true);
+	mTask->Attach(20, 7, SendTask, true);
+	mLed1->Blink(true, 100, 4);
+	mLed2->Blink(true, 100, 4);
+	mLed3->Blink(true, 100, 4);
+	mLed4->Blink(true, 100, 4);
+	mTask->Attach(50, 0, Output, true);
+	mTask->Attach(1000, 0, BatteryPrint, true);
+	mLed1->LedControl(true);
+	mLed2->LedControl(true);
+	mLed3->LedControl(true);
+	mLed4->LedControl(true);
 	mTask->Run();
-//	mPWM = new PWM(mConfig->mPWMConf1);
-//	App::mApp->mPWM->Control1(5000);
-//	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
-//	mTask->Run();
-//	initVolt = 0;
-//	mTask->Attach(1, 0, InitADCUpdate, false, 1024, false);
-//	mTask->Attach(1, 0, Discharging, true);
-//	mTask->Attach(20, 3, ADCPrint, true);
-//	Eigen::Matrix<float, 1, 1> d;
-//	d << 0.0f;
-//	Eigen::Matrix<float, 1, 1> Q;
-//	Q << 0.000001f;
-//	Eigen::Matrix<float, 1, 1> R;
-//	R << 0.0001f;
-//	mADCKalman = new Kalman(d, Q, R);
-
-//	mTask->Attach(100, 0, SonicUpdate, true);
-//	mTask->Attach(20, 3, PrintSonic3, true);
-//	mTask->Attach(20, 13, PrintSonic4, true);
-//	mTask->Attach(100, 53, PrintSonic2, true);
-//	printf("%g\n", mBattery->getBatteryLevel());
-//
-//	I2C* mI2C2 = new I2C(I2C2, I2C::SPEED_400K);
-//	MPU6050* mMPU6050 = new MPU6050(0, mI2C2);
-//	Acceleration* mAcceleration = new Acceleration(0);
-//	Omega* mOmega = new Omega(0);
-////	HMC5883L mHMC5883L(66);
-////
-//
-//	Quaternion* mQuaternion = new Quaternion(0, 0.002f);
-//	mQuaternion->resetQuaternion();
-//
-//	if(mBattery->getBatteryLevel() > 3.7f){
-//		mLeds->Blink(100, Leds::LED1, true);
-//		mLeds->Blink(100, Leds::LED2, true);
-//		mLeds->Blink(100, Leds::LED3, true);
-//		mLeds->Blink(100, Leds::LED4, true);
-//	}
-//	else{
-//		mLeds->LedsControl(Leds::LED1, false);
-//		mLeds->LedsControl(Leds::LED2, false);
-//		mLeds->LedsControl(Leds::LED3, false);
-//		mLeds->LedsControl(Leds::LED4, false);
-//	}
-//
-//	mTask->Attach(2, 0, Update, true);
-////	mTask->Attach(66, 0, CompassUpdate, true);
-//////	mTask->Attach(60, 0, SonicUpdateTask, true, -1);
-//	mTask->Attach(2, 1, ControlTask, true);
-//////	mTask->Attach(8, 3, SE3Update, true, -1);
-//	mTask->Attach(5, 0, ReceiveTask, true);
-//	mTask->Attach(10, 1, SendTask, true);
-//	mTask->Attach(500, 23, printParams, true);
-////	mTask->Attach(1000, 110, PrintBattery, true);
-////	mTask->Attach(10, 0, Sampling, true);
-//	mTask->Run();
 }
 
 void HardFault_Handler(){

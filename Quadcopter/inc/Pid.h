@@ -8,17 +8,23 @@
 #ifndef PID_H_
 #define PID_H_
 
+#include <Eigen/Eigen>
+
 namespace Math{
 
 	class Pid{
 
 		public:
 
-			Pid(int, float, float, float, float, float);
-			static Pid* getInstance(int);
-			float setPid(float, float, float);
-			float getPid(int);
-			float pid(float, float);
+			Pid(float kp, float ki, float kd, float integralLimit, float t);
+			void setKp(float kp);
+			void setKi(float ki);
+			void setKd(float kd);
+			float getKp();
+			float getKi();
+			float getKd();
+
+			float pid(float target, float current);
 			void clear();
 			float getIntegral();
 

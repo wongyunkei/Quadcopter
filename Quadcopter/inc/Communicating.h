@@ -8,9 +8,26 @@
 #ifndef COMMUNICATING_H_
 #define COMMUNICATING_H_
 
+#include <App.h>
 #include <UART.h>
 #include <stm32f4xx.h>
 #include <inttypes.h>
+#include <stm32f4xx_usart.h>
+#include <stdio.h>
+#include <PWM.h>
+#include <Controlling.h>
+#include <Pid.h>
+#include <Quaternion.h>
+#include <math.h>
+#include <MathTools.h>
+#include <Task.h>
+#include <inttypes.h>
+#include <Delay.h>
+#include <Led.h>
+#include <NRF905.h>
+#include <stm32f4xx_gpio.h>
+#include <stm32f4xx_rcc.h>
+#include <MPU6050.h>
 
 namespace Communication{
 
@@ -38,7 +55,6 @@ namespace Communication{
 				START,
 				STOP,
 				POWER,
-				INTIAL_POWER,
 				ROLL_OFFSET,
 				PITCH_OFFSET,
 				YAW_OFFSET,
@@ -51,27 +67,6 @@ namespace Communication{
 				YAW_KP,
 				YAW_KI,
 				YAW_KD,
-				OFFSET0,
-				OFFSET1,
-				OFFSET2,
-				OFFSET3,
-				MOTOR_KP,
-				MOTOR_KD,
-				Q,
-				R1,
-				R2,
-				DRIFT_KP,
-				DRIFT_KI,
-				SWITCH_LIGHT,
-				HIGHT_KP,
-				HIGHT_KI,
-				HIGHT_KD,
-				X_KP,
-				X_KI,
-				X_KD,
-				Y_KP,
-				Y_KI,
-				Y_KD,
 				MAX_LIFT_VALUE,
 				MIN_LIFT_VALUE,
 				LIFT,
@@ -87,6 +82,8 @@ namespace Communication{
 			void Send(int, float);
 			void SendCmd(char, float);
 			int getTxBufferCount();
+			void Acknowledgement();
+			int PrintType;
 
 		private:
 			Com* _com;
@@ -97,7 +94,6 @@ namespace Communication{
 			int txBufferCount;
 			int BufferCount;
 			char Bytes[7];
-			uint32_t PrintType;
 			float CmdData;
 			int Cmd;
 			float Data;

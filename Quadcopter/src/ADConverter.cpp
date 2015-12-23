@@ -68,7 +68,7 @@ ADConverter::ADConverter(ADCConfiguration* conf) : Conf(conf){
 	ADC_SoftwareStartConv(ADC1);
 }
 
-double ADConverter::getVoltage(){
-	return 3.3 * _ADCData / 4096.0;
+double ADConverter::getReading(){
+	return _ADCData;
 }
 

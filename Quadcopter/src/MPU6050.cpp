@@ -48,6 +48,8 @@ MPU6050::MPU6050(Communication::I2C* i2c) : i2cx(i2c), isValided(false){
 	RawOmegaOffset[0] = RawOmegaScale[0] * -2.7f;
 	RawOmegaOffset[1] = RawOmegaScale[1] * 0.3f;
 	RawOmegaOffset[2] = RawOmegaScale[2] * -1.0f;
+
+	Update();
 }
 
 void MPU6050::FastInitialization(){

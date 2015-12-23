@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <Delay.h>
 #include <Config.h>
+#include <Communicating.h>
 #include <Ticks.h>
 #include <Task.h>
 #include <Led.h>
@@ -24,22 +25,48 @@
 #include <I2C.h>
 #include <Kalman.h>
 #include <MPU6050.h>
+#include <HMC5883L.h>
 #include <Acceleration.h>
 #include <Omega.h>
+#include <Compass.h>
 #include <Quaternion.h>
+#include <AdditionalTools.h>
+#include <Controlling.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
 using namespace Math;
 using namespace Sensors;
 using namespace Inertia;
+using namespace Control;
+using namespace Communication;
+using namespace Debug;
+
+namespace Debug{
+	class Led;
+};
+
+namespace System{
+	class Config;
+};
+
+namespace Control{
+	class Controlling;
+};
+
+namespace Communication{
+	class Communicating;
+};
 
 namespace Sensors{
 	class MPU6050;
+	class HMC5883L;
 };
 
 namespace Inertia{
 	class Acceleration;
+	class Omega;
+	class Compass;
 };
 
 namespace System{
@@ -68,15 +95,16 @@ namespace System{
 			Sonic* mSonic2;
 			Sonic* mSonic3;
 			Sonic* mSonic4;
-			Kalman* mADCKalman;
 			I2C* mI2C1;
 			I2C* mI2C2;
 			MPU6050* mMPU6050;
+			HMC5883L* mHMC5883L;
 			Acceleration* mAcceleration;
 			Omega* mOmega;
+			Compass* mCompass;
 			Quaternion* mQuaternion;
+			Controlling* mControlling;
 			App();
-			double initVolt;
 		private:
 	};
 };

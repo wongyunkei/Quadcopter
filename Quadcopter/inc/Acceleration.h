@@ -9,6 +9,7 @@
 #define ACCELERATION_H_
 
 #include <MPU6050.h>
+#include <math.h>
 #include <MathTools.h>
 #include <MovingWindowAverageFilter.h>
 #include <Eigen/Eigen>

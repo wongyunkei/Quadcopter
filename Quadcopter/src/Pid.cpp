@@ -11,39 +11,31 @@
 #include <Ticks.h>
 #include <MathTools.h>
 
-Pid* _mPid[20];
-
-Pid::Pid(int index, float kp, float ki, float kd, float integralLimit, float t) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), DefaultPeriod(t), Period(t), PreTimeStamp(0){
-	_mPid[index] = this;
+Pid::Pid(float kp, float ki, float kd, float integralLimit, float t) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), DefaultPeriod(t), Period(t), PreTimeStamp(0){
 }
 
-Pid* Pid::getInstance(int index){
-	return _mPid[index];
-}
-
-float Pid::setPid(float kp, float ki, float kd){
+void Pid::setKp(float kp){
 	Kp = kp;
-	Ki = ki;
-	Kd = kd;
 }
 
-float Pid::getPid(int index){
-	float v = 0;
+void Pid::setKi(float ki){
+	Kp = ki;
+}
 
-	switch(index){
-		case 0:
-			v = Kp;
-			break;
-		case 1:
-			v = Ki;
-			break;
-		case 2:
-			v = Kd;
-			break;
+void Pid::setKd(float kd){
+	Kp = kd;
+}
 
-	}
+float Pid::getKp(){
+	return Kp;
+}
 
-	return v;
+float Pid::getKi(){
+	return Ki;
+}
+
+float Pid::getKd(){
+	return Kd;
 }
 
 void Pid::clear(){

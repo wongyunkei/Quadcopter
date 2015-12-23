@@ -11,6 +11,7 @@
 #include <Kalman.h>
 #include <Omega.h>
 #include <Acceleration.h>
+#include <Compass.h>
 #include <AdditionalTools.h>
 #include <Eigen/Eigen>
 using Eigen::Matrix3f;
@@ -21,11 +22,12 @@ using Eigen::Vector4f;
 using namespace Inertia;
 
 namespace Inertia{
+	class Acceleration;
 	class Omega;
+	class Compass;
 };
 
 namespace Inertia{
-	class Acceleration;
 };
 
 namespace Math{
@@ -33,7 +35,7 @@ namespace Math{
 	class Quaternion{
 
 		public:
-			Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval);
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass, float interval);
 			bool Update();
 			Vector3f getEuler();
 			void Reset();
@@ -41,6 +43,7 @@ namespace Math{
 		private:
 			Acceleration* _mAcceleration;
 			Omega* _mOmega;
+			Compass* _mCompass;
 			float Interval;
 			Vector3f _Euler;
 			Vector4f _Quaternion;

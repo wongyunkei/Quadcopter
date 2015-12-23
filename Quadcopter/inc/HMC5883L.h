@@ -8,21 +8,26 @@
 #ifndef  HMC5883L_H_
 #define  HMC5883L_H_
 
-#include <Kalman.h>
+#include <I2C.h>
+#include <Task.h>
+#include <stdio.h>
+#include <math.h>
+#include <MathTools.h>
+#include <MPU6050.h>
+#include <App.h>
+#include <Eigen/Eigen>
+using Eigen::Vector3f;
 
 using namespace Math;
+
+namespace Sensors{
+	class MPU6050;
+};
 
 namespace Sensors{
 
 	class HMC5883L{
 		public:
-			#define XSCALE	0.00264707822318913
-			#define YSCALE	0.00292081657181901
-			#define ZSCALE	0.0032969023676514
-			#define XOFFSET -0.167149765712816
-			#define YOFFSET -0.0170576026511972
-			#define ZOFFSET 0.152827895166594
-
 			enum ADDR{ADDRESS = 0x1e};
 			enum REG{CFG_REG_A = 0x00,
 					 CFG_REG_B = 0x01,
@@ -38,35 +43,27 @@ namespace Sensors{
 					 ID_REGB = 0x0B,
 					 ID_REGC = 0x0c};
 
-			HMC5883L(float);
-			static HMC5883L* getInstance();
+			HMC5883L(MPU6050* mMPU6050);
 			bool Update();
-			void setRawMagneticField(int, float);
-			float getRawMagneticField(int);
-			void setRawAccOffset(int, float);
-			float getRawAccOffset(int);
-			void setRawAccScale(int, float);
-			float getRawAccScale(int);
-			void setRawOmega(int, float);
-			float getRawOmega(int);
-			void setRawOmegaOffset(int, float);
-			float getRawOmegaOffset(int);
+			void setRawMag(Vector3f value);
+			Vector3f getRawMag();
 			bool getIsValided();
-			float getRawHead();
-			void setRawHead(float value);
 
 		private:
+			MPU6050* _mMPU6050;
+			Communication::I2C* i2cx;
 			bool isValided;
-			float Interval;
-			float RawMagneticField[3];
-			float RawMagneticFieldOffset[3];
-			float RawMagneticFieldScale[3];
-			float RawHead;
-			float RawHeadOffset;
-			int inited;
+			Vector3f RawMag;
+			Vector3f RawMagScale;
+			Vector3f RawMagOffset;
+			static float RawMagPosX;
+			static float RawMagNegX;
+			static float RawMagPosY;
+			static float RawMagNegY;
+			static float RawMagPosZ;
+			static float RawMagNegZ;
 			bool CompassCal();
 			void FastInitialization();
-			Kalman* CompassKalman;
 	};
 };
 

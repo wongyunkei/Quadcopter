@@ -8,6 +8,7 @@
 #include <Omega.h>
 
 Omega::Omega(MPU6050* mMPU6050) : _mMPU6050(mMPU6050), isValided(false){
+	Update();
 }
 
 void Omega::Update(){

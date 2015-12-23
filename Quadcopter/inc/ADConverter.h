@@ -29,7 +29,7 @@ namespace Sensors{
 				private:
 			};
 			ADConverter(ADCConfiguration* conf);
-			double getVoltage();
+			double getReading();
 		private:
 			ADCConfiguration* Conf;
 			uint16_t _ADCData;

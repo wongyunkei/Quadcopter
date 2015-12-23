@@ -9,9 +9,23 @@
 #define CONTROLLING_H_
 
 #include <PWM.h>
+#include <App.h>
+#include <Communicating.h>
+#include <Quaternion.h>
+#include <math.h>
+#include <MathTools.h>
+#include <stdio.h>
 #include <Pid.h>
+#include <PWM.h>
+#include <Omega.h>
+#include <Task.h>
 #include <Acceleration.h>
-#include <Fuzzy.h>
+#include <AdditionalTools.h>
+#include <Delay.h>
+#include <Led.h>
+#include <Eigen/Eigen>
+using Eigen::Vector3f;
+using Eigen::Vector4f;
 
 using namespace Math;
 
@@ -19,98 +33,57 @@ namespace Control{
 
 	class Controlling{
 		public:
-			#define WATCHDOGCOUNT_LIMIT	800
-			#define JX	0.047387
-			#define JY	0.047387
-			#define JZ	0.07438
-			#define __M	1.68
-			#define __R	0.275
-			#define CT	0.12
-			#define CD	0.05
-			#define __K	23
-			#define INIT_PWM		2500.0f
-			#define INIT_RPM		0.0f
-			#define MIN_LIFT		2500.0f
-			#define MAX_LIFT		10000.0f
-			#define LANDING_MAX_LIFT		5000.0f
-			#define MAX_RPM			5000.0f
-			Controlling();
-			static Controlling* getInstant();
+			Controlling(PWM* mPWM);
 			void ControllingPoll();
 			void Starting();
 			void Stopping();
-			void setTarget(int, float);
-			float getThrust(int);
-			float getOffset(int);
-			void setOffset(int, float);
-			void setRPYOffset(int, float);
-			float getRPYOffset(int);
+			float getRollTarget();
+			float getPitchTarget();
+			float getYawTarget();
+			void setRollTarget(float roll);
+			void setPitchTarget(float pitch);
+			void setYawTarget(float yaw);
+			float getRollOffset();
+			float getPitchOffset();
+			float getYawOffset();
+			void setRollOffset(float roll);
+			void setPitchOffset(float pitch);
+			void setYawOffset(float yaw);
 			void clearWatchDogCount();
-			float getErrRPY(int);
-			float getInitPWM();
-			void setInitPWM(float);
-			float getInitRPM();
-			void setInitRPM(float);
-			void setRotorPWM(int, float);
-			float getRotorPWM(int);
 			void setStart(bool);
 			bool getStart();
 			void setStarting(bool);
 			bool getStarting();
 			void setStopping(bool);
 			bool getStopping();
-			float getFzPWM();
-			void setFzPWM(float);
-			float getPreFzPWM();
-			void setPreFzPWM(float);
-			float getTarget(int);
-			void MotorControl(int index, float value);
-			float RPM2PWM(int index, float rpm);
-			float getMotorRPM(int index);
-			void setMotorRPM(int index, float value);
-			float getMotorValue(int index);
-			void setMotorValue(int index, float value);
-			void setMotorTarget(int index, float value);
-			float getMotorTarget(int index);
-			float getLift();
-			void setLift(float value);
-			void setMaxLift(float value);
-			void setMinLift(float value);
+			void StopAllMotors();
+			PWM* _mPWM;
+			Pid* RollPid;
+			Pid* PitchPid;
+			Pid* YawPid;
+			Pid* KdRollPid;
+			Pid* KdPitchPid;
+			Pid* KdYawPid;
+			float maxLift;
+			float minLift;
+			float initLift;
+			float leadingLift;
+			float Lift;
 			int watchDogCount;
+			float RollOffset;
+			float PitchOffset;
+			float YawOffset;
+			int startCount;
+			int StoppingDelayCount;
 
 		private:
-			PWM* ControlPWM;
-			Fuzzy* FuzzyRPY[3];
-			Pid* RPYPid[3];
-			Pid* XYPid[2];
-			Pid* HightPid;
-			Pid* MotorPid[4];
-			float MotorTarget[4];
-			float MotorRPM[4];
-			float MotorValue[4];
-			float preFzPWM;
-			int HightPidDelayCount;
-			int XYPidDelayCount;
-			Pid* D_RPYPid[3];
-			float RPYOffset[3];
-			float Lift;
-			float errRPY[3];
-			float errXY[2];
-			float target[4];
-			float thrust[4];
-			float offset[4];
-			float rotorPWM[4];
+			int WatchDogLimit;
+			float RollTarget;
+			float PitchTarget;
+			float YawTarget;
 			bool started;
 			bool starting;
 			bool stopping;
-			float initPWM;
-			float minLift;
-			float maxLift;
-			float initRPM;
-			float FzPWM;
-			float cosRollcosPitch;
-			float** fuzzyTable;
-
 	};
 };
 

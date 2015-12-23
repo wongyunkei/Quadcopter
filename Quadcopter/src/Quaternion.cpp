@@ -24,15 +24,16 @@
 
 using namespace Utility;
 
-Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval) : _mAcceleration(mAcceleration), _mOmega(mOmega), Interval(interval), Valid(false){
+Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass, float interval) : _mAcceleration(mAcceleration), _mOmega(mOmega), _mCompass(mCompass), Interval(interval), Valid(false){
 	Matrix4f Q;
 	Q.setIdentity();
 	Q *= 1e-12f;
 	Matrix3f R;
 	R.setIdentity();
-	R *= 1e-6f;
+	R *= 1e-7f;
 	_Quaternion = EulerToQuaternion(mAcceleration->getAngle());
 	_QuaternionKalman = new Kalman(_Quaternion, Q, R);
+	Update();
 }
 
 bool Quaternion::Update(){
@@ -45,33 +46,20 @@ bool Quaternion::Update(){
 		for(int i = 0; i < 3; i++){
 			if(fabs(E[i]) > 0.5f){
 				valid = false;
-				if(i == 0){
-					App::mApp->mLed2->LedControl(true);
-				}
-				if(i == 1){
-					App::mApp->mLed3->LedControl(true);
-				}
-				if(i == 2){
-					App::mApp->mLed4->LedControl(true);
-				}
-			}
-			else{
-				if(i == 0){
-					App::mApp->mLed2->LedControl(false);
-				}
-				if(i == 1){
-					App::mApp->mLed3->LedControl(false);
-				}
-				if(i == 2){
-					App::mApp->mLed4->LedControl(false);
-				}
 			}
 		}
 		bool AccValid = _mAcceleration->getIsValided() && _mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.9f && _mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.1f;
 		Vector3f angle;
+		bool MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
+
 		if(AccValid){
 			angle = _mAcceleration->getAngle();
-			angle[2] = E[2];
+			if(MagValid){
+				angle[2] = _mCompass->getAngle()[2];
+			}
+			else{
+				angle[2] = E[2];
+			}
 		}
 		if(valid && AccValid){
 			Eigen::Matrix<float, 3, 4> C = calcQuatToEulerMeasMatrix(q);
@@ -90,7 +78,12 @@ bool Quaternion::Update(){
 			_Quaternion.normalize();
 			if(!valid && AccValid){
 				angle = _mAcceleration->getFilteredAngle();
-				angle[2] = E[2];
+				if(MagValid){
+					angle[2] = _mCompass->getFilteredAngle()[2];
+				}
+				else{
+					angle[2] = E[2];
+				}
 				_Quaternion = EulerToQuaternion(angle);
 			}
 		}
@@ -212,6 +205,8 @@ Vector3f Quaternion::getEuler(){
 }
 
 void Quaternion::Reset(){
-	_Quaternion = EulerToQuaternion(_mAcceleration->getAngle());
+	Vector3f angle = _mAcceleration->getFilteredAngle();
+	angle[2] = _mCompass->getFilteredAngle()[2];
+	_Quaternion = EulerToQuaternion(angle);
 	_QuaternionKalman->Clear(_Quaternion);
 }
