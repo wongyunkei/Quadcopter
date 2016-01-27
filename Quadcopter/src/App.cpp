@@ -71,7 +71,9 @@ void Output(){
 }
 
 void BatteryPrint(){
-	printf("%g\n", 4096 * 0.52 / App::mApp->mADC->getReading());
+	App::mApp->mADCFilter->Update(App::mApp->mADC->getReading() * 3.3 / 4096.0);
+	App::mApp->mCommunicating1->Send(0, App::mApp->mADCFilter->getAverage());
+//	printf("%g\n", App::mApp->mADC->getReading());
 }
 
 App::App(){
@@ -86,37 +88,43 @@ App::App(){
 	mLed4 = new Led(mConfig->LedConf4);
 	mUART1 = new UART(mConfig->UART1Conf1);
 	printf("Started\n");
-	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
-	mADC = new ADConverter(mConfig->ADCConf1);
-	mPWM = new PWM(mConfig->mPWMConf1);
-	mControlling = new Controlling(mPWM);
-	mI2C2 = new I2C(mConfig->I2C2Con1);
-	mMPU6050 = new MPU6050(mI2C2);
-	mHMC5883L = new HMC5883L(mMPU6050);
-	mAcceleration = new Acceleration(mMPU6050);
-	mOmega = new Omega(mMPU6050);
-	mCompass = new Compass(mHMC5883L, mAcceleration);
-	mTask->Attach(2, 0, initUpdate, false, 500, false);
-	mTask->Attach(20, 0, initCompassUpdate, false, 50, false);
-	mTask->Run();
-	mCompass->Reset();
-	mQuaternion = new Quaternion(mAcceleration, mOmega, mCompass, 0.002f);
-	mQuaternion->Reset();
-	mTask->Attach(2, 0, Update, true);
-	mTask->Attach(2, 1, ControlTask, true);
-	mTask->Attach(20, 0, CompassUpdate, true);
-	mTask->Attach(20, 3, ReceiveTask, true);
-	mTask->Attach(20, 7, SendTask, true);
-	mLed1->Blink(true, 100, 4);
-	mLed2->Blink(true, 100, 4);
-	mLed3->Blink(true, 100, 4);
-	mLed4->Blink(true, 100, 4);
-	mTask->Attach(50, 0, Output, true);
-	mTask->Attach(1000, 0, BatteryPrint, true);
-	mLed1->LedControl(true);
-	mLed2->LedControl(true);
-	mLed3->LedControl(true);
-	mLed4->LedControl(true);
+
+//	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
+//	mADC = new ADConverter(mConfig->ADCConf1);
+//	mPWM = new PWM(mConfig->mPWMConf1);
+//	mControlling = new Controlling(mPWM);
+//	mI2C2 = new I2C(mConfig->I2C2Con1);
+//	mMPU6050 = new MPU6050(mI2C2);
+//	mHMC5883L = new HMC5883L(mMPU6050);
+//	mAcceleration = new Acceleration(mMPU6050);
+//	mOmega = new Omega(mMPU6050);
+//	mCompass = new Compass(mHMC5883L, mAcceleration);
+//	mTask->Attach(2, 0, initUpdate, false, 500, false);
+//	mTask->Attach(20, 0, initCompassUpdate, false, 50, false);
+//	mTask->Run();
+//	mCompass->Reset();
+//	mQuaternion = new Quaternion(mAcceleration, mOmega, mCompass, 0.002f);
+//	mQuaternion->Reset();
+//	mTask->Attach(2, 0, Update, true);
+//	mTask->Attach(2, 1, ControlTask, true);
+//	mTask->Attach(20, 0, CompassUpdate, true);
+//	mTask->Attach(20, 3, ReceiveTask, true);
+//	mTask->Attach(20, 7, SendTask, true);
+//	mLed1->Blink(true, 100, 4);
+//	mLed2->Blink(true, 100, 4);
+//	mLed3->Blink(true, 100, 4);
+//	mLed4->Blink(true, 100, 4);
+////	mTask->Attach(50, 0, Output, true);
+////	mTask->Attach(100, 0, BatteryPrint, true);
+//	mLed1->LedControl(true);
+//	mLed2->LedControl(true);
+//	mLed3->LedControl(true);
+//	mLed4->LedControl(true);
+
+	mLed1->Blink(true, 100);
+	mLed2->Blink(true, 100);
+	mLed3->Blink(true, 100);
+	mLed4->Blink(true, 100);
 	mTask->Run();
 }
 

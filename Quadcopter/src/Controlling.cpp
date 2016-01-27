@@ -36,9 +36,9 @@ void StartingTask(){
 void StoppingTask(){
 	if(App::mApp->mControlling->getStopping()){
 		if(App::mApp->mControlling->Lift > App::mApp->mControlling->leadingLift){
-			App::mApp->mControlling->Lift = App::mApp->mControlling->Lift - 250;
+			App::mApp->mControlling->Lift = App::mApp->mControlling->Lift - 500;
 		}
-		else if(App::mApp->mControlling->StoppingDelayCount < 100){
+		else if(App::mApp->mControlling->StoppingDelayCount < 25){
 			App::mApp->mControlling->StoppingDelayCount++;
 		}
 		else{
@@ -58,7 +58,7 @@ void StoppingTask(){
 	}
 }
 
-Controlling::Controlling(PWM* mPWM) : _mPWM(mPWM), WatchDogLimit(800), leadingLift(6000), minLift(7500), maxLift(9500),
+Controlling::Controlling(PWM* mPWM) : _mPWM(mPWM), WatchDogLimit(800), leadingLift(5000), minLift(7000), maxLift(9500),
 		started(false), starting(false), stopping(false),
 		watchDogCount(0), Lift(3000.0f), RollTarget(0),
 		PitchTarget(0), YawTarget(0), RollOffset(0),

@@ -64,7 +64,6 @@ bool Kalman::Gain(MatrixXf H){
 	}
 	_K = predictP * H.transpose() * invM;
 	return true;
-
 }
 
 void Kalman::Clear(VectorXf X){

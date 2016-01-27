@@ -32,6 +32,7 @@
 #include <Quaternion.h>
 #include <AdditionalTools.h>
 #include <Controlling.h>
+#include <MovingWindowAverageFilter.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
@@ -104,6 +105,7 @@ namespace System{
 			Compass* mCompass;
 			Quaternion* mQuaternion;
 			Controlling* mControlling;
+			MovingWindowAverageFilter* mADCFilter;
 			App();
 		private:
 	};
