@@ -18,6 +18,7 @@
 #include <Controlling.h>
 #include <Pid.h>
 #include <Quaternion.h>
+#include <Localization.h>
 #include <math.h>
 #include <MathTools.h>
 #include <Task.h>
@@ -72,7 +73,9 @@ namespace Communication{
 				LIFT,
 				TARGET_ROLL,
 				TARGET_PITCH,
-				TARGET_YAW
+				TARGET_YAW,
+				SET_X_TRANSLATION,
+				SET_Y_TRANSLATION
 			};
 
 			Communicating(Com* com);

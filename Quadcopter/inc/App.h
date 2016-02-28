@@ -33,6 +33,8 @@
 #include <AdditionalTools.h>
 #include <Controlling.h>
 #include <MovingWindowAverageFilter.h>
+#include <Encoder.h>
+#include <Localization.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
@@ -62,12 +64,18 @@ namespace Communication{
 namespace Sensors{
 	class MPU6050;
 	class HMC5883L;
+	class Encoder;
 };
 
 namespace Inertia{
 	class Acceleration;
 	class Omega;
 	class Compass;
+};
+
+namespace Math{
+	class Quaternion;
+	class Localization;
 };
 
 namespace System{
@@ -106,6 +114,9 @@ namespace System{
 			Quaternion* mQuaternion;
 			Controlling* mControlling;
 			MovingWindowAverageFilter* mADCFilter;
+			Encoder* mEncoder1;
+			Encoder* mEncoder2;
+			Localization* mLocalization;
 			App();
 		private:
 	};

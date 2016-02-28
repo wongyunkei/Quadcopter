@@ -16,17 +16,28 @@
 #include <ADConverter.h>
 #include <I2C.h>
 #include <Sonic.h>
+#include <Encoder.h>
 
 using namespace Debug;
 using namespace Communication;
 using namespace Control;
 using namespace Sensors;
 
+namespace Sensors{
+	class Encoder;
+};
+
 namespace System{
 
 	class Config{
 		public:
 			Config();
+			Encoder::EncoderConfiguration* Encoder1Conf1;
+			Encoder::EncoderConfiguration* Encoder2Conf1;
+			Encoder::EncoderConfiguration* Encoder3Conf1;
+			Encoder::EncoderConfiguration* Encoder4Conf1;
+			Encoder::EncoderConfiguration* Encoder5Conf1;
+			Encoder::EncoderConfiguration* Encoder6Conf1;
 			Led::LedConfiguration* LedConf1;
 			Led::LedConfiguration* LedConf2;
 			Led::LedConfiguration* LedConf3;

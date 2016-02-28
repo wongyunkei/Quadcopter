@@ -8,12 +8,12 @@
 #include <HMC5883L.h>
 using namespace Sensors;
 
-float HMC5883L::RawMagPosX = 397;
-float HMC5883L::RawMagNegX = -549;
-float HMC5883L::RawMagPosY = 376.75;
-float HMC5883L::RawMagNegY = -563.5;
-float HMC5883L::RawMagPosZ = 338;
-float HMC5883L::RawMagNegZ = -484.75;
+float HMC5883L::RawMagPosX = 726.35;
+float HMC5883L::RawMagNegX = -740.22;
+float HMC5883L::RawMagPosY = 708.1;
+float HMC5883L::RawMagNegY = -778.91;
+float HMC5883L::RawMagPosZ = 873.77;
+float HMC5883L::RawMagNegZ = -889.87;
 
 //float HMC5883L::RawMagPosX = 1.0f;
 //float HMC5883L::RawMagNegX = -1.0f;
@@ -22,7 +22,32 @@ float HMC5883L::RawMagNegZ = -484.75;
 //float HMC5883L::RawMagPosZ = 1.0f;
 //float HMC5883L::RawMagNegZ = -1.0f;
 
+void HMC5883L::CalibrationPrint(){
+	static int count = 0;
+	for(int i = 0; i < 3; i++){
+		MaxMag[i] = MaxMag[i] < RawMag[i] ? RawMag[i] : MaxMag[i];
+		MinMag[i] = MinMag[i] > RawMag[i] ? RawMag[i] : MinMag[i];
+	}
+	printf("%d\n", count);
+	if(count++ >= 1499){
+		Delay::DelayMS(100);
+		CalibrationResultPrint();
+	}
+}
+
+void HMC5883L::CalibrationResultPrint(){
+	printf("float HMC5883L::RawMagPosX = %g;\n", MaxMag[0]);
+	printf("float HMC5883L::RawMagNegX = %g;\n", MinMag[0]);
+	printf("float HMC5883L::RawMagPosY = %g;\n", MaxMag[1]);
+	printf("float HMC5883L::RawMagNegY = %g;\n", MinMag[1]);
+	printf("float HMC5883L::RawMagPosZ = %g;\n", MaxMag[2]);
+	printf("float HMC5883L::RawMagNegZ = %g;\n", MinMag[2]);
+}
+
 HMC5883L::HMC5883L(MPU6050* mMPU6050) : _mMPU6050(mMPU6050), i2cx(mMPU6050->i2cx), isValided(false){
+
+	MaxMag << -99999, -99999, -99999;
+	MinMag << 99999, 99999, 99999;
 
 	RawMagScale[0] = 2.0f / (RawMagPosX - RawMagNegX);
 	RawMagScale[1] = 2.0f / (RawMagPosY - RawMagNegY);

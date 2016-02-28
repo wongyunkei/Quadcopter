@@ -24,70 +24,133 @@
 
 using namespace Utility;
 
-Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass, float interval) : _mAcceleration(mAcceleration), _mOmega(mOmega), _mCompass(mCompass), Interval(interval), Valid(false){
-	Matrix4f Q;
+Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval, bool isUseCompass, Compass* mCompass) : _mAcceleration(mAcceleration), _mOmega(mOmega), IsUseCompass(isUseCompass), _mCompass(mCompass), Interval(interval), Valid(false), ComplementaryFactor(0.1f){
+	Matrix3f Q;
 	Q.setIdentity();
-	Q *= 1e-12f;
+	Q *= 1e-1f;
 	Matrix3f R;
 	R.setIdentity();
-	R *= 1e-7f;
-	_Quaternion = EulerToQuaternion(mAcceleration->getAngle());
-	_QuaternionKalman = new Kalman(_Quaternion, Q, R);
-	Update();
+	R *= 1e-12f;
+	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
 }
+
+//bool Quaternion::Update(){
+//	if(_mOmega->getIsValided()){
+//		Vector3f omega = _mOmega->getOmega() * MathTools::RADIAN_PER_DEGREE;
+//		Matrix4f T = calcStateTransMatrix(omega, Interval);
+//		Vector4f q = T * _Quaternion;
+//		Vector3f E = QuaternionToEuler(q);
+//		bool valid = true;
+//		for(int i = 0; i < 3; i++){
+//			if(fabs(E[i]) > 0.5f){
+//				valid = false;
+//			}
+//		}
+//		bool AccValid = _mAcceleration->getIsValided() && _mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.9f && _mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.1f;
+//		Vector3f angle;
+//		bool MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
+//
+//		if(AccValid){
+//			angle = _mAcceleration->getAngle();
+//			if(MagValid){
+//				angle[2] = _mCompass->getAngle()[2];
+//			}
+//			else{
+//				angle[2] = E[2];
+//			}
+//		}
+//		if(valid && AccValid){
+//			Eigen::Matrix<float, 3, 4> C = calcQuatToEulerMeasMatrix(q);
+//			Vector4f quat = _QuaternionKalman->Filtering(T, _Quaternion, C, angle) ? _QuaternionKalman->getCorrectedData() : T * _Quaternion;
+//			quat.normalize();
+//			for(int i = 0; i < 4; i++){
+//				if(quat[i] != quat[i]){
+//					Valid = false;
+//					return false;
+//				}
+//			}
+//			_Quaternion = quat;
+//		}
+//		else{
+//			_Quaternion = T * _Quaternion;
+//			_Quaternion.normalize();
+//			if(!valid && AccValid){
+//				angle = _mAcceleration->getFilteredAngle();
+//				if(MagValid){
+//					angle[2] = _mCompass->getFilteredAngle()[2];
+//				}
+//				else{
+//					angle[2] = E[2];
+//				}
+//				_Quaternion = EulerToQuaternion(angle);
+//			}
+//		}
+//		_Euler = QuaternionToEuler(_Quaternion);
+//		return true;
+//	}
+//	else{
+//		Valid = false;
+//		return false;
+//	}
+//}
 
 bool Quaternion::Update(){
 	if(_mOmega->getIsValided()){
 		Vector3f omega = _mOmega->getOmega() * MathTools::RADIAN_PER_DEGREE;
-		Matrix4f T = calcStateTransMatrix(omega, Interval);
-		Vector4f q = T * _Quaternion;
-		Vector3f E = QuaternionToEuler(q);
+		Vector4f q;
+		q << 0, omega[0], omega[1], omega[2];
+		Vector4f t;
+		t[0] = q[0]*_Quaternion[0]-q[1]*_Quaternion[1]-q[2]*_Quaternion[2]-q[3]*_Quaternion[3];
+		t[1] = q[0]*_Quaternion[1]+q[1]*_Quaternion[0]+q[2]*_Quaternion[3]-q[3]*_Quaternion[2];
+		t[2] = q[0]*_Quaternion[2]-q[1]*_Quaternion[3]+q[2]*_Quaternion[0]+q[3]*_Quaternion[1];
+		t[3] = q[0]*_Quaternion[3]+q[1]*_Quaternion[2]-q[2]*_Quaternion[1]+q[3]*_Quaternion[0];
+
+		q = _Quaternion + 0.5 * t * Interval;
+		q.normalize();
+		Vector3f e = QuaternionToEuler(q);
 		bool valid = true;
-		for(int i = 0; i < 3; i++){
-			if(fabs(E[i]) > 0.5f){
-				valid = false;
-			}
-		}
 		bool AccValid = _mAcceleration->getIsValided() && _mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.9f && _mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.1f;
 		Vector3f angle;
-		bool MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
-
+		bool MagValid;
+		if(IsUseCompass){
+			MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
+		}
 		if(AccValid){
 			angle = _mAcceleration->getAngle();
-			if(MagValid){
+			if(IsUseCompass && MagValid){
 				angle[2] = _mCompass->getAngle()[2];
+				App::mApp->mLed3->LedControl(true);
 			}
 			else{
-				angle[2] = E[2];
+				angle[2] = e[2];
+				App::mApp->mLed3->LedControl(false);
 			}
 		}
+		Vector3f euler;
 		if(valid && AccValid){
-			Eigen::Matrix<float, 3, 4> C = calcQuatToEulerMeasMatrix(q);
-			Vector4f quat = _QuaternionKalman->Filtering(T, _Quaternion, C, angle) ? _QuaternionKalman->getCorrectedData() : T * _Quaternion;
-			quat.normalize();
-			for(int i = 0; i < 4; i++){
-				if(quat[i] != quat[i]){
+			angle = (1 - ComplementaryFactor) * e + ComplementaryFactor * angle;
+			for(int i = 0; i < 3; i++){
+				if(angle[i] != angle[i]){
 					Valid = false;
 					return false;
 				}
 			}
-			_Quaternion = quat;
+			euler = angle;
 		}
 		else{
-			_Quaternion = T * _Quaternion;
-			_Quaternion.normalize();
-			if(!valid && AccValid){
-				angle = _mAcceleration->getFilteredAngle();
-				if(MagValid){
-					angle[2] = _mCompass->getFilteredAngle()[2];
-				}
-				else{
-					angle[2] = E[2];
-				}
-				_Quaternion = EulerToQuaternion(angle);
-			}
+			euler = e;
 		}
-		_Euler = QuaternionToEuler(_Quaternion);
+		Matrix3f A;
+		A.setIdentity();
+		Matrix3f H;
+		H.setIdentity();
+//		if(_QuaternionKalman->Filtering(A, e, H, euler)){
+//			_Euler = _QuaternionKalman->getCorrectedData();
+//		}
+//		else{
+			_Euler = euler;
+//		}
+		_Quaternion = EulerToQuaternion(_Euler);
 		return true;
 	}
 	else{
@@ -206,7 +269,12 @@ Vector3f Quaternion::getEuler(){
 
 void Quaternion::Reset(){
 	Vector3f angle = _mAcceleration->getFilteredAngle();
-	angle[2] = _mCompass->getFilteredAngle()[2];
+	if(IsUseCompass){
+		angle[2] = _mCompass->getFilteredAngle()[2];
+	}
+	else{
+		angle[2] = 0;
+	}
+	_QuaternionKalman->Clear(angle);
 	_Quaternion = EulerToQuaternion(angle);
-	_QuaternionKalman->Clear(_Quaternion);
 }

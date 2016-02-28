@@ -16,6 +16,7 @@ Compass::Compass(Sensors::HMC5883L* mHMC5883L, Acceleration* mAcceleration) : _m
 	mMagMovingWindowAverageFilter[2] = new MovingWindowAverageFilter(10);
 	Update();
 	InitMagHead = getAngle()[2];
+	InitMagHead = InitMagHead < 0 ? InitMagHead + 2 * Math::MathTools::PI : InitMagHead;
 }
 
 void Compass::Update(){
@@ -51,11 +52,11 @@ Vector3f Compass::getFilteredAngle(){
 	Vector3f mag = getFilteredMag();
 	Vector3f angle;
 	Vector3f AccAngle = _mAcceleration->getFilteredAngle();
-	float y = mag[0] - sinf(AccAngle[1]);
-	float x = mag[1] + sinf(AccAngle[0]);
+	float y = mag[2]*sinf(AccAngle[1]) - mag[1]*cosf(AccAngle[1]);
+	float x = mag[0]*cosf(AccAngle[0]) + mag[1]*sinf(AccAngle[0])*sinf(AccAngle[1]) + mag[2]*sinf(AccAngle[0])*cosf(AccAngle[1]);
 	angle[0] = 0.0f;
 	angle[1] = 0.0f;
-	angle[2] = -atan2(y, -x) - InitMagHead;
+	angle[2] = -atan2(-y, x) - InitMagHead;
 	angle[2] = angle[2] > MathTools::PI ? angle[2] -  2 * MathTools::PI:
 			   angle[2] < -MathTools::PI ? 2 * MathTools::PI + angle[2] : angle[2];
 	return angle;
@@ -69,11 +70,11 @@ Vector3f Compass::getAngle(){
 	Vector3f mag = getMag();
 	Vector3f angle;
 	Vector3f AccAngle = _mAcceleration->getFilteredAngle();
-	float y = mag[0] - sinf(AccAngle[1]);
-	float x = mag[1] + sinf(AccAngle[0]);
+	float y = mag[2]*sinf(AccAngle[0]) - mag[1]*cosf(AccAngle[0]);
+	float x = mag[0]*cosf(AccAngle[1]) + mag[1]*sinf(AccAngle[1])*sinf(AccAngle[0]) + mag[2]*sinf(AccAngle[1])*cosf(AccAngle[0]);
 	angle[0] = 0.0f;
 	angle[1] = 0.0f;
-	angle[2] = -atan2(y, -x) - InitMagHead;
+	angle[2] = -atan2(-y, x) - InitMagHead;
 	angle[2] = angle[2] > MathTools::PI ? angle[2] -  2 * MathTools::PI:
 			   angle[2] < -MathTools::PI ? 2 * MathTools::PI + angle[2] : angle[2];
 	return angle;
@@ -86,5 +87,6 @@ void Compass::Reset(){
 	InitMagHead = 0;
 	Update();
 	InitMagHead = getAngle()[2];
+	InitMagHead = InitMagHead < 0 ? InitMagHead + 2 * Math::MathTools::PI : InitMagHead;
 }
 

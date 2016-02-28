@@ -48,6 +48,8 @@ namespace Sensors{
 			void setRawMag(Vector3f value);
 			Vector3f getRawMag();
 			bool getIsValided();
+			void CalibrationPrint();
+			void CalibrationResultPrint();
 
 		private:
 			MPU6050* _mMPU6050;
@@ -62,6 +64,8 @@ namespace Sensors{
 			static float RawMagNegY;
 			static float RawMagPosZ;
 			static float RawMagNegZ;
+			Vector3f MaxMag;
+			Vector3f MinMag;
 			bool CompassCal();
 			void FastInitialization();
 	};

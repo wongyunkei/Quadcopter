@@ -35,7 +35,7 @@ namespace Math{
 	class Quaternion{
 
 		public:
-			Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass, float interval);
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval, bool isUseCompass = false, Compass* mCompass = (Compass*)0);
 			bool Update();
 			Vector3f getEuler();
 			void Reset();
@@ -50,6 +50,7 @@ namespace Math{
 			Kalman* _QuaternionKalman;
 
 			bool Valid;
+			bool IsUseCompass;
 			Vector3f QuaternionToEuler(Vector4f q);
 			Matrix3f QuaternionToMatrix(Vector4f q);
 			Vector4f EulerToQuaternion(Vector3f euler);
@@ -58,6 +59,7 @@ namespace Math{
 			Vector3f MatrixToFixedAngles(Matrix3f R);
 			Matrix4f calcStateTransMatrix(Vector3f w, float t);
 			Eigen::Matrix<float, 3, 4> calcQuatToEulerMeasMatrix(Vector4f q);
+			float ComplementaryFactor;
 	};
 };
 

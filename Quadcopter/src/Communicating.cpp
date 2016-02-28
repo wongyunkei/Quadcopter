@@ -36,7 +36,6 @@ void Communicating::ReceivePoll(){
 		case Com::__UART:
 			length = _com->_UART->getBufferCount();
 			_com->_UART->Read(Buffer + BufferCount, length);
-			printf("%s", Buffer + BufferCount);
 			break;
 		case Com::__SPI:
 			break;
@@ -172,27 +171,27 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::RESET_ALL:
-			App::mApp->mControlling->setStart(false);
-			App::mApp->mControlling->setStarting(false);
-			App::mApp->mControlling->setStopping(false);
-			App::mApp->mControlling->StopAllMotors();
+//			App::mApp->mControlling->setStart(false);
+//			App::mApp->mControlling->setStarting(false);
+//			App::mApp->mControlling->setStopping(false);
+//			App::mApp->mControlling->StopAllMotors();
 			App::mApp->mCompass->Reset();
 			App::mApp->mQuaternion->Reset();
+			App::mApp->mLocalization->Reset();
+//			for(int i = 0; i < 500; i++){
+//				App::mApp->mMPU6050->Update();
+//				App::mApp->mHMC5883L->Update();
+//				App::mApp->mAcceleration->Update();
+//				App::mApp->mOmega->Update();
+//				App::mApp->mCompass->Update();
+//				App::mApp->mQuaternion->Update();
+		//		Delay::DelayMS(2);
+	//		}
 
-			for(int i = 0; i < 500; i++){
-				App::mApp->mMPU6050->Update();
-				App::mApp->mHMC5883L->Update();
-				App::mApp->mAcceleration->Update();
-				App::mApp->mOmega->Update();
-				App::mApp->mCompass->Update();
-				App::mApp->mQuaternion->Update();
-				Delay::DelayMS(2);
-			}
-
-			App::mApp->mControlling->RollOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[0]);
-			App::mApp->mControlling->PitchOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[1]);
-			App::mApp->mControlling->YawOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2]);
-			App::mApp->mControlling->Lift = 0;
+//			App::mApp->mControlling->RollOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[0]);
+//			App::mApp->mControlling->PitchOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[1]);
+//			App::mApp->mControlling->YawOffset = MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2]);
+//			App::mApp->mControlling->Lift = 0;
 			Acknowledgement();
 			break;
 		case CMD::ROLL_OFFSET:
@@ -269,14 +268,20 @@ void Communicating::Execute(int cmd, float data){
 			App::mApp->mControlling->setYawTarget(data);
 			Acknowledgement();
 			break;
+		case CMD::SET_X_TRANSLATION:
+				App::mApp->mLocalization->setEncoderXTranslation(data);
+				Acknowledgement();
+				break;
+		case CMD::SET_Y_TRANSLATION:
+				App::mApp->mLocalization->setEncoderYTranslation(data);
+				Acknowledgement();
+				break;
+
 	}
 
 }
 
 void Communicating::Acknowledgement(){
-	App::mApp->mLed1->Blink(true, 100, 2);
-	App::mApp->mLed2->Blink(true, 100, 2);
-	App::mApp->mLed3->Blink(true, 100, 2);
 	App::mApp->mLed4->Blink(true, 100, 2);
 }
 
