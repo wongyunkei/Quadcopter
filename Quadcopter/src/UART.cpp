@@ -36,7 +36,7 @@ void DMA2_Stream7_IRQHandler(void)
 			}
 		}
 		USART_ClearFlag(USART1,USART_FLAG_TC);
-		App::mApp->mUART1->setIsDmaBusy(false);
+		App::mApp->mUART1->isDmaBusy = false;//setIsDmaBusy(false);
 	}
 }
 
@@ -53,7 +53,7 @@ void DMA1_Stream3_IRQHandler(void)
 			}
 		}
 		USART_ClearFlag(USART3,USART_FLAG_TC);
-		App::mApp->mUART3->setIsDmaBusy(false);
+		App::mApp->mUART3->isDmaBusy = false;//setIsDmaBusy(false);
 	}
 }
 
@@ -70,10 +70,15 @@ void DMA1_Stream1_IRQHandler(void)
 			}
 		}
 		for(int i = 0; i < 4; i++){
-			App::mApp->mUART3->getBuffer()[App::mApp->mUART3->getBufferCount()] = App::mApp->mUART3->getRxBuffer()[i];
-			App::mApp->mUART3->setBufferCount(App::mApp->mUART3->getBufferCount() + 1);
-			if(App::mApp->mUART3->getBufferCount() == 2047){
-				App::mApp->mUART3->setBufferCount(0);
+//			App::mApp->mUART3->getBuffer()[App::mApp->mUART3->getBufferCount()] = App::mApp->mUART3->getRxBuffer()[i];
+//			App::mApp->mUART3->setBufferCount(App::mApp->mUART3->getBufferCount() + 1);
+//			if(App::mApp->mUART3->getBufferCount() == 2047){
+//				App::mApp->mUART3->setBufferCount(0);
+//			}
+			App::mApp->mUART3->Buffer[App::mApp->mUART3->BufferCount++] = App::mApp->mUART3->rxBuffer[i];
+			App::mApp->mUART3->AvailableLength++;
+			if(App::mApp->mUART3->BufferCount == 2047){
+				App::mApp->mUART3->BufferCount = 0;
 			}
 		}
 
@@ -94,10 +99,10 @@ void DMA2_Stream2_IRQHandler(void)
 			}
 		}
 		for(int i = 0; i < 4; i++){
-			App::mApp->mUART1->getBuffer()[App::mApp->mUART1->getBufferCount()] = App::mApp->mUART1->getRxBuffer()[i];
-			App::mApp->mUART1->setBufferCount(App::mApp->mUART1->getBufferCount() + 1);
-			if(App::mApp->mUART1->getBufferCount() == 2047){
-				App::mApp->mUART1->setBufferCount(0);
+			App::mApp->mUART1->Buffer[App::mApp->mUART1->BufferCount++] = App::mApp->mUART1->rxBuffer[i];
+			App::mApp->mUART1->AvailableLength++;
+			if(App::mApp->mUART1->BufferCount == 2047){
+				App::mApp->mUART1->BufferCount = 0;
 			}
 		}
 		DMA_Cmd(DMA2_Stream2, ENABLE);
@@ -106,67 +111,39 @@ void DMA2_Stream2_IRQHandler(void)
 
 
 void USART1_IRQHandler(){
-
-	App::mApp->mUART1->getBuffer()[App::mApp->mUART1->getBufferCount()] = USART_ReceiveData(USART1);
-	App::mApp->mUART1->setBufferCount(App::mApp->mUART1->getBufferCount() + 1);
-	if(App::mApp->mUART1->getBufferCount() == 2047){
-		App::mApp->mUART1->setBufferCount(0);
+	App::mApp->mUART1->Buffer[App::mApp->mUART1->BufferCount++] = USART_ReceiveData(USART1);
+	App::mApp->mUART1->AvailableLength++;
+	if(App::mApp->mUART1->BufferCount == 2047){
+		App::mApp->mUART1->BufferCount = 0;
 	}
 }
 
 void USART3_IRQHandler(){
-
-	App::mApp->mUART3->getBuffer()[	App::mApp->mUART3->getBufferCount()] = USART_ReceiveData(USART3);
-	App::mApp->mUART3->setBufferCount(	App::mApp->mUART3->getBufferCount() + 1);
-	if(	App::mApp->mUART3->getBufferCount() == 2047){
-		App::mApp->mUART3->setBufferCount(0);
+	App::mApp->mUART3->Buffer[App::mApp->mUART3->BufferCount++] = USART_ReceiveData(USART3);
+	App::mApp->mUART3->AvailableLength++;
+	if(App::mApp->mUART3->BufferCount == 2047){
+		App::mApp->mUART3->BufferCount = 0;
 	}
 }
 
 void UART4_IRQHandler(){
-
-	App::mApp->mUART4->getBuffer()[App::mApp->mUART4->getBufferCount()] = USART_ReceiveData(UART4);
-	App::mApp->mUART4->setBufferCount(App::mApp->mUART4->getBufferCount() + 1);
-	if(App::mApp->mUART4->getBufferCount() == 2047){
-		App::mApp->mUART4->setBufferCount(0);
+	App::mApp->mUART4->Buffer[App::mApp->mUART4->BufferCount++] = USART_ReceiveData(UART4);
+	App::mApp->mUART4->AvailableLength++;
+	if(App::mApp->mUART4->BufferCount == 2047){
+		App::mApp->mUART4->BufferCount = 0;
 	}
 }
 
 void UART5_IRQHandler(){
-
-	App::mApp->mUART5->getBuffer()[App::mApp->mUART5->getBufferCount()] = USART_ReceiveData(UART5);
-	App::mApp->mUART5->setBufferCount(App::mApp->mUART5->getBufferCount() + 1);
-	if(App::mApp->mUART5->getBufferCount() == 2047){
-		App::mApp->mUART5->setBufferCount(0);
+	App::mApp->mUART5->Buffer[App::mApp->mUART5->BufferCount++] = USART_ReceiveData(UART5);
+	App::mApp->mUART5->AvailableLength++;
+	if(App::mApp->mUART5->BufferCount == 2047){
+		App::mApp->mUART5->BufferCount = 0;
 	}
 }
 
-bool UART::getIsDmaBusy(){
-	return isDmaBusy;
-}
-
-void UART::setIsDmaBusy(bool value){
-	isDmaBusy = value;
-}
-
-void UART::setBufferCount(int value){
-	BufferCount = value;
-}
-
-int UART::getBufferCount(){
-	return BufferCount;
-}
-
-char* UART::getBuffer(){
-	return pBuffer;
-}
-
-char* UART::getRxBuffer(){
-	return rxBuffer;
-}
-
 int UART::Read(char* buffer, int length){
-
+	pBuffer = &Buffer[BufferCount - AvailableLength];
 	for(int i = 0; i < length; i++){
 		if(pBuffer >= Buffer + 2047){
 			pBuffer = Buffer;
@@ -174,8 +151,8 @@ int UART::Read(char* buffer, int length){
 		buffer[i] = *(pBuffer++);
 	}
 	buffer[length] = '\0';
-	BufferCount -= length;
-	return BufferCount;
+	AvailableLength -= length;
+	return AvailableLength;
 }
 
 void UART::setPrintUART(){
@@ -184,7 +161,7 @@ void UART::setPrintUART(){
 	STDIN_USART = Conf->_UARTx;
 }
 
-UART::UART(UARTConfiguration* conf) : Conf(conf), BufferCount(0), pBuffer(Buffer), isDmaBusy(false){
+UART::UART(UARTConfiguration* conf) : Conf(conf), BufferCount(0), pBuffer(Buffer), isDmaBusy(false), AvailableLength(0){
 
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
@@ -439,15 +416,15 @@ void UART::Print(const char* pstr, ...)
 	}
 
 	if(Conf->_UARTx == USART1){
-		if(!App::mApp->mUART1->getIsDmaBusy()){
-			App::mApp->mUART1->setIsDmaBusy(true);
+		if(!App::mApp->mUART1->isDmaBusy){
+			App::mApp->mUART1->isDmaBusy = true;
 			DMA_SetCurrDataCounter(DMA2_Stream7, length);
 			DMA_Cmd(DMA2_Stream7, ENABLE);
 		}
 	}
 	else if(Conf->_UARTx == USART3){
-		if(!App::mApp->mUART3->getIsDmaBusy()){
-			App::mApp->mUART3->setIsDmaBusy(true);
+		if(!App::mApp->mUART3->isDmaBusy){
+			App::mApp->mUART3->isDmaBusy = true;
 			DMA_SetCurrDataCounter(DMA1_Stream3, length);
 			DMA_Cmd(DMA1_Stream3, ENABLE);
 		}

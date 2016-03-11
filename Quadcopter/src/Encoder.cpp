@@ -6,17 +6,21 @@
  */
 
 #include <Encoder.h>
+#include <App.h>
+#include <MathTools.h>
 
 using namespace Sensors;
+using namespace Math;
 
 Encoder::EncoderConfiguration::EncoderConfiguration(Configuration* signalA,
 		Configuration* signalB,
-		TimerSelections timerConf) : _signalA(signalA),
+		TimerSelections timerConf, float timerClk) : _signalA(signalA),
 		_signalB(signalB),
-		_timerConf(timerConf){
+		_timerConf(timerConf),
+		TimerClk(timerClk){
 }
 
-Encoder::Encoder(EncoderConfiguration* conf, float scale, float interval) : Conf(conf), Scale(scale), Interval(interval), Vel(0), Pos(0){
+Encoder::Encoder(EncoderConfiguration* conf, float scale, float angle) : Angle(Angle), Conf(conf), Scale(scale), Interval(0), Vel(0), Pos(0), PrevVel(0), PrevRawVel(0), RawVel(0){
 	GPIO_InitTypeDef GPIO_InitStructure;
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef TIM_OCInitStructure;
@@ -24,19 +28,19 @@ Encoder::Encoder(EncoderConfiguration* conf, float scale, float interval) : Conf
 	uint32_t RCC_TIMx;
 	uint8_t signalASource;
 	uint8_t signalBSource;
-	uint16_t TIM_Prescaler = 83;
+	uint16_t TIM_Prescaler = 84000000.0f / conf->TimerClk - 1;
 	switch(conf->_timerConf){
 		case EncoderConfiguration::TimerConf1:
 			TIMx = TIM1;
 			GPIO_AF_TIMx = GPIO_AF_TIM1;
 			RCC_TIMx = RCC_APB2Periph_TIM1;
-			TIM_Prescaler = 167;
+			TIM_Prescaler = 168000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf2:
 			TIMx = TIM8;
 			GPIO_AF_TIMx = GPIO_AF_TIM8;
 			RCC_TIMx = RCC_APB2Periph_TIM8;
-			TIM_Prescaler = 167;
+			TIM_Prescaler = 168000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf3:
 			TIMx = TIM2;
@@ -101,20 +105,67 @@ Encoder::Encoder(EncoderConfiguration* conf, float scale, float interval) : Conf
 
 	TIM_SetCounter(TIMx, 32768);
 	TIM_Cmd(TIMx, ENABLE);
+	PrevTick = App::mApp->mTicks->getTicks();
 }
 
-void Encoder::Poll(){
-	Vel = (int32_t)TIM_GetCounter(TIMx) - 32768;
+void Encoder::Update(float angle){
+	RawVel = (int32_t)TIM_GetCounter(TIMx) - 32768;
 	TIM_SetCounter(TIMx, 32768);
-	Vel *= Scale;
-	Pos += Vel;
-	Vel /= Interval;
+	Interval = App::mApp->mTicks->getTicks() - PrevTick;
+	PrevTick = App::mApp->mTicks->getTicks();
+	Interval /= 1000.0f;
+	if(Interval <= 0){
+		return;
+	}
+	RawVel *= 2.0f * MathTools::PI * Scale;
+	RawVel *= 100.0f;
+	RawVel /= Interval;
+	RawVel /= Conf->TimerClk / 1000000.0f;
+	if(App::mApp->mQuaternion != 0){
+		angle = fabs(angle);
+		angle = angle > MathTools::PI / 2.0f ? MathTools::PI - angle : angle;
+		if(MathTools::RadianToDegree(angle) > 20){
+			Vel = RawVel / calcEncoderErrorCompensationFactor(angle);
+		}
+		else{
+			Vel = RawVel;
+		}
+	}
+	else{
+		Vel = RawVel;
+	}
+	Pos += 0.5f * (RawVel + PrevRawVel) * Interval;
+	PrevRawVel = RawVel;
 }
 
-float Encoder::ReadVel(){
+float Encoder::getVel(){
 	return Vel;
 }
 
-float Encoder::ReadPos(){
+void Encoder::Reset(){
+	RawVel = 0;
+	PrevRawVel = 0;
+	Vel = 0;
+	PrevVel = 0;
+	Pos = 0;
+}
+
+float Encoder::getRawVel(){
+	return RawVel;
+}
+
+float Encoder::getPos(){
 	return Pos;
+}
+
+float Encoder::calcEncoderErrorCompensationFactor(float angle){
+	double x8 = angle*angle*angle*angle*angle*angle*angle*angle;
+	double x7 = angle*angle*angle*angle*angle*angle*angle;
+	double x6 = angle*angle*angle*angle*angle*angle;
+	double x5 = angle*angle*angle*angle*angle;
+	double x4 = angle*angle*angle*angle;
+	double x3 = angle*angle*angle;
+	double x2 = angle*angle;
+	double x = angle;
+	return 1.0 + 0.8749*x2 - 0.7317*x + 0.169;
 }

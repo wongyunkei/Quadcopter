@@ -22,17 +22,11 @@ void SysTick_Handler(void){
 	if(App::mApp->mTicks->getTicks() >= Ticks::maxTicks){
 		App::mApp->mTicks->setTicks(0);
 	}
-//	if(App::mApp->mTask->IsPrintTaskNum){
-//		if(App::mApp->mTask->hangCount++ > 10000){
-//
-//			App::mApp->mCommunicating1->Send(5,App::mApp->mTask->currentTaskNum);
-//
-//			while(App::mApp->mCommunicating1->getTxBufferCount() >= 4){
-//				App::mApp->mCommunicating1->SendPoll();
-//				Delay::DelayMS(10);
-//			}
-//		}
-//	}
+	if(App::mApp->mTask != 0 && App::mApp->mTask->IsPrintTaskNum){
+		if(App::mApp->mTask->hangCount++ > 10){
+			printf("%d\n", App::mApp->mTask->currentTaskNum);
+		}
+	}
 }
 
 uint16_t Ticks::getTimeout(){
@@ -80,7 +74,7 @@ uint16_t Ticks::getTicks(){
 }
 
 bool Ticks::Timeout(){
-	return (timeoutCount - getTimeout() < 0) ? true : false;
+	return (((int)timeoutCount - (int)getTimeout()) < 0) ? true : false;
 }
 
 void Ticks::setTimeout(uint16_t value){

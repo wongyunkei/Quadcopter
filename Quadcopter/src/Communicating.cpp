@@ -11,12 +11,13 @@ using namespace Communication;
 using namespace Math;
 using namespace Control;
 
-Communicating::Com::Com(Interface interface, uint32_t addr) : _interface(interface){
+Communicating::Com::Com(Interface interface, uint32_t addr, int index) : _interface(interface), Index(index){
 	switch(interface){
 		case __UART:
 			_UART = (UART*)addr;
 			break;
 		case __SPI:
+			_Spi = (Spi*)addr;
 			break;
 		case __I2C:
 			break;
@@ -34,10 +35,12 @@ void Communicating::ReceivePoll(){
 	int length;
 	switch(_com->_interface){
 		case Com::__UART:
-			length = _com->_UART->getBufferCount();
+			length = _com->_UART->AvailableLength;
 			_com->_UART->Read(Buffer + BufferCount, length);
 			break;
 		case Com::__SPI:
+			length = _com->_Spi->AvailableLength;
+			_com->_Spi->Read(Buffer + BufferCount, length);
 			break;
 		case Com::__I2C:
 			break;
@@ -84,13 +87,13 @@ void Communicating::ReceivePoll(){
 }
 
 void Communicating::SendPoll(){
+	char D[txBufferCount];
+	for(int i = 0; i < txBufferCount; i++){
+		D[i] = txBuffer[i];
+	}
 	switch(_com->_interface){
 		case Com::__UART:
-			if((!_com->_UART->Conf->_UseDMA || !_com->_UART->getIsDmaBusy()) && txBufferCount >= 4){
-				char D[txBufferCount];
-				for(int i = 0; i < txBufferCount; i++){
-					D[i] = txBuffer[i];
-				}
+			if((!_com->_UART->Conf->_UseDMA || !_com->_UART->isDmaBusy) && txBufferCount >= 4){
 				if(_com->_UART->Conf->_UseDMA){
 					_com->_UART->Print("%s\n", D);
 				}
@@ -98,14 +101,22 @@ void Communicating::SendPoll(){
 					_com->_UART->setPrintUART();
 					printf("%s\n", D);
 				}
-				txBufferCount = 0;
 			}
 			break;
 		case Com::__SPI:
+			if(txBufferCount >= 4){
+				if(_com->_Spi->Conf->IsSlave){
+					_com->_Spi->setSlaveTxBuffer(D, txBufferCount);
+				}
+				else{
+					_com->_Spi->Print(_com->Index, D, txBufferCount);
+				}
+			}
 			break;
 		case Com::__I2C:
 			break;
 	}
+	txBufferCount = 0;
 }
 
 void Communicating::Execute(int cmd, float data){
@@ -113,7 +124,9 @@ void Communicating::Execute(int cmd, float data){
 	switch(cmd){
 
 		case CMD::WATCHDOG:
-			App::mApp->mControlling->clearWatchDogCount();
+//			App::mApp->mControlling->clearWatchDogCount();
+			App::mApp->mCommunicating2->Send(0, data);
+			Acknowledgement();
 			break;
 		case CMD::PRINT_MODE:
 			PrintType = data;
@@ -177,7 +190,11 @@ void Communicating::Execute(int cmd, float data){
 //			App::mApp->mControlling->StopAllMotors();
 			App::mApp->mCompass->Reset();
 			App::mApp->mQuaternion->Reset();
+			App::mApp->mEncoder1->Reset();
+			App::mApp->mEncoder2->Reset();
+			App::mApp->mEncoder3->Reset();
 			App::mApp->mLocalization->Reset();
+			App::mApp->mEncoderYaw->Reset();
 //			for(int i = 0; i < 500; i++){
 //				App::mApp->mMPU6050->Update();
 //				App::mApp->mHMC5883L->Update();
@@ -282,7 +299,7 @@ void Communicating::Execute(int cmd, float data){
 }
 
 void Communicating::Acknowledgement(){
-	App::mApp->mLed4->Blink(true, 100, 2);
+	App::mApp->mLed4->Blink(true, 20, 2);
 }
 
 void Communicating::Send(int cmd, float data){

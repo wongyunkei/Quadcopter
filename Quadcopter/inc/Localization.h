@@ -26,9 +26,9 @@ namespace Sensors{
 namespace Math{
 	class Localization{
 		public:
-			Localization(Quaternion* quaternion, Encoder* encoderX, Encoder* encoderY, float encoderXTranslation, float encoderYTranslation, float interval);
-			Vector3f ReadPos();
-			Vector3f ReadVel();
+			Localization(Quaternion* quaternion, Encoder* encoderX, Encoder* encoderY, float encoderXTranslation, float encoderYTranslation);
+			Vector3f getPos();
+			Vector3f getVel();
 			void setEncoderXTranslation(float value);
 			void setEncoderYTranslation(float value);
 			void LocalizationCalc();
@@ -40,10 +40,13 @@ namespace Math{
 			float Interval;
 			float EncoderXFramePosX;
 			float EncoderXFramePosY;
+			float PrevProjX;
+			float PrevProjY;
 			Vector3f Pos;
 			Vector3f Vel;
 			float EncoderXTranslation;
 			float EncoderYTranslation;
+			float PrevTick;
 	};
 }
 

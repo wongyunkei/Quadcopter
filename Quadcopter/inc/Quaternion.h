@@ -13,6 +13,7 @@
 #include <Acceleration.h>
 #include <Compass.h>
 #include <AdditionalTools.h>
+#include <EncoderYaw.h>
 #include <Eigen/Eigen>
 using Eigen::Matrix3f;
 using Eigen::Matrix4f;
@@ -25,6 +26,7 @@ namespace Inertia{
 	class Acceleration;
 	class Omega;
 	class Compass;
+	class EncoderYaw;
 };
 
 namespace Inertia{
@@ -35,22 +37,27 @@ namespace Math{
 	class Quaternion{
 
 		public:
-			Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval, bool isUseCompass = false, Compass* mCompass = (Compass*)0);
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega);
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass);
+			Quaternion(Acceleration* mAcceleration, Omega* mOmega, EncoderYaw* mEncoderYaw);
 			bool Update();
 			Vector3f getEuler();
 			void Reset();
+			Vector4f _Quaternion;
 
 		private:
 			Acceleration* _mAcceleration;
 			Omega* _mOmega;
 			Compass* _mCompass;
+			EncoderYaw* _mEncoderYaw;
 			float Interval;
 			Vector3f _Euler;
-			Vector4f _Quaternion;
 			Kalman* _QuaternionKalman;
 
 			bool Valid;
 			bool IsUseCompass;
+			bool IsUseEncoderYaw;
+			Vector4f PrevT;
 			Vector3f QuaternionToEuler(Vector4f q);
 			Matrix3f QuaternionToMatrix(Vector4f q);
 			Vector4f EulerToQuaternion(Vector3f euler);
@@ -59,7 +66,7 @@ namespace Math{
 			Vector3f MatrixToFixedAngles(Matrix3f R);
 			Matrix4f calcStateTransMatrix(Vector3f w, float t);
 			Eigen::Matrix<float, 3, 4> calcQuatToEulerMeasMatrix(Vector4f q);
-			float ComplementaryFactor;
+			float PrevTick;
 	};
 };
 

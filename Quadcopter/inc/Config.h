@@ -15,6 +15,7 @@
 #include <PWM.h>
 #include <ADConverter.h>
 #include <I2C.h>
+#include <Spi.h>
 #include <Sonic.h>
 #include <Encoder.h>
 
@@ -22,10 +23,6 @@ using namespace Debug;
 using namespace Communication;
 using namespace Control;
 using namespace Sensors;
-
-namespace Sensors{
-	class Encoder;
-};
 
 namespace System{
 
@@ -53,10 +50,13 @@ namespace System{
 			UART::UARTConfiguration* UART5Conf2;
 			PWM::PWMConfiguration* mPWMConf1;
 			ADConverter::ADCConfiguration* ADCConf1;
-			I2C::I2CConfiguration* I2C1Con1;
-			I2C::I2CConfiguration* I2C1Con2;
-			I2C::I2CConfiguration* I2C2Con1;
-			I2C::I2CConfiguration* I2C2Con2;
+			I2C::I2CConfiguration* I2C1Conf1;
+			I2C::I2CConfiguration* I2C1Conf2;
+			I2C::I2CConfiguration* I2C2Conf1;
+			I2C::I2CConfiguration* I2C2Conf2;
+			Spi::SpiConfiguration* Spi1Conf1;
+			Spi::SpiConfiguration* Spi1Conf2;
+			Spi::SpiConfiguration* Spi2Conf1;
 			Sonic::SonicConfiguration* SonicConf1;
 			Sonic::SonicConfiguration* SonicConf2;
 			Sonic::SonicConfiguration* SonicConf3;

@@ -34,26 +34,26 @@ namespace Communication{
 
 			UART(UARTConfiguration* conf);
 			int Read(char*, int);
-			void setBufferCount(int);
-			int getBufferCount();
-			char* getBuffer();
+//			void setBufferCount(int);
+//			int getBufferCount();
+//			char* getBuffer();
 			void setPrintUART();
 			void Print(const char*, ...);
-			bool getIsDmaBusy();
-			void setIsDmaBusy(bool);
-			char* getRxBuffer();
-			void reset();
-			uint32_t getBaudrate();
+//			bool getIsDmaBusy();
+//			void setIsDmaBusy(bool);
+//			char* getRxBuffer();
+//			void reset();
+//			uint32_t getBaudrate();
 
 			UARTConfiguration* Conf;
 
-		private:
 			char Buffer[2048];
 			char txBuffer[2048];
 			char rxBuffer[7];
 			bool isDmaBusy;
 			char* pBuffer;
 			int BufferCount;
+			int AvailableLength;
 	};
 };
 

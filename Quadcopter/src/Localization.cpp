@@ -11,22 +11,23 @@ Localization::Localization(Quaternion* quaternion,
 		Encoder* encoderX,
 		Encoder* encoderY,
 		float  encoderYTranslation,
-		float  encoderXTranslation,
-		float interval) : mQuaternion(quaternion),
+		float  encoderXTranslation) : mQuaternion(quaternion),
 		mEncoderX(encoderX),
 		mEncoderY(encoderY),
 		EncoderXTranslation(encoderXTranslation),
 		EncoderYTranslation(encoderYTranslation),
-		Interval(interval), EncoderXFramePosX(encoderXTranslation), EncoderXFramePosY(encoderYTranslation){
+		Interval(0), EncoderXFramePosX(encoderXTranslation), PrevProjX(0), EncoderXFramePosY(encoderYTranslation), PrevProjY(0){
 	Pos.setZero();
 	Vel.setZero();
+	PrevTick = App::mApp->mTicks->getTicks();
+
 }
 
-Vector3f Localization::ReadPos(){
+Vector3f Localization::getPos(){
 	return Pos;
 }
 
-Vector3f Localization::ReadVel(){
+Vector3f Localization::getVel(){
 	return Vel;
 }
 
@@ -34,12 +35,22 @@ void Localization::LocalizationCalc(){
 	float yaw = mQuaternion->getEuler()[2];
 	float sinyaw = sinf(yaw);
 	float cosyaw = cosf(yaw);
-	float x = mEncoderX->ReadVel();
-	float y = mEncoderY->ReadVel();
-	EncoderXFramePosX += (cosyaw * x - sinyaw * y) * Interval;
-	EncoderXFramePosY += (sinyaw * x + cosyaw * y) * Interval;
+	float x = mEncoderX->getVel();
+	float y = mEncoderY->getVel();
+	Interval = App::mApp->mTicks->getTicks() - PrevTick;
+	PrevTick = App::mApp->mTicks->getTicks();
+	Interval /= 1000.0f;
+	if(Interval <= 0){
+		return;
+	}
+	float ProjX = (cosyaw * x - sinyaw * y);
+	float ProjY = (sinyaw * x + cosyaw * y);
+	EncoderXFramePosX += 0.5f * (PrevProjX + ProjX) * Interval;
+	EncoderXFramePosY += 0.5f * (PrevProjY + ProjY) * Interval;
+	PrevProjX = ProjX;
+	PrevProjY = ProjY;
 	Vector3f t;
-	t << EncoderXFramePosX - cosyaw * EncoderXTranslation + sinyaw * EncoderYTranslation  , EncoderXFramePosY - sinyaw * EncoderXTranslation - cosyaw * EncoderYTranslation, 0;
+	t << EncoderXFramePosX - cosyaw * EncoderXTranslation + sinyaw * EncoderYTranslation , EncoderXFramePosY - sinyaw * EncoderXTranslation - cosyaw * EncoderYTranslation, 0;
 	Vel = (t - Pos) / Interval;
 	Pos = t;
 }
@@ -57,4 +68,6 @@ void Localization::Reset(){
 	Vel.setZero();
 	EncoderXFramePosX = EncoderXTranslation;
 	EncoderXFramePosY = EncoderYTranslation;
+	PrevProjX = 0;
+	PrevProjY = 0;
 }

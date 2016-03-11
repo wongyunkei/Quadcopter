@@ -22,6 +22,7 @@
 #include <PWM.h>
 #include <ADConverter.h>
 #include <Sonic.h>
+#include <Spi.h>
 #include <I2C.h>
 #include <Kalman.h>
 #include <MPU6050.h>
@@ -35,6 +36,7 @@
 #include <MovingWindowAverageFilter.h>
 #include <Encoder.h>
 #include <Localization.h>
+#include <EncoderYaw.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
@@ -71,6 +73,7 @@ namespace Inertia{
 	class Acceleration;
 	class Omega;
 	class Compass;
+	class EncoderYaw;
 };
 
 namespace Math{
@@ -104,6 +107,8 @@ namespace System{
 			Sonic* mSonic2;
 			Sonic* mSonic3;
 			Sonic* mSonic4;
+			Spi* mSpi1;
+			Spi* mSpi2;
 			I2C* mI2C1;
 			I2C* mI2C2;
 			MPU6050* mMPU6050;
@@ -116,7 +121,9 @@ namespace System{
 			MovingWindowAverageFilter* mADCFilter;
 			Encoder* mEncoder1;
 			Encoder* mEncoder2;
+			Encoder* mEncoder3;
 			Localization* mLocalization;
+			EncoderYaw* mEncoderYaw;
 			App();
 		private:
 	};

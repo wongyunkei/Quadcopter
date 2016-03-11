@@ -21,78 +21,47 @@
 #include <Communicating.h>
 #include <Led.h>
 #include <UART.h>
+#include <EncoderYaw.h>
 
 using namespace Utility;
 
-Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, float interval, bool isUseCompass, Compass* mCompass) : _mAcceleration(mAcceleration), _mOmega(mOmega), IsUseCompass(isUseCompass), _mCompass(mCompass), Interval(interval), Valid(false), ComplementaryFactor(0.1f){
+Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega) : _mAcceleration(mAcceleration), _mOmega(mOmega), IsUseCompass(false), IsUseEncoderYaw(false), _mCompass(0), Interval(0), Valid(false), _mEncoderYaw((EncoderYaw*)0){
+	PrevT.setZero();
 	Matrix3f Q;
 	Q.setIdentity();
-	Q *= 1e-1f;
+	Q *= 1e-6f;
 	Matrix3f R;
 	R.setIdentity();
-	R *= 1e-12f;
+	R *= 1e-4f;
+	R(2,2) *= 1e-6f;
 	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
+	PrevTick = App::mApp->mTicks->getTicks();
 }
 
-//bool Quaternion::Update(){
-//	if(_mOmega->getIsValided()){
-//		Vector3f omega = _mOmega->getOmega() * MathTools::RADIAN_PER_DEGREE;
-//		Matrix4f T = calcStateTransMatrix(omega, Interval);
-//		Vector4f q = T * _Quaternion;
-//		Vector3f E = QuaternionToEuler(q);
-//		bool valid = true;
-//		for(int i = 0; i < 3; i++){
-//			if(fabs(E[i]) > 0.5f){
-//				valid = false;
-//			}
-//		}
-//		bool AccValid = _mAcceleration->getIsValided() && _mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.9f && _mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.1f;
-//		Vector3f angle;
-//		bool MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
-//
-//		if(AccValid){
-//			angle = _mAcceleration->getAngle();
-//			if(MagValid){
-//				angle[2] = _mCompass->getAngle()[2];
-//			}
-//			else{
-//				angle[2] = E[2];
-//			}
-//		}
-//		if(valid && AccValid){
-//			Eigen::Matrix<float, 3, 4> C = calcQuatToEulerMeasMatrix(q);
-//			Vector4f quat = _QuaternionKalman->Filtering(T, _Quaternion, C, angle) ? _QuaternionKalman->getCorrectedData() : T * _Quaternion;
-//			quat.normalize();
-//			for(int i = 0; i < 4; i++){
-//				if(quat[i] != quat[i]){
-//					Valid = false;
-//					return false;
-//				}
-//			}
-//			_Quaternion = quat;
-//		}
-//		else{
-//			_Quaternion = T * _Quaternion;
-//			_Quaternion.normalize();
-//			if(!valid && AccValid){
-//				angle = _mAcceleration->getFilteredAngle();
-//				if(MagValid){
-//					angle[2] = _mCompass->getFilteredAngle()[2];
-//				}
-//				else{
-//					angle[2] = E[2];
-//				}
-//				_Quaternion = EulerToQuaternion(angle);
-//			}
-//		}
-//		_Euler = QuaternionToEuler(_Quaternion);
-//		return true;
-//	}
-//	else{
-//		Valid = false;
-//		return false;
-//	}
-//}
+Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, Compass* mCompass) : _mAcceleration(mAcceleration), _mOmega(mOmega), IsUseCompass(true), IsUseEncoderYaw(false), Interval(0), Valid(false), _mCompass(mCompass), _mEncoderYaw((EncoderYaw*)0){
+	PrevT.setZero();
+	Matrix3f Q;
+	Q.setIdentity();
+	Q *= 1e-6f;
+	Matrix3f R;
+	R.setIdentity();
+	R *= 1e-1f;
+	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
+	PrevTick = App::mApp->mTicks->getTicks();
+}
+
+
+Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega, EncoderYaw* mEncoderYaw) : _mAcceleration(mAcceleration), _mOmega(mOmega), IsUseCompass(false), IsUseEncoderYaw(true), _mCompass(0), Interval(0), Valid(false), _mEncoderYaw(mEncoderYaw){
+	PrevT.setZero();
+	Matrix3f Q;
+	Q.setIdentity();
+	Q *= 1e-6f;
+	Matrix3f R;
+	R.setIdentity();
+	R *= 1e-1f;
+	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
+	PrevTick = App::mApp->mTicks->getTicks();
+}
 
 bool Quaternion::Update(){
 	if(_mOmega->getIsValided()){
@@ -100,16 +69,24 @@ bool Quaternion::Update(){
 		Vector4f q;
 		q << 0, omega[0], omega[1], omega[2];
 		Vector4f t;
-		t[0] = q[0]*_Quaternion[0]-q[1]*_Quaternion[1]-q[2]*_Quaternion[2]-q[3]*_Quaternion[3];
-		t[1] = q[0]*_Quaternion[1]+q[1]*_Quaternion[0]+q[2]*_Quaternion[3]-q[3]*_Quaternion[2];
-		t[2] = q[0]*_Quaternion[2]-q[1]*_Quaternion[3]+q[2]*_Quaternion[0]+q[3]*_Quaternion[1];
-		t[3] = q[0]*_Quaternion[3]+q[1]*_Quaternion[2]-q[2]*_Quaternion[1]+q[3]*_Quaternion[0];
-
-		q = _Quaternion + 0.5 * t * Interval;
+		t[0] = -q[1]*_Quaternion[1]-q[2]*_Quaternion[2]-q[3]*_Quaternion[3];
+		t[1] = q[1]*_Quaternion[0]+q[2]*_Quaternion[3]-q[3]*_Quaternion[2];
+		t[2] = -q[1]*_Quaternion[3]+q[2]*_Quaternion[0]+q[3]*_Quaternion[1];
+		t[3] = q[1]*_Quaternion[2]-q[2]*_Quaternion[1]+q[3]*_Quaternion[0];
+		Interval = App::mApp->mTicks->getTicks() - PrevTick;
+		PrevTick = App::mApp->mTicks->getTicks();
+		Interval /= 1000.0f;
+		if(Interval <= 0){
+			Valid = false;
+			return false;
+		}
+		t *= 0.5f * Interval;
+		q = _Quaternion + 0.5f * (t + PrevT);
+		PrevT = t;
 		q.normalize();
 		Vector3f e = QuaternionToEuler(q);
 		bool valid = true;
-		bool AccValid = _mAcceleration->getIsValided() && _mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.9f && _mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.1f;
+		bool AccValid = _mAcceleration->getIsValided() && (_mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.95f) && (_mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.05f);
 		Vector3f angle;
 		bool MagValid;
 		if(IsUseCompass){
@@ -119,37 +96,50 @@ bool Quaternion::Update(){
 			angle = _mAcceleration->getAngle();
 			if(IsUseCompass && MagValid){
 				angle[2] = _mCompass->getAngle()[2];
-				App::mApp->mLed3->LedControl(true);
+			}
+			else if(IsUseEncoderYaw){
+				angle[2] = _mEncoderYaw->getYaw();
 			}
 			else{
 				angle[2] = e[2];
-				App::mApp->mLed3->LedControl(false);
 			}
 		}
-		Vector3f euler;
-		if(valid && AccValid){
-			angle = (1 - ComplementaryFactor) * e + ComplementaryFactor * angle;
+		else{
+			angle[0] = e[0];
+			angle[1] = e[1];
+			if(IsUseCompass && MagValid){
+				angle[2] = _mCompass->getAngle()[2];
+			}
+			else if(IsUseEncoderYaw){
+				angle[2] = _mEncoderYaw->getYaw();
+			}
+			else{
+				angle[2] = e[2];
+			}
+		}
+
+		Matrix3f A;
+		A.setIdentity();
+		Matrix3f H;
+		H.setIdentity();
+		if(valid && AccValid && _QuaternionKalman->Filtering(A, e, H, angle)){
+			angle = _QuaternionKalman->getCorrectedData();
 			for(int i = 0; i < 3; i++){
 				if(angle[i] != angle[i]){
 					Valid = false;
 					return false;
 				}
 			}
-			euler = angle;
+			if(fabs(fabs(_mEncoderYaw->getYaw()) - MathTools::PI) < 0.01f){
+				angle[2] = _mEncoderYaw->getYaw();
+			}
+			_Euler = angle;
+			App::mApp->mLed3->LedControl(true);
 		}
 		else{
-			euler = e;
+			_Euler = e;
+			App::mApp->mLed3->LedControl(false);
 		}
-		Matrix3f A;
-		A.setIdentity();
-		Matrix3f H;
-		H.setIdentity();
-//		if(_QuaternionKalman->Filtering(A, e, H, euler)){
-//			_Euler = _QuaternionKalman->getCorrectedData();
-//		}
-//		else{
-			_Euler = euler;
-//		}
 		_Quaternion = EulerToQuaternion(_Euler);
 		return true;
 	}
@@ -190,7 +180,7 @@ Eigen::Matrix<float, 3, 4> Quaternion::calcQuatToEulerMeasMatrix(Vector4f q){
 		 2*(R(0,0)*q[0]+2*R(0,1)*q[3]);
 	Eigen::Matrix<float, 3, 1> d;
 	d << R(2,2)*R(2,2)+R(1,2)*R(1,2),
-		 sqrt(1-R(0,2)*R(0,2)),
+		 sqrtf(1-R(0,2)*R(0,2)),
 		 R(0,0)*R(0,0)+R(0,1)*R(0,1);
 	C << -n(0,0)/d(0,0),-n(0,1)/d(0,0),-n(0,2)/d(0,0),-n(0,3)/d(0,0),
 		 n(1,0)/d(1,0),n(1,1)/d(1,0),n(1,2)/d(1,0),n(1,3)/d(1,0),
@@ -201,6 +191,7 @@ Eigen::Matrix<float, 3, 4> Quaternion::calcQuatToEulerMeasMatrix(Vector4f q){
 Vector3f Quaternion::QuaternionToEuler(Vector4f q){
 	Vector3f euler;
 	euler[0] = atan2f(2 * (q[0] * q[1] + q[2] * q[3]), 1 - 2 * (q[1] * q[1] + q[2] * q[2]));
+	float a = 2 * (q[0] * q[1] + q[2] * q[3]), b = 1 - 2 * (q[1] * q[1] + q[2] * q[2]);
 	float r32 = 2 * (q[0] * q[1] + q[2] * q[3]);
 	float r33 = 1 - 2 * (q[1] * q[1] + q[2] * q[2]);
 	euler[1] = atan2f(-2 * (q[1] * q[3] - q[0] * q[2]), sqrtf(r32 * r32 + r33 * r33));
@@ -209,7 +200,16 @@ Vector3f Quaternion::QuaternionToEuler(Vector4f q){
 }
 
 Vector4f Quaternion::EulerToQuaternion(Vector3f euler){
-	return FixedAnglesToQuaternion(MatrixToFixedAngles(EulerToMatrix(euler)));
+
+	float CosHalfRoll = cosf(euler[0] / 2.0f), SinHalfRoll = sinf(euler[0] / 2.0f);
+	float CosHalfPitch = cosf(euler[1] / 2.0f), SinHalfPitch = sinf(euler[1] / 2.0f);
+	float CosHalfYaw = cosf(euler[2] / 2.0f), SinHalfYaw = sinf(euler[2] / 2.0f);
+	Vector4f q;
+	q[0] = CosHalfRoll * CosHalfPitch * CosHalfYaw + SinHalfRoll * SinHalfPitch * SinHalfYaw;
+	q[1] = SinHalfRoll * CosHalfPitch * CosHalfYaw - CosHalfRoll * SinHalfPitch * SinHalfYaw;
+	q[2] = CosHalfRoll * SinHalfPitch * CosHalfYaw + SinHalfRoll * CosHalfPitch * SinHalfYaw;
+	q[3] = CosHalfRoll * CosHalfPitch * SinHalfYaw - SinHalfRoll * SinHalfPitch * CosHalfYaw;
+	return q;
 }
 
 Vector4f Quaternion::FixedAnglesToQuaternion(Vector3f fixedAngles){
@@ -277,4 +277,5 @@ void Quaternion::Reset(){
 	}
 	_QuaternionKalman->Clear(angle);
 	_Quaternion = EulerToQuaternion(angle);
+	PrevT.setZero();
 }

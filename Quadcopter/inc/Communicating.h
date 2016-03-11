@@ -29,6 +29,7 @@
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <MPU6050.h>
+#include <Spi.h>
 
 namespace Communication{
 
@@ -38,10 +39,11 @@ namespace Communication{
 			class Com{
 				public:
 					enum Interface{__UART, __SPI, __I2C};
-					Com(Interface interface, uint32_t addr);
+					Com(Interface interface, uint32_t addr, int index = 0);
 					Interface _interface;
 					UART* _UART;
-	//				SPI* _SPI;
+					Spi* _Spi;
+					int Index;
 	//				I2C* _I2C;
 				private:
 			};

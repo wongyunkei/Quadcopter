@@ -69,7 +69,7 @@ void NRF905::resetNRF905(){
 	clrPwr();
 	clrTxen();
 	clrTrxce();
-	Spi::getInstance(RF_SPI)->resetSpi();
+//	Spi::getInstance(RF_SPI)->resetSpi();
 	rfDelayCount = 0;
 	App::mApp->mTask->Attach(10, 0, resetNRF905Task, true, -1);
 }
@@ -151,7 +151,7 @@ NRF905::NRF905(int channel, FREQ freq, POWER power, RX_POWER rxPower, RETRAN ret
 		delete NRF905Spi;
 	}
 
-	NRF905Spi = new Spi(RF_SPI, Spi::PRESCALER8, Spi::SPIMODE0);
+//	NRF905Spi = new Spi(RF_SPI, Spi::PRESCALER8, Spi::SPIMODE0);
 
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
