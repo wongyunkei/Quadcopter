@@ -93,6 +93,9 @@ namespace System{
 			Led* mLed3;
 			Led* mLed4;
 			Led* mGPIO1;
+			Led* mGPIO2;
+			Led* mGPIO3;
+			Led* mGPIO4;
 			UART* mUART1;
 			UART* mUART3;
 			UART* mUART4;
@@ -122,6 +125,7 @@ namespace System{
 			Encoder* mEncoder1;
 			Encoder* mEncoder2;
 			Encoder* mEncoder3;
+			Encoder* mEncoder4;
 			Localization* mLocalization;
 			EncoderYaw* mEncoderYaw;
 			App();

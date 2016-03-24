@@ -19,11 +19,11 @@ void Pid::setKp(float kp){
 }
 
 void Pid::setKi(float ki){
-	Kp = ki;
+	Ki = ki;
 }
 
 void Pid::setKd(float kd){
-	Kp = kd;
+	Kd = kd;
 }
 
 float Pid::getKp(){

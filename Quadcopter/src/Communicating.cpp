@@ -124,9 +124,9 @@ void Communicating::Execute(int cmd, float data){
 	switch(cmd){
 
 		case CMD::WATCHDOG:
-//			App::mApp->mControlling->clearWatchDogCount();
-			App::mApp->mCommunicating2->Send(0, data);
-			Acknowledgement();
+			App::mApp->mControlling->clearWatchDogCount();
+//			App::mApp->mCommunicating2->Send(0, data);
+//			Acknowledgement();
 			break;
 		case CMD::PRINT_MODE:
 			PrintType = data;
@@ -270,7 +270,7 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::LIFT:
-			App::mApp->mControlling->Lift = data;
+			App::mApp->mControlling->Speed = data;
 			Acknowledgement();
 			break;
 		case CMD::TARGET_ROLL:
@@ -293,7 +293,48 @@ void Communicating::Execute(int cmd, float data){
 				App::mApp->mLocalization->setEncoderYTranslation(data);
 				Acknowledgement();
 				break;
-
+		case CMD::MOTOR_KP:
+					App::mApp->mControlling->Motor1->setKp(data);
+					App::mApp->mControlling->Motor2->setKp(data);
+					App::mApp->mControlling->Motor3->setKp(data);
+					App::mApp->mControlling->Motor4->setKp(data);
+					Acknowledgement();
+					break;
+		case CMD::MOTOR_KI:
+					App::mApp->mControlling->Motor1->setKi(data);
+					App::mApp->mControlling->Motor2->setKi(data);
+					App::mApp->mControlling->Motor3->setKi(data);
+					App::mApp->mControlling->Motor4->setKi(data);
+					Acknowledgement();
+					break;
+		case CMD::FORWARD:
+					App::mApp->mControlling->Forward();
+					Acknowledgement();
+					break;
+		case CMD::BACKWARD:
+					App::mApp->mControlling->Backward();
+					Acknowledgement();
+					break;
+		case CMD::LEFT:
+					App::mApp->mControlling->Left();
+					Acknowledgement();
+					break;
+		case CMD::RIGHT:
+					App::mApp->mControlling->Right();
+					Acknowledgement();
+					break;
+		case CMD::PAUSE:
+					App::mApp->mControlling->Pause();
+					Acknowledgement();
+					break;
+		case CMD::CW:
+					App::mApp->mControlling->CW();
+					Acknowledgement();
+					break;
+		case CMD::CCW:
+					App::mApp->mControlling->CCW();
+					Acknowledgement();
+					break;
 	}
 
 }

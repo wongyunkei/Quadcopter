@@ -77,7 +77,16 @@ namespace Communication{
 				TARGET_PITCH,
 				TARGET_YAW,
 				SET_X_TRANSLATION,
-				SET_Y_TRANSLATION
+				SET_Y_TRANSLATION,
+				MOTOR_KP,
+				MOTOR_KI,
+	            FORWARD,
+	            BACKWARD,
+	            LEFT,
+	            RIGHT,
+				PAUSE,
+	            CW,
+				CCW
 			};
 
 			Communicating(Com* com);

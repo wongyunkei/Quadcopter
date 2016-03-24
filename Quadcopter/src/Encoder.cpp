@@ -28,39 +28,43 @@ Encoder::Encoder(EncoderConfiguration* conf, float scale, float angle) : Angle(A
 	uint32_t RCC_TIMx;
 	uint8_t signalASource;
 	uint8_t signalBSource;
-	uint16_t TIM_Prescaler = 84000000.0f / conf->TimerClk - 1;
+	uint16_t TIM_Prescaler;
 	switch(conf->_timerConf){
 		case EncoderConfiguration::TimerConf1:
 			TIMx = TIM1;
 			GPIO_AF_TIMx = GPIO_AF_TIM1;
 			RCC_TIMx = RCC_APB2Periph_TIM1;
-			TIM_Prescaler = 168000000.0f / conf->TimerClk - 1;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf2:
 			TIMx = TIM8;
 			GPIO_AF_TIMx = GPIO_AF_TIM8;
 			RCC_TIMx = RCC_APB2Periph_TIM8;
-			TIM_Prescaler = 168000000.0f / conf->TimerClk - 1;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf3:
 			TIMx = TIM2;
 			GPIO_AF_TIMx = GPIO_AF_TIM2;
 			RCC_TIMx = RCC_APB1Periph_TIM2;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf4:
 			TIMx = TIM3;
 			GPIO_AF_TIMx = GPIO_AF_TIM3;
 			RCC_TIMx = RCC_APB1Periph_TIM3;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf5:
 			TIMx = TIM4;
 			GPIO_AF_TIMx = GPIO_AF_TIM4;
 			RCC_TIMx = RCC_APB1Periph_TIM4;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 		case EncoderConfiguration::TimerConf6:
 			TIMx = TIM5;
 			GPIO_AF_TIMx = GPIO_AF_TIM5;
 			RCC_TIMx = RCC_APB1Periph_TIM5;
+			TIM_Prescaler = 42000000.0f / conf->TimerClk - 1;
 			break;
 	}
 
@@ -121,19 +125,19 @@ void Encoder::Update(float angle){
 	RawVel *= 100.0f;
 	RawVel /= Interval;
 	RawVel /= Conf->TimerClk / 1000000.0f;
-	if(App::mApp->mQuaternion != 0){
-		angle = fabs(angle);
-		angle = angle > MathTools::PI / 2.0f ? MathTools::PI - angle : angle;
-		if(MathTools::RadianToDegree(angle) > 20){
-			Vel = RawVel / calcEncoderErrorCompensationFactor(angle);
-		}
-		else{
-			Vel = RawVel;
-		}
-	}
-	else{
+//	if(App::mApp->mQuaternion != 0){
+//		angle = fabs(angle);
+//		angle = angle > MathTools::PI / 2.0f ? MathTools::PI - angle : angle;
+//		if(MathTools::RadianToDegree(angle) > 20){
+//			Vel = RawVel / calcEncoderErrorCompensationFactor(angle);
+//		}
+//		else{
+//			Vel = RawVel;
+//		}
+//	}
+//	else{
 		Vel = RawVel;
-	}
+//	}
 	Pos += 0.5f * (RawVel + PrevRawVel) * Interval;
 	PrevRawVel = RawVel;
 }

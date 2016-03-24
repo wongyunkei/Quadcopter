@@ -40,6 +40,9 @@ namespace System{
 			Led::LedConfiguration* LedConf3;
 			Led::LedConfiguration* LedConf4;
 			Led::LedConfiguration* GPIOConf1;
+			Led::LedConfiguration* GPIOConf2;
+			Led::LedConfiguration* GPIOConf3;
+			Led::LedConfiguration* GPIOConf4;
 			UART::UARTConfiguration* UART1Conf1;
 			UART::UARTConfiguration* UART1Conf2;
 			UART::UARTConfiguration* UART3Conf1;

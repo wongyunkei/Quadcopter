@@ -23,17 +23,19 @@
 #include <AdditionalTools.h>
 #include <Delay.h>
 #include <Led.h>
+#include <Encoder.h>
 #include <Eigen/Eigen>
 using Eigen::Vector3f;
 using Eigen::Vector4f;
 
 using namespace Math;
+using namespace Sensors;
 
 namespace Control{
 
 	class Controlling{
 		public:
-			Controlling(PWM* mPWM);
+			Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encoder* encoder3, Encoder* encoder4);
 			void ControllingPoll();
 			void Starting();
 			void Stopping();
@@ -57,13 +59,28 @@ namespace Control{
 			void setStopping(bool);
 			bool getStopping();
 			void StopAllMotors();
+			void Forward();
+			void Backward();
+			void Left();
+			void Right();
+			void Pause();
+			void CW();
+			void CCW();
 			PWM* _mPWM;
+			Encoder* Encoder1;
+			Encoder* Encoder2;
+			Encoder* Encoder3;
+			Encoder* Encoder4;
 			Pid* RollPid;
 			Pid* PitchPid;
 			Pid* YawPid;
 			Pid* KdRollPid;
 			Pid* KdPitchPid;
 			Pid* KdYawPid;
+			Pid* Motor1;
+			Pid* Motor2;
+			Pid* Motor3;
+			Pid* Motor4;
 			float maxLift;
 			float minLift;
 			float initLift;
@@ -75,6 +92,15 @@ namespace Control{
 			float YawOffset;
 			int startCount;
 			int StoppingDelayCount;
+			float Motor1PWM;
+			float Motor2PWM;
+			float Motor3PWM;
+			float Motor4PWM;
+			float Speed;
+			float Motor1SpeedTarget;
+			float Motor2SpeedTarget;
+			float Motor3SpeedTarget;
+			float Motor4SpeedTarget;
 
 		private:
 			int WatchDogLimit;

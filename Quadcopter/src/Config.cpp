@@ -15,15 +15,21 @@ Config::Config(){
 	Encoder2Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_6),
 													  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_7), Encoder::EncoderConfiguration::TimerConf2, 42000000);
 
-	Encoder3Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_4),
-														  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_5), Encoder::EncoderConfiguration::TimerConf4, 42000000);
+	Encoder3Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_6),
+														  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_7), Encoder::EncoderConfiguration::TimerConf4, 42000000);
+
+	Encoder4Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_0),
+															  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_1), Encoder::EncoderConfiguration::TimerConf6, 42000000);
 
 	LedConf1 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_12), Bit_SET);
 	LedConf2 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_13), Bit_SET);
 	LedConf3 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_14), Bit_SET);
 	LedConf4 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_15), Bit_SET);
 
-	GPIOConf1 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_0), Bit_RESET);
+	GPIOConf1 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_0), Bit_SET);
+	GPIOConf2 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), Bit_SET);
+	GPIOConf3 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_2), Bit_SET);
+	GPIOConf4 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_1), Bit_SET);
 
 	UART1Conf1 = new UART::UARTConfiguration(USART1, 115200, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_6), GPIO_PinSource6, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_7), GPIO_PinSource7, false);
 	UART1Conf2 = new UART::UARTConfiguration(USART1, 115200, new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_9), GPIO_PinSource9, new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_10), GPIO_PinSource10, true);
@@ -32,11 +38,11 @@ Config::Config(){
 	UART4Conf2 = new UART::UARTConfiguration(UART4, 115200, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_10), GPIO_PinSource10, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_11), GPIO_PinSource11);
 	UART5Conf1 = new UART::UARTConfiguration(UART5, 115200, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_12), GPIO_PinSource12, new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_2), GPIO_PinSource2);
 
-	mPWMConf1 = new PWM::PWMConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_6), GPIO_PinSource6,
-										  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_7), GPIO_PinSource7,
-										  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_8), GPIO_PinSource8,
-										  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_9), GPIO_PinSource9,
-										  40000);
+	mPWMConf1 = new PWM::PWMConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_5),
+										  new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_6),
+										  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_14),
+										  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_15),
+										  10000);
 
 	ADCConf1 = new ADConverter::ADCConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_3), ADC_Channel_3, ADC_SampleTime_480Cycles);
 

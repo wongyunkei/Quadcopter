@@ -19,30 +19,25 @@ namespace Control{
 		public:
 			class PWMConfiguration{
 				public:
-					PWMConfiguration(Configuration* pwm1, uint8_t pwmSource1, Configuration* pwm2, uint8_t pwmSource2, Configuration* pwm3, uint8_t pwmSource3, Configuration* pwm4, uint8_t pwmSource4, float freq);
+					PWMConfiguration(Configuration* pwm1, Configuration* pwm2, Configuration* pwm3, Configuration* pwm4, float freq);
 					Configuration* _pwm1;
 					Configuration* _pwm2;
 					Configuration* _pwm3;
 					Configuration* _pwm4;
-					uint8_t _pwmSource1;
-					uint8_t _pwmSource2;
-					uint8_t _pwmSource3;
-					uint8_t _pwmSource4;
 					float _freq;
 				private:
 			};
 			PWM(PWMConfiguration* conf);
-			void Control1(double dutyCycle);
-			void Control2(double dutyCycle);
-			void Control3(double dutyCycle);
-			void Control4(double dutyCycle);
-			double getLowerLimit();
-			double getUpperLimit();
+			void Control1(float dutyCycle);
+			void Control2(float dutyCycle);
+			void Control3(float dutyCycle);
+			void Control4(float dutyCycle);
 		private:
 			PWMConfiguration* Conf;
-			double LowerLimit;
-			double UpperLimit;
-			double MaxPWM;
+			float MaxPWM;
+			float MinPWM;
+			float UpperLimit1;
+			float UpperLimit2;
 	};
 };
 

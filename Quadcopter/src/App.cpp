@@ -54,10 +54,67 @@ void SendTask(){
 //	App::mApp->mCommunicating2->SendPoll();
 }
 
+void printElse(){
+	App::mApp->mCommunicating1->Send(0, AdditionalTools::getBuffer(0)[0]);
+}
+
 void print(){
-	printf("%g,%g,%g\n", App::mApp->mOmega->getOmega()[0]
-					  , App::mApp->mOmega->getOmega()[1]
-					  , App::mApp->mOmega->getOmega()[2]);
+	static int index = 0;
+
+	switch(App::mApp->mCommunicating1->PrintType){
+		case 0:
+			if(index == 0){
+//				App::mApp->mCommunicating1->Send(0, App::mApp->mEncoder1->getVel());
+				App::mApp->mCommunicating1->Send(0, App::mApp->mControlling->Motor1PWM);
+			}
+			else if(index == 1){
+//				App::mApp->mCommunicating1->Send(1, App::mApp->mEncoder2->getVel());
+				App::mApp->mCommunicating1->Send(1, App::mApp->mControlling->Motor2PWM);
+			}
+			else if(index == 2){
+//				App::mApp->mCommunicating1->Send(2, App::mApp->mEncoder3->getVel());
+				App::mApp->mCommunicating1->Send(2, App::mApp->mControlling->Motor3PWM);
+			}
+			else if(index == 3){
+//				App::mApp->mCommunicating1->Send(3, App::mApp->mEncoder4->getVel());
+				App::mApp->mCommunicating1->Send(3, App::mApp->mControlling->Motor4PWM);
+			}
+			break;
+		case 1:
+			if(index == 0){
+				App::mApp->mCommunicating1->Send(0, App::mApp->mEncoder1->getVel());
+			}
+			else if(index == 1){
+				App::mApp->mCommunicating1->Send(1, App::mApp->mEncoder2->getVel());
+			}
+			else if(index == 2){
+				App::mApp->mCommunicating1->Send(2, App::mApp->mEncoder3->getVel());
+			}
+			else if(index == 3){
+				App::mApp->mCommunicating1->Send(3, App::mApp->mEncoder4->getVel());
+			}
+			break;
+		case 2:
+			if(index == 0){
+				App::mApp->mCommunicating1->Send(0, App::mApp->mEncoder1->getPos());
+			}
+			else if(index == 1){
+				App::mApp->mCommunicating1->Send(1, App::mApp->mEncoder2->getPos());
+			}
+			else if(index == 2){
+				App::mApp->mCommunicating1->Send(2, App::mApp->mEncoder3->getPos());
+			}
+			else if(index == 3){
+				App::mApp->mCommunicating1->Send(3, App::mApp->mEncoder4->getPos());
+			}
+			break;
+	}
+	if(index == 4){
+		index = 0;
+	}
+	else{
+		index++;
+	}
 }
 
 void Output(){
@@ -136,9 +193,10 @@ void BatteryPrint(){
 }
 
 void EncoderUpdate(){
-	App::mApp->mEncoder1->Update(MathTools::DegreeToRadian(-30));
-	App::mApp->mEncoder2->Update(MathTools::DegreeToRadian(-60));
-	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(-60));
+	App::mApp->mEncoder1->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder2->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
 }
 
 void EncoderPrint(){
@@ -185,8 +243,63 @@ void SpiPoll(){
 	}
 }
 
+//App::App() : mTask(0), mQuaternion(0){
+//	Delay::DelayMS(100);
+//	mApp = this;
+//	mConfig = new Config();
+//	mTicks = new Ticks(true);
+//	mTask = new Task();
+//
+//	mLed1 = new Led(mConfig->LedConf1);
+//	mLed2 = new Led(mConfig->LedConf2);
+//	mLed3 = new Led(mConfig->LedConf3);
+//	mLed4 = new Led(mConfig->LedConf4);
+////	mGPIO1 = new Led(mConfig->GPIOConf1);
+//
+//	mUART1 = new UART(mConfig->UART1Conf1);
+////	mSpi1 = new Spi(mConfig->Spi1Conf1);
+////	mSpi1 = new Spi(mConfig->Spi1Conf2);
+////	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
+//	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
+//
+////	mI2C1 = new I2C(mConfig->I2C1Conf2);
+////	mMPU6050 = new MPU6050(mI2C1);
+////	mHMC5883L = new HMC5883L(mMPU6050);
+////	mAcceleration = new Acceleration(mMPU6050);
+////	mOmega = new Omega(mMPU6050);
+////	mCompass = new Compass(mHMC5883L, mAcceleration);
+////	mTask->Attach(4, 0, initUpdate, false, 100, false);
+////	mTask->Attach(20, 0, initCompassUpdate, false, 50, false);
+////
+////	Delay::DelayMS(10);
+////
+////	mTask->Run();
+////	mCompass->Reset();
+////	mEncoder1 = new Encoder(mConfig->Encoder1Conf1, 0.0239232580938729f / 1000.0f, 0);
+////	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, -0.0241855873642646f / 1000.0f, MathTools::PI / 2.0f);
+////	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, -0.0237461417341602f / 2000.0f, MathTools::PI / 2.0f);
+////	mEncoderYaw = new EncoderYaw(mEncoder2, mEncoder3, 0.18f);
+////	mQuaternion = new Quaternion(mAcceleration, mOmega, mEncoderYaw);
+////	mQuaternion->Reset();
+////	mLocalization = new Localization(mQuaternion, mEncoder2, mEncoder1, 0.0f, 0.0f);
+//	printf("Started\n");
+//
+////	mTask->Attach(4, 0, Update, true);
+////	mTask->Attach(20, 0, CompassUpdate, true);
+//	mTask->Attach(2, 0, EncoderUpdate, true);
+////	mTask->Attach(2, 0	, LocalizationUpdate, true);
+//	mTask->Attach(20, 0, ReceiveTask, true);
+//	mTask->Attach(5, 0, SendTask, true);
+////	mTask->Attach(100, 50, EncoderPrint, true);
+//
+////	mTask->Attach(20, 7, Output, true);
+//	mLed1->Blink(true, 100);
+////	mTask->Attach(20, 0, CompassCalTask, false, 1500);
+//	mTask->Run();
+//}
+
 App::App() : mTask(0), mQuaternion(0){
-	Delay::DelayMS(100);
+	Delay::DelayMS(10);
 	mApp = this;
 	mConfig = new Config();
 	mTicks = new Ticks(true);
@@ -196,48 +309,45 @@ App::App() : mTask(0), mQuaternion(0){
 	mLed2 = new Led(mConfig->LedConf2);
 	mLed3 = new Led(mConfig->LedConf3);
 	mLed4 = new Led(mConfig->LedConf4);
-//	mGPIO1 = new Led(mConfig->GPIOConf1);
+	mGPIO1 = new Led(mConfig->GPIOConf1);
+	mGPIO2 = new Led(mConfig->GPIOConf2);
+	mGPIO3 = new Led(mConfig->GPIOConf3);
+	mGPIO4 = new Led(mConfig->GPIOConf4);
 
 	mUART1 = new UART(mConfig->UART1Conf1);
-	printf("Started\n");
 //	mSpi1 = new Spi(mConfig->Spi1Conf1);
 //	mSpi1 = new Spi(mConfig->Spi1Conf2);
 //	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
 
-	mI2C1 = new I2C(mConfig->I2C1Conf2);
-	mMPU6050 = new MPU6050(mI2C1);
-	mHMC5883L = new HMC5883L(mMPU6050);
-	mAcceleration = new Acceleration(mMPU6050);
-	mOmega = new Omega(mMPU6050);
-	mCompass = new Compass(mHMC5883L, mAcceleration);
-	mTask->Attach(4, 0, initUpdate, false, 100, false);
-	mTask->Attach(20, 0, initCompassUpdate, false, 50, false);
+	mEncoder1 = new Encoder(mConfig->Encoder1Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, -0.009434f / 1000.0f, 0);
+	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, -0.00933f / 1000.0f, 0);
+	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, 0.00933f / 1000.0f, 0);
 
-	Delay::DelayMS(10);
+	mPWM = new PWM(mConfig->mPWMConf1);
+	App::mApp->mPWM->Control1(10000);
+	App::mApp->mPWM->Control2(10000);
+	App::mApp->mPWM->Control3(10000);
+	App::mApp->mPWM->Control4(10000);
 
-	mTask->Run();
-	mCompass->Reset();
-	mEncoder1 = new Encoder(mConfig->Encoder1Conf1, 0.0239232580938729f / 1000.0f, 0);
-	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, -0.0241855873642646f / 1000.0f, MathTools::PI / 2.0f);
-	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, -0.0237461417341602f / 2000.0f, MathTools::PI / 2.0f);
-	mEncoderYaw = new EncoderYaw(mEncoder2, mEncoder3, 0.18f);
-	mQuaternion = new Quaternion(mAcceleration, mOmega, mEncoderYaw);
-	mQuaternion->Reset();
-	mLocalization = new Localization(mQuaternion, mEncoder2, mEncoder1, 0.0f, 0.0f);
+	mControlling = new Controlling(mPWM, mEncoder1,mEncoder2,mEncoder3,mEncoder4);
 	printf("Started\n");
 
-	mTask->Attach(4, 0, Update, true);
-	mTask->Attach(20, 0, CompassUpdate, true);
+//	mTask->Attach(4, 0, Update, true);
+//	mTask->Attach(20, 0, CompassUpdate, true);
 	mTask->Attach(2, 0, EncoderUpdate, true);
-	mTask->Attach(2, 0	, LocalizationUpdate, true);
+	mTask->Attach(2, 0, ControlTask, true);
+//	mTask->Attach(2, 0	, LocalizationUpdate, true);
 	mTask->Attach(20, 0, ReceiveTask, true);
 	mTask->Attach(5, 0, SendTask, true);
-//	mTask->Attach(100, 50, EncoderPrint, true);
-
-	mTask->Attach(20, 7, Output, true);
+	mTask->Attach(20, 7, print, true);
+//	mTask->Attach(20, 13, printElse, true);
 	mLed1->Blink(true, 100);
-//	mTask->Attach(20, 0, CompassCalTask, false, 1500);
+	mGPIO1->LedControl(true);
+	mGPIO2->LedControl(true);
+	mGPIO3->LedControl(true);
+	mGPIO4->LedControl(true);
 	mTask->Run();
 }
 
