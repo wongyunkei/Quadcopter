@@ -86,7 +86,8 @@ namespace Communication{
 	            RIGHT,
 				PAUSE,
 	            CW,
-				CCW
+				CCW,
+				MOVE
 			};
 
 			Communicating(Com* com);

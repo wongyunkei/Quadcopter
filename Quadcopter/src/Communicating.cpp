@@ -335,6 +335,10 @@ void Communicating::Execute(int cmd, float data){
 					App::mApp->mControlling->CCW();
 					Acknowledgement();
 					break;
+		case CMD::MOVE:
+					App::mApp->mControlling->Move(App::mApp->mControlling->Speed, data, 0);
+					Acknowledgement();
+					break;
 	}
 
 }

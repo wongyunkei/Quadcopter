@@ -46,7 +46,7 @@ void CompassUpdate(){
 
 void ReceiveTask(){
 	App::mApp->mCommunicating1->ReceivePoll();
-//	App::mApp->mCommunicating2->ReceivePoll();
+	App::mApp->mCommunicating2->ReceivePoll();
 }
 
 void SendTask(){
@@ -306,24 +306,23 @@ App::App() : mTask(0), mQuaternion(0){
 	mTask = new Task();
 
 	mLed1 = new Led(mConfig->LedConf1);
-	mLed2 = new Led(mConfig->LedConf2);
-	mLed3 = new Led(mConfig->LedConf3);
-	mLed4 = new Led(mConfig->LedConf4);
 	mGPIO1 = new Led(mConfig->GPIOConf1);
 	mGPIO2 = new Led(mConfig->GPIOConf2);
 	mGPIO3 = new Led(mConfig->GPIOConf3);
 	mGPIO4 = new Led(mConfig->GPIOConf4);
 
-	mUART1 = new UART(mConfig->UART1Conf1);
-//	mSpi1 = new Spi(mConfig->Spi1Conf1);
-//	mSpi1 = new Spi(mConfig->Spi1Conf2);
-//	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
-	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART1));
+	mUART4 = new UART(mConfig->UART4Conf1);
+	mSpi2 = new Spi(mConfig->Spi2Conf1);
+
+	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
+	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
 
 	mEncoder1 = new Encoder(mConfig->Encoder1Conf1, 0.00933f / 1000.0f, 0);
-	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, -0.009434f / 1000.0f, 0);
-	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, -0.00933f / 1000.0f, 0);
-	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, -0.00933f / 1000.0f, 0);
+	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
+	mEncoder6 = new Encoder(mConfig->Encoder6Conf1, 0.00933f / 1000.0f, 0);
 
 	mPWM = new PWM(mConfig->mPWMConf1);
 	App::mApp->mPWM->Control1(10000);
@@ -331,7 +330,7 @@ App::App() : mTask(0), mQuaternion(0){
 	App::mApp->mPWM->Control3(10000);
 	App::mApp->mPWM->Control4(10000);
 
-	mControlling = new Controlling(mPWM, mEncoder1,mEncoder2,mEncoder3,mEncoder4);
+	mControlling = new Controlling(mPWM, mEncoder3,mEncoder4,mEncoder4,mEncoder5);
 	printf("Started\n");
 
 //	mTask->Attach(4, 0, Update, true);

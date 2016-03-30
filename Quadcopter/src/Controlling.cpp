@@ -151,9 +151,11 @@ void Controlling::ControllingPoll(){
 		Motor4PWM = Motor4PWM < -10000.0f ? -10000.0f : Motor4PWM  > 10000.0f ? 10000.0f : Motor4PWM;
 		if(Motor1PWM < 0.0f){
 			App::mApp->mGPIO1->LedControl(false);
+//			App::mApp->mLed3->LedControl(true);
 		}
 		else{
 			App::mApp->mGPIO1->LedControl(true);
+//			App::mApp->mLed3->LedControl(false);
 		}
 		if(Motor2PWM < 0.0f){
 			App::mApp->mGPIO2->LedControl(false);
@@ -173,7 +175,7 @@ void Controlling::ControllingPoll(){
 		else{
 			App::mApp->mGPIO4->LedControl(true);
 		}
-		_mPWM->Control1(10000 - fabs(Motor1PWM));
+		_mPWM->Control1(10000 -fabs(Motor1PWM));
 		_mPWM->Control2(10000 - fabs(Motor2PWM));
 		_mPWM->Control3(10000 - fabs(Motor3PWM));
 		_mPWM->Control4(10000 - fabs(Motor4PWM));
@@ -305,31 +307,35 @@ void Controlling::StopAllMotors(){
 }
 
 void Controlling::Forward(){
-	Motor1SpeedTarget = Speed;
-	Motor2SpeedTarget = Speed;
-	Motor3SpeedTarget = Speed;
-	Motor4SpeedTarget = Speed;
+	Move(Speed, MathTools::PI / 2, 0);
+//	Motor1SpeedTarget = Speed;
+//	Motor2SpeedTarget = Speed;
+//	Motor3SpeedTarget = Speed;
+//	Motor4SpeedTarget = Speed;
 }
 
 void Controlling::Backward(){
-	Motor1SpeedTarget = -Speed;
-	Motor2SpeedTarget = -Speed;
-	Motor3SpeedTarget = -Speed;
-	Motor4SpeedTarget = -Speed;
+	Move(Speed, 3 * MathTools::PI / 2, 0);
+//	Motor1SpeedTarget = -Speed;
+//	Motor2SpeedTarget = -Speed;
+//	Motor3SpeedTarget = -Speed;
+//	Motor4SpeedTarget = -Speed;
 }
 
 void Controlling::Left(){
-	Motor1SpeedTarget = -Speed;
-	Motor2SpeedTarget = Speed;
-	Motor3SpeedTarget = -Speed;
-	Motor4SpeedTarget = Speed;
+	Move(Speed, MathTools::PI, 0);
+//	Motor1SpeedTarget = -Speed;
+//	Motor2SpeedTarget = Speed;
+//	Motor3SpeedTarget = -Speed;
+//	Motor4SpeedTarget = Speed;
 }
 
 void Controlling::Right(){
-	Motor1SpeedTarget = Speed;
-	Motor2SpeedTarget = -Speed;
-	Motor3SpeedTarget = Speed;
-	Motor4SpeedTarget = -Speed;
+	Move(Speed, 0, 0);
+//	Motor1SpeedTarget = Speed;
+//	Motor2SpeedTarget = -Speed;
+//	Motor3SpeedTarget = Speed;
+//	Motor4SpeedTarget = -Speed;
 }
 
 void Controlling::CW(){
@@ -344,4 +350,21 @@ void Controlling::CCW(){
 	Motor2SpeedTarget = Speed;
 	Motor3SpeedTarget = Speed;
 	Motor4SpeedTarget = -Speed;
+}
+
+void Controlling::Move(float vel, float dirAngle, float orientationAngle){
+	float y = vel*sinf(dirAngle);
+	float x = vel*cosf(dirAngle);
+	Matrix4f A;
+	A <<   0.250,  0.250, -0.250,  0.250,
+		 0.250, -0.250,  0.250,  0.250,
+		 0.250,  0.250,  0.250, -0.250,
+		 0.250, -0.250, -0.250, -0.250;
+	Vector4f u;
+	u << 1.4142f*y,1.4142f*x,0,0;
+	Vector4f v = A * u;
+	Motor1SpeedTarget = v[0];
+	Motor2SpeedTarget = v[1];
+	Motor3SpeedTarget = v[2];
+	Motor4SpeedTarget = v[3];
 }

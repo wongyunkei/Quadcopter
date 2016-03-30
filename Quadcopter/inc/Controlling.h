@@ -27,6 +27,7 @@
 #include <Eigen/Eigen>
 using Eigen::Vector3f;
 using Eigen::Vector4f;
+using Eigen::Matrix4f;
 
 using namespace Math;
 using namespace Sensors;
@@ -66,6 +67,7 @@ namespace Control{
 			void Pause();
 			void CW();
 			void CCW();
+			void Move(float vel, float dirAngle, float orientationAngle);
 			PWM* _mPWM;
 			Encoder* Encoder1;
 			Encoder* Encoder2;
