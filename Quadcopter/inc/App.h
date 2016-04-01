@@ -96,6 +96,10 @@ namespace System{
 			Led* mGPIO2;
 			Led* mGPIO3;
 			Led* mGPIO4;
+			Led* mGPIO5;
+			Led* mGPIO6;
+			Led* mGPIO7;
+			Led* mGPIO8;
 			UART* mUART1;
 			UART* mUART2;
 			UART* mUART3;
@@ -132,6 +136,7 @@ namespace System{
 			Localization* mLocalization;
 			EncoderYaw* mEncoderYaw;
 			App();
+			int PathState;
 		private:
 	};
 };

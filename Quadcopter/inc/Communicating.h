@@ -87,7 +87,8 @@ namespace Communication{
 				PAUSE,
 	            CW,
 				CCW,
-				MOVE
+				MOVE,
+				MANUAL_MODE
 			};
 
 			Communicating(Com* com);

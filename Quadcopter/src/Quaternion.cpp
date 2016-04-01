@@ -32,8 +32,8 @@ Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega) : _mAccelerat
 	Q *= 1e-6f;
 	Matrix3f R;
 	R.setIdentity();
-	R *= 1e-4f;
-	R(2,2) *= 1e-6f;
+	R *= 1e-2f;
+	R(2,2) *= 1e-2f;
 	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
 	PrevTick = App::mApp->mTicks->getTicks();
 }
@@ -89,6 +89,7 @@ bool Quaternion::Update(){
 		bool AccValid = _mAcceleration->getIsValided() && (_mAcceleration->getAcc().norm() > Acceleration::Gravity * 0.95f) && (_mAcceleration->getAcc().norm() < Acceleration::Gravity * 1.05f);
 		Vector3f angle;
 		bool MagValid;
+
 		if(IsUseCompass){
 			MagValid = _mCompass->getIsValided() && _mCompass->getMag().norm() > 0.9f && _mCompass->getMag().norm() < 1.1f;
 		}
@@ -130,15 +131,13 @@ bool Quaternion::Update(){
 					return false;
 				}
 			}
-			if(fabs(fabs(_mEncoderYaw->getYaw()) - MathTools::PI) < 0.01f){
+			if(IsUseEncoderYaw && fabs(fabs(_mEncoderYaw->getYaw()) - MathTools::PI) < 0.01f){
 				angle[2] = _mEncoderYaw->getYaw();
 			}
 			_Euler = angle;
-			App::mApp->mLed3->LedControl(true);
 		}
 		else{
 			_Euler = e;
-			App::mApp->mLed3->LedControl(false);
 		}
 		_Quaternion = EulerToQuaternion(_Euler);
 		return true;

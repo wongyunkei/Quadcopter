@@ -148,27 +148,27 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::ROLL_KP:
-			App::mApp->mControlling->RollPid->setKp(data);
+			App::mApp->mControlling->XPosPid->setKp(data);
 			Acknowledgement();
 			break;
 		case CMD::ROLL_KI:
-			App::mApp->mControlling->RollPid->setKi(data*1000);
+			App::mApp->mControlling->XPosPid->setKi(data);
 			Acknowledgement();
 			break;
 		case CMD::ROLL_KD:
-			App::mApp->mControlling->KdRollPid->setKp(data);
+			App::mApp->mControlling->XPosPid->setKd(data);
 			Acknowledgement();
 			break;
 		case CMD::PITCH_KP:
-			App::mApp->mControlling->PitchPid->setKp(data);
+			App::mApp->mControlling->YPosPid->setKp(data);
 			Acknowledgement();
 			break;
 		case CMD::PITCH_KI:
-			App::mApp->mControlling->PitchPid->setKi(data*1000);
+			App::mApp->mControlling->YPosPid->setKi(data);
 			Acknowledgement();
 			break;
 		case CMD::PITCH_KD:
-			App::mApp->mControlling->KdPitchPid->setKp(data);
+			App::mApp->mControlling->YPosPid->setKd(data);
 			Acknowledgement();
 			break;
 		case CMD::YAW_KP:
@@ -176,25 +176,32 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::YAW_KI:
-			App::mApp->mControlling->YawPid->setKi(data*1000);
+			App::mApp->mControlling->YawPid->setKi(data);
 			Acknowledgement();
 			break;
 		case CMD::YAW_KD:
-			App::mApp->mControlling->KdYawPid->setKp(data);
+			App::mApp->mControlling->YawPid->setKd(data);
 			Acknowledgement();
 			break;
 		case CMD::RESET_ALL:
-//			App::mApp->mControlling->setStart(false);
-//			App::mApp->mControlling->setStarting(false);
-//			App::mApp->mControlling->setStopping(false);
-//			App::mApp->mControlling->StopAllMotors();
-			App::mApp->mCompass->Reset();
+			App::mApp->mControlling->setStart(false);
+			App::mApp->mControlling->setStarting(false);
+			App::mApp->mControlling->setStopping(false);
+			App::mApp->mControlling->StopAllMotors();
+			if(App::mApp->mCompass != 0){
+				App::mApp->mCompass->Reset();
+			}
 			App::mApp->mQuaternion->Reset();
 			App::mApp->mEncoder1->Reset();
 			App::mApp->mEncoder2->Reset();
 			App::mApp->mEncoder3->Reset();
+			App::mApp->mEncoder4->Reset();
+			App::mApp->mEncoder5->Reset();
+			App::mApp->mEncoder6->Reset();
 			App::mApp->mLocalization->Reset();
-			App::mApp->mEncoderYaw->Reset();
+			if(App::mApp->mEncoderYaw != 0){
+				App::mApp->mEncoderYaw->Reset();
+			}
 //			for(int i = 0; i < 500; i++){
 //				App::mApp->mMPU6050->Update();
 //				App::mApp->mHMC5883L->Update();
@@ -339,12 +346,16 @@ void Communicating::Execute(int cmd, float data){
 					App::mApp->mControlling->Move(App::mApp->mControlling->Speed, data, 0);
 					Acknowledgement();
 					break;
+		case CMD::MANUAL_MODE:
+					App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
+					Acknowledgement();
+					break;
 	}
 
 }
 
 void Communicating::Acknowledgement(){
-	App::mApp->mLed4->Blink(true, 20, 2);
+	App::mApp->mLed1->Blink(true, 20, 2);
 }
 
 void Communicating::Send(int cmd, float data){

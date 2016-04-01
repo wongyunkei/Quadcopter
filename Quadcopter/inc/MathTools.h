@@ -31,6 +31,7 @@ namespace Math{
 			static float CalcLength(float* x, int length);
 			static int FloatToHalfInt(float _float);
 			static float HalfIntToFloat(int hbits);
+			static bool CheckWithInInterval(float value, float mean, float var);
 		private:
 
 

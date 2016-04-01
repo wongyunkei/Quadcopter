@@ -16,7 +16,7 @@ namespace Math{
 
 		public:
 
-			Pid(float kp, float ki, float kd, float integralLimit, float t);
+			Pid(float kp, float ki, float kd, float integralLimit);
 			void setKp(float kp);
 			void setKi(float ki);
 			void setKd(float kd);
@@ -31,12 +31,11 @@ namespace Math{
 		private:
 
 			float Kp, Ki, Kd;
+			float Interval;
 			float Integral;
 			float IntegralLimit;
 			float PreErr;
-			float PreTimeStamp;
-			float Period;
-			float DefaultPeriod;
+			float PrevTick;
 
 	};
 };

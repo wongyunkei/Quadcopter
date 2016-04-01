@@ -45,14 +45,15 @@ MPU6050::MPU6050(Communication::I2C* i2c) : i2cx(i2c), isValided(false){
 	RawOmegaScale[0] = 1.0f;
 	RawOmegaScale[1] = 1.0f;
 	RawOmegaScale[2] = 1.0f;
-	RawOmegaOffset[0] = RawOmegaScale[0] * -2.9f;
-	RawOmegaOffset[1] = RawOmegaScale[1] * 0.1f;
-	RawOmegaOffset[2] = RawOmegaScale[2] * -0.8f;
+	RawOmegaOffset[0] = RawOmegaScale[0] * -3.12f;//1;//-2.9f;
+	RawOmegaOffset[1] = RawOmegaScale[1] * -0.0f;//0.1f;
+	RawOmegaOffset[2] = RawOmegaScale[2] * -0.98;//-0.8f;
 
 	Update();
 }
 
 void MPU6050::FastInitialization(){
+
 	App::mApp->mTicks->setTimeout(3);
 	while(!i2cx->Write(ADDRESS,RA_PWR_MGMT_1,0x00)){
 		if(App::mApp->mTicks->Timeout()){
@@ -74,7 +75,7 @@ void MPU6050::FastInitialization(){
 		}
 	}
 	App::mApp->mTicks->setTimeout(3);
-	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x08)){
+	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x00)){
 		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
@@ -110,7 +111,7 @@ bool MPU6050::Update(){
 		}
 		else if(i >= 8 && i <= 13){
 			temp = data[i + 1] | (data[i] << 8);
-			RawOmega[(i - 8) / 2] = (float)temp * 0.015267f;
+			RawOmega[(i - 8) / 2] = (float)temp * 0.00763359f;// * 0.015267f;
 		}
 	}
 
@@ -127,7 +128,7 @@ bool MPU6050::Update(){
 //		RawOmega[i] -= getGyroTemperatureCompensation(i, temperature);
 		RawOmega[i] *= RawOmegaScale[i];
 		RawOmega[i] -= RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0f);
+		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 0.5f);
 	}
 
 	isValided = true;

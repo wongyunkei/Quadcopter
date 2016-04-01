@@ -74,7 +74,6 @@ I2C::I2C(I2CConfiguration* conf) : ErrorCount(0){
 }
 
 void I2C::ResetI2C(){
-	App::mApp->mLed2->Toggle();
 	ErrorCount++;
 	I2C_DeInit(Conf->_I2Cx);
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -102,6 +101,7 @@ void I2C::ResetI2C(){
 	else if(App::mApp->mI2C2 == this){
 		I2C mI2C2(Conf);
 	}
+	printf("I2C Error\n");
 }
 
 bool I2C::Write(uint8_t addr, uint8_t reg, uint8_t data){

@@ -87,7 +87,7 @@ Config::Config(){
 														  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_3), Encoder::EncoderConfiguration::TimerConf3, 42000000);
 
 	Encoder4Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_4),
-														  new Configuration(RCC_AHB1Periph_GPIOB, GPIOA, GPIO_Pin_5), Encoder::EncoderConfiguration::TimerConf4, 42000000);
+														  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_5), Encoder::EncoderConfiguration::TimerConf4, 42000000);
 
 	Encoder5Conf1 = new Encoder::EncoderConfiguration(new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_6),
 														  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_7), Encoder::EncoderConfiguration::TimerConf5, 42000000);
@@ -101,11 +101,15 @@ Config::Config(){
 	GPIOConf2 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_5), Bit_SET);
 	GPIOConf3 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_8), Bit_SET);
 	GPIOConf4 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_9), Bit_SET);
+	GPIOConf5 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_0), Bit_SET);
+	GPIOConf6 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_1), Bit_SET);
+	GPIOConf7 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_2), Bit_SET);
+	GPIOConf8 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_3), Bit_SET);
 
 	UART4Conf1 = new UART::UARTConfiguration(UART4, 115200, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_10), GPIO_PinSource10, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_11), GPIO_PinSource11);
 
-	mPWMConf1 = new PWM::PWMConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_2),
-										  new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_3),
+	mPWMConf1 = new PWM::PWMConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_2),
+										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_3),
 										  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_14),
 										  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_15),
 										  10000);
@@ -130,8 +134,8 @@ Config::Config(){
 //	I2C2Conf1 = new I2C::I2CConfiguration(I2C2, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_10), GPIO_PinSource10, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_11), GPIO_PinSource11, I2C::I2CConfiguration::SPEED_400K);
 //	I2C2Conf2 = new I2C::I2CConfiguration(I2C2, new Configuration(RCC_AHB1Periph_GPIOF, GPIOF, GPIO_Pin_1), GPIO_PinSource1, new Configuration(RCC_AHB1Periph_GPIOF, GPIOF, GPIO_Pin_0), GPIO_PinSource0, I2C::I2CConfiguration::SPEED_400K);
 
-	SonicConf1 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_0), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_8), GPIO_PinSource8);
-	SonicConf2 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_1), new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_11), GPIO_PinSource11);
-	SonicConf3 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_2), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_10), GPIO_PinSource10);
-	SonicConf4 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_11), GPIO_PinSource11);
+//	SonicConf1 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_0), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_8), GPIO_PinSource8);
+//	SonicConf2 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_1), new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_11), GPIO_PinSource11);
+//	SonicConf3 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_2), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_10), GPIO_PinSource10);
+//	SonicConf4 = new Sonic::SonicConfiguration(new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_11), GPIO_PinSource11);
 }

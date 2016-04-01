@@ -11,7 +11,8 @@
 #include <Ticks.h>
 #include <MathTools.h>
 
-Pid::Pid(float kp, float ki, float kd, float integralLimit, float t) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), DefaultPeriod(t), Period(t), PreTimeStamp(0){
+Pid::Pid(float kp, float ki, float kd, float integralLimit) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), Interval(0){
+	PrevTick = App::mApp->mTicks->getTicks();
 }
 
 void Pid::setKp(float kp){
@@ -41,26 +42,23 @@ float Pid::getKd(){
 void Pid::clear(){
 	Integral = 0;
 	PreErr = 0;
-	PreTimeStamp = 0;
+	PrevTick = 0;
 }
 
 float Pid::pid(float target, float current){
-	float t = App::mApp->mTicks->getTicks();
-	t /= 1000.0f;
-	if(PreTimeStamp > 0){
-		Period = t < PreTimeStamp ? (10000 - PreTimeStamp + t) : t - PreTimeStamp;
+	Interval = App::mApp->mTicks->getTicks() - PrevTick;
+	PrevTick = App::mApp->mTicks->getTicks();
+	Interval /= 1000.0f;
+	if(Interval <= 0){
+		return 0;
 	}
-	else{
-		Period = DefaultPeriod;
-	}
-	PreTimeStamp = t;
 	float err = target - current;
 	Integral += err;
-	Integral *= Period;
+	Integral *= Interval;
 	Integral = MathTools::Trim(-IntegralLimit, Integral, IntegralLimit);
 	float derivative = err - PreErr;
 	PreErr = err;
-	return Kp * err + Ki * Integral + Kd * derivative / Period;
+	return Kp * err + Ki * Integral + Kd * derivative / Interval;
 }
 
 float Pid::getIntegral(){

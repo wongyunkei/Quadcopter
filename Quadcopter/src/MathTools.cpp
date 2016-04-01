@@ -151,3 +151,12 @@ float MathTools::TrimResolution(float value){
 	x.d &= 0xfffffff0;
 	return x.f;
 }
+
+bool MathTools::CheckWithInInterval(float value, float mean, float var){
+	if(fabs(value - mean) < var){
+		return true;
+	}
+	else{
+		return false;
+	}
+}

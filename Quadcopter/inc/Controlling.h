@@ -68,6 +68,7 @@ namespace Control{
 			void CW();
 			void CCW();
 			void Move(float vel, float dirAngle, float orientationAngle);
+			void MoveToTarget(float x, float y, float yaw);
 			PWM* _mPWM;
 			Encoder* Encoder1;
 			Encoder* Encoder2;
@@ -75,10 +76,12 @@ namespace Control{
 			Encoder* Encoder4;
 			Pid* RollPid;
 			Pid* PitchPid;
-			Pid* YawPid;
 			Pid* KdRollPid;
 			Pid* KdPitchPid;
 			Pid* KdYawPid;
+			Pid* YPosPid;
+			Pid* XPosPid;
+			Pid* YawPid;
 			Pid* Motor1;
 			Pid* Motor2;
 			Pid* Motor3;
@@ -103,12 +106,15 @@ namespace Control{
 			float Motor2SpeedTarget;
 			float Motor3SpeedTarget;
 			float Motor4SpeedTarget;
+			float XPosTarget;
+			float YPosTarget;
+			float YawTarget;
+			bool ManualMode;
 
 		private:
 			int WatchDogLimit;
 			float RollTarget;
 			float PitchTarget;
-			float YawTarget;
 			bool started;
 			bool starting;
 			bool stopping;
