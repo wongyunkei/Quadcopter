@@ -202,6 +202,7 @@ void Communicating::Execute(int cmd, float data){
 			if(App::mApp->mEncoderYaw != 0){
 				App::mApp->mEncoderYaw->Reset();
 			}
+			App::mApp->PathState = 0;
 //			for(int i = 0; i < 500; i++){
 //				App::mApp->mMPU6050->Update();
 //				App::mApp->mHMC5883L->Update();
@@ -348,6 +349,10 @@ void Communicating::Execute(int cmd, float data){
 					break;
 		case CMD::MANUAL_MODE:
 					App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
+					Acknowledgement();
+					break;
+		case CMD::RETURN_HOME:
+					App::mApp->PathState = 999;
 					Acknowledgement();
 					break;
 	}

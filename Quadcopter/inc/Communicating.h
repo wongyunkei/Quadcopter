@@ -88,7 +88,8 @@ namespace Communication{
 	            CW,
 				CCW,
 				MOVE,
-				MANUAL_MODE
+				MANUAL_MODE,
+				RETURN_HOME
 			};
 
 			Communicating(Com* com);

@@ -128,7 +128,7 @@ bool MPU6050::Update(){
 //		RawOmega[i] -= getGyroTemperatureCompensation(i, temperature);
 		RawOmega[i] *= RawOmegaScale[i];
 		RawOmega[i] -= RawOmegaOffset[i];
-		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 0.5f);
+		RawOmega[i] = MathTools::CutOff(RawOmega[i], 0.0f, 1.0f);
 	}
 
 	isValided = true;

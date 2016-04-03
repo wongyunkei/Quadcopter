@@ -118,6 +118,20 @@ void print(){
 				App::mApp->mCommunicating1->Send(index, (float)(App::mApp->mMPU6050->getRawOmega()[index]));
 			}
 			break;
+		case 7:
+			if(index == 0){
+				App::mApp->mCommunicating1->Send(0, App::mApp->mControlling->Motor1PWM);
+			}
+			else if(index == 1){
+				App::mApp->mCommunicating1->Send(1, App::mApp->mControlling->Motor2PWM);
+			}
+			else if(index == 2){
+				App::mApp->mCommunicating1->Send(2, App::mApp->mControlling->Motor3PWM);
+			}
+			else if(index == 3){
+				App::mApp->mCommunicating1->Send(3, App::mApp->mControlling->Motor4PWM);
+			}
+			break;
 	}
 	if(index == 4){
 		index = 0;
@@ -318,7 +332,7 @@ void PathTask(){
 	} PT;
 
 	PT points[8] = {{0.0, 1.0, 0},
-					{1.0, 1.0, -MathTools::PI/2},
+					{1.0, 1.0, 0},//-MathTools::PI/2},
 					{1.0, 0.0, 0},
 					{0.0, 0.0, 0},
 					{1.0, 1.0, 0},
@@ -326,14 +340,25 @@ void PathTask(){
 					{0.0, 1.0, 0},
 					{0.0, 0.0, 0}
 					};
-	App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].x, points[App::mApp->PathState].y, points[App::mApp->PathState].yaw);
-	if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], points[App::mApp->PathState].x, 0.015) &&
-			MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], points[App::mApp->PathState].y, 0.015) &&
-			MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)){
-		App::mApp->PathState++;
-		App::mApp->mCommunicating1->Acknowledgement();
-		if(App::mApp->PathState > 7){
+	if(App::mApp->PathState == 999){
+		App::mApp->mControlling->MoveToTarget(0, 0, 0);
+		if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], 0, 0.015) &&
+				MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], 0, 0.015) &&
+				MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], 0, 0.0174)){
 			App::mApp->PathState = 0;
+			App::mApp->mControlling->Stopping();
+		}
+	}
+	else{
+		App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].x, points[App::mApp->PathState].y, points[App::mApp->PathState].yaw);
+		if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], points[App::mApp->PathState].x, 0.015) &&
+				MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], points[App::mApp->PathState].y, 0.015) &&
+				MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)){
+			App::mApp->PathState++;
+			App::mApp->mCommunicating1->Acknowledgement();
+			if(App::mApp->PathState > 3){
+				App::mApp->PathState = 0;
+			}
 		}
 	}
 }

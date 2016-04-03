@@ -81,12 +81,12 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 		watchDogCount(0), Lift(3000.0f), RollTarget(0),
 		PitchTarget(0), RollOffset(0),
 		PitchOffset(0), YawOffset(0), initLift(5000), startCount(0), StoppingDelayCount(0),
-		Speed(0.8), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
+		Speed(1.0f), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
 		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(false){
 
-	YPosPid = new Pid(5,0,0.0,10000);
-	XPosPid = new Pid(5,0,0.0,10000);
-	YawPid = new Pid(2,0,0.0,10000);
+	YPosPid = new Pid(10,0,0.2,10000);
+	XPosPid = new Pid(10,0,0.2,10000);
+	YawPid = new Pid(4,0,0.2,10000);
 //	RollPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	PitchPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	YawPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
