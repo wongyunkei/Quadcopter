@@ -10,7 +10,6 @@
 using namespace System;
 
 int main(){
-
 	App* app = new App();
 	return 0;
 }

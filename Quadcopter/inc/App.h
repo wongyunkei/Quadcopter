@@ -37,6 +37,7 @@
 #include <Encoder.h>
 #include <Localization.h>
 #include <EncoderYaw.h>
+#include <ExternalInterrupt.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
@@ -88,10 +89,14 @@ namespace System{
 			Ticks* mTicks;
 			Task* mTask;
 			Config* mConfig;
+			ExternalInterrupt* mExti[16];
 			Led* mLed1;
 			Led* mLed2;
 			Led* mLed3;
 			Led* mLed4;
+
+			Led* mSonicTrigger[16];
+
 			Led* mGPIO1;
 			Led* mGPIO2;
 			Led* mGPIO3;
@@ -115,6 +120,18 @@ namespace System{
 			Sonic* mSonic2;
 			Sonic* mSonic3;
 			Sonic* mSonic4;
+			Sonic* mSonic5;
+			Sonic* mSonic6;
+			Sonic* mSonic7;
+			Sonic* mSonic8;
+			Sonic* mSonic9;
+			Sonic* mSonic10;
+			Sonic* mSonic11;
+			Sonic* mSonic12;
+			Sonic* mSonic13;
+			Sonic* mSonic14;
+			Sonic* mSonic15;
+			Sonic* mSonic16;
 			Spi* mSpi1;
 			Spi* mSpi2;
 			I2C* mI2C1;

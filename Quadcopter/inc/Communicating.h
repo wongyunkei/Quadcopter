@@ -25,7 +25,6 @@
 #include <inttypes.h>
 #include <Delay.h>
 #include <Led.h>
-#include <NRF905.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <MPU6050.h>

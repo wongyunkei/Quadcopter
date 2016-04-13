@@ -9,6 +9,7 @@
 #include <Spi.h>
 #include <Delay.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <stm32f4xx_spi.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>

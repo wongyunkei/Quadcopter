@@ -59,9 +59,8 @@ void printElse(){
 
 void print(){
 	static int index = 0;
-
 	switch(App::mApp->mCommunicating1->PrintType){
-		case 0:
+		case 8:
 			if(index < 3){
 				App::mApp->mCommunicating1->Send(index, (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[index])));
 			}
@@ -130,6 +129,20 @@ void print(){
 			}
 			else if(index == 3){
 				App::mApp->mCommunicating1->Send(3, App::mApp->mControlling->Motor4PWM);
+			}
+			break;
+		case 0:
+			if(index == 0){
+				App::mApp->mCommunicating1->Send(0, App::mApp->mSonic1->Distance);
+			}
+			else if(index == 1){
+				App::mApp->mCommunicating1->Send(1, App::mApp->mSonic2->Distance);
+			}
+			else if(index == 2){
+				App::mApp->mCommunicating1->Send(2, App::mApp->mSonic3->Distance);
+			}
+			else if(index == 3){
+				App::mApp->mCommunicating1->Send(3, App::mApp->mSonic4->Distance);
 			}
 			break;
 	}
@@ -323,6 +336,13 @@ void SpiPoll(){
 //	mTask->Run();
 //}
 
+void SonicUpdate(){
+	App::mApp->mSonic1->Update();
+	App::mApp->mSonic2->Update();
+	App::mApp->mSonic3->Update();
+	App::mApp->mSonic4->Update();
+}
+
 void PathTask(){
 
 	typedef struct Point{
@@ -366,11 +386,15 @@ void PathTask(){
 App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
+	for(int i = 0; i < 16; i++){
+		mExti[i] = 0;
+	}
 	mConfig = new Config();
 	mTicks = new Ticks(true);
 	mTask = new Task();
 
 	mLed1 = new Led(mConfig->LedConf1);
+
 	mGPIO1 = new Led(mConfig->GPIOConf1);
 	mGPIO2 = new Led(mConfig->GPIOConf2);
 	mGPIO3 = new Led(mConfig->GPIOConf3);
@@ -380,11 +404,17 @@ App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0)
 	mGPIO7 = new Led(mConfig->GPIOConf7);
 	mGPIO8 = new Led(mConfig->GPIOConf8);
 
+
 	mUART4 = new UART(mConfig->UART4Conf1);
 	mSpi2 = new Spi(mConfig->Spi2Conf1);
 
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
 	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
+
+	mSonic1 = new Sonic(mConfig->SonicConf1);
+	mSonic2 = new Sonic(mConfig->SonicConf2);
+	mSonic3 = new Sonic(mConfig->SonicConf3);
+	mSonic4 = new Sonic(mConfig->SonicConf4);
 
 	mEncoder1 = new Encoder(mConfig->Encoder1Conf1, -0.008335f / 1000.0f, 0);
 	mEncoder2 = new Encoder(mConfig->Encoder2Conf1, -0.008335f / 1000.0f, 0);
@@ -393,37 +423,38 @@ App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0)
 	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
 	mEncoder6 = new Encoder(mConfig->Encoder6Conf1, 0.00933f / 1000.0f, 0);
 
-	mPWM = new PWM(mConfig->mPWMConf1);
-	App::mApp->mPWM->Control1(0);
-	App::mApp->mPWM->Control2(0);
-	App::mApp->mPWM->Control3(0);
-	App::mApp->mPWM->Control4(0);
+//	mPWM = new PWM(mConfig->mPWMConf1);
+//	App::mApp->mPWM->Control1(0);
+//	App::mApp->mPWM->Control2(0);
+//	App::mApp->mPWM->Control3(0);
+//	App::mApp->mPWM->Control4(0);
+//
+//	mControlling = new Controlling(mPWM, mEncoder3,mEncoder4,mEncoder5,mEncoder6);
 
-	mControlling = new Controlling(mPWM, mEncoder3,mEncoder4,mEncoder5,mEncoder6);
+//	mI2C1 = new I2C(mConfig->I2C1Conf2);
+//	mMPU6050 = new MPU6050(mI2C1);
+//	mAcceleration = new Acceleration(mMPU6050);
+//	mOmega = new Omega(mMPU6050);
+//	mTask->Attach(4, 0, initUpdate, false, 100, false);
+//
+//	Delay::DelayMS(10);
+//
+//	mTask->Run();
+////	mEncoderYaw = new EncoderYaw(mEncoder2, mEncoder3, 0.18f);
+//	mQuaternion = new Quaternion(mAcceleration, mOmega);
+//	mQuaternion->Reset();
+//	mLocalization = new Localization(mQuaternion, mEncoder2, mEncoder1, -0.001f, 0.0f);
 
-	mI2C1 = new I2C(mConfig->I2C1Conf2);
-	mMPU6050 = new MPU6050(mI2C1);
-	mAcceleration = new Acceleration(mMPU6050);
-	mOmega = new Omega(mMPU6050);
-	mTask->Attach(4, 0, initUpdate, false, 100, false);
 
-	Delay::DelayMS(10);
-
-	mTask->Run();
-//	mEncoderYaw = new EncoderYaw(mEncoder2, mEncoder3, 0.18f);
-	mQuaternion = new Quaternion(mAcceleration, mOmega);
-	mQuaternion->Reset();
-	mLocalization = new Localization(mQuaternion, mEncoder2, mEncoder1, -0.001f, 0.0f);
-	printf("Started\n");
-
-	mTask->Attach(4, 0, Update, true);
-	mTask->Attach(4, 0, EncoderUpdate, true);
-	mTask->Attach(4, 0, ControlTask, true);
-	mTask->Attach(4, 0, LocalizationUpdate, true);
-	mTask->Attach(20, 0, ReceiveTask, true);
+//	mTask->Attach(4, 0, Update, true);
+//	mTask->Attach(4, 0, EncoderUpdate, true);
+//	mTask->Attach(4, 0, ControlTask, true);
+//	mTask->Attach(4, 0, LocalizationUpdate, true);
+	mTask->Attach(20, 0, SonicUpdate, true);
+//	mTask->Attach(20, 0, ReceiveTask, true);
 	mTask->Attach(5, 0, SendTask, true);
 	mTask->Attach(20, 7, print, true);
-	mTask->Attach(4, 0, PathTask, true);
+//	mTask->Attach(4, 0, PathTask, true);
 	mGPIO1->LedControl(true);
 	mGPIO2->LedControl(true);
 	mGPIO3->LedControl(true);
@@ -432,12 +463,14 @@ App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0)
 	mGPIO6->LedControl(false);
 	mGPIO7->LedControl(false);
 	mGPIO8->LedControl(false);
+	mLed1->Blink(true, 100);
+	printf("Started\n");
 	mTask->Run();
 }
 
 void HardFault_Handler(){
 	while(true){
-		printf("HardFault\n");
+		printf("HardFault:%d\n", App::mApp->mTask->currentTaskNum);
 		Delay::DelayMS(100);
 	}
 }

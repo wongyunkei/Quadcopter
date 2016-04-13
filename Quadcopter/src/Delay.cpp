@@ -11,7 +11,7 @@ using namespace Time;
 
 void Delay::Simple100Delay(){
 
-	__asm__ __volatile__("MOV	R0,#40\n\t"
+	__asm__ __volatile__("MOV	R0,#42\n\t"
 						"DELAY:"
 						"SUB	R0,#1\n\t"
 						"CMP	R0,#0\n\t"

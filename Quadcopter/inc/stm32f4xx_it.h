@@ -74,12 +74,18 @@ void DMA2_Stream4_IRQHandler();
 void DMA2_Stream5_IRQHandler();
 void DMA2_Stream6_IRQHandler();
 void DMA2_Stream7_IRQHandler();
-void EXTI9_5_IRQHandler();
+void EXTI0_IRQHandler();
+void EXTI1_IRQHandler();
 void EXTI2_IRQHandler();
+void EXTI3_IRQHandler();
+void EXTI4_IRQHandler();
+void EXTI9_5_IRQHandler();
+void EXTI15_10_IRQHandler();
 void TIM1_UP_TIM10_IRQHandler();
 void TIM1_CC_IRQHandler();
 void TIM3_IRQHandler();
 void TIM2_IRQHandler();
+void TIM6_DAC_IRQHandler();
 
 #ifdef __cplusplus
 }

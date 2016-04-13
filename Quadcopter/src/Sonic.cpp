@@ -1,176 +1,322 @@
 /*
  * Sonic.cpp
  *
- *  Created on: 2014年12月18日
- *      Author: YunKei
+ *  Created on: 2016年4月13日
+ *      Author: wongy
  */
 
-#include <Sonic.h>
-#include <stm32f4xx.h>
-#include <stm32f4xx_gpio.h>
-#include <stm32f4xx_rcc.h>
-#include <stm32f4xx_it.h>
-#include <stm32f4xx_tim.h>
 #include <App.h>
+#include <Led.h>
+#include <Sonic.h>
+#include <Delay.h>
+#include <Configuration.h>
+#include <stm32f4xx.h>
+#include <stm32f4xx_it.h>
 #include <stdio.h>
 
 using namespace Sensors;
+using namespace Time;
 
-Sonic::SonicConfiguration::SonicConfiguration(Configuration* trigger, Configuration* echo, uint8_t echoSource) : _trigger(trigger), _echo(echo), _echoSource(echoSource){
-}
-
+int Sonic::SonicNum = 0;
 int Sonic::OverFlowCount = 0;
 
-Sonic::Sonic(SonicConfiguration* conf) : DeltaUS(0), Conf(conf){
-	GPIO_InitTypeDef GPIO_InitStructure;
-	TIM_ICInitTypeDef TIM_ICInitStructure;
-	NVIC_InitTypeDef NVIC_InitStructure;
+Sonic::SonicConfiguration::SonicConfiguration(Led::LedConfiguration* trigger, Configuration* echo) : Trigger(trigger), Echo(echo){
+}
+
+void TIM6_DAC_IRQHandler(){
+	if(TIM_GetITStatus(TIM6, TIM_IT_Update) != RESET){
+		Sonic::OverFlowCount++;
+		TIM_ClearITPendingBit(TIM6, TIM_IT_Update);
+	}
+}
+
+void SonicInterrupt1(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic1->Echo->_pin->_port, App::mApp->mSonic1->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic1->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic1->Distance = App::mApp->mSonic1->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt2(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic2->Echo->_pin->_port, App::mApp->mSonic2->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic2->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic2->Distance = App::mApp->mSonic2->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt3(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic3->Echo->_pin->_port, App::mApp->mSonic3->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic3->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic3->Distance = App::mApp->mSonic3->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt4(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic4->Echo->_pin->_port, App::mApp->mSonic4->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic4->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic4->Distance = App::mApp->mSonic4->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt5(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic5->Echo->_pin->_port, App::mApp->mSonic5->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic5->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic5->Distance = App::mApp->mSonic5->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt6(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic6->Echo->_pin->_port, App::mApp->mSonic6->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic6->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic6->Distance = App::mApp->mSonic6->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt7(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic7->Echo->_pin->_port, App::mApp->mSonic7->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic7->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic7->Distance = App::mApp->mSonic7->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt8(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic8->Echo->_pin->_port, App::mApp->mSonic8->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic8->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic8->Distance = App::mApp->mSonic8->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt9(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic9->Echo->_pin->_port, App::mApp->mSonic9->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic9->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic9->Distance = App::mApp->mSonic9->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt10(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic10->Echo->_pin->_port, App::mApp->mSonic10->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic10->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic10->Distance = App::mApp->mSonic10->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt11(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic11->Echo->_pin->_port, App::mApp->mSonic11->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic11->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic11->Distance = App::mApp->mSonic11->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt12(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic12->Echo->_pin->_port, App::mApp->mSonic12->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic12->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic12->Distance = App::mApp->mSonic12->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt13(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic13->Echo->_pin->_port, App::mApp->mSonic13->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic13->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic13->Distance = App::mApp->mSonic13->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt14(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic14->Echo->_pin->_port, App::mApp->mSonic14->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic14->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic14->Distance = App::mApp->mSonic14->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt15(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic15->Echo->_pin->_port, App::mApp->mSonic15->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic15->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic15->Distance = App::mApp->mSonic15->SonicFilter->getAverage();
+	}
+}
+
+void SonicInterrupt16(){
+	static float timestamp;
+	if(GPIO_ReadInputDataBit(App::mApp->mSonic16->Echo->_pin->_port, App::mApp->mSonic16->Echo->_pin->_pin) == SET){
+		timestamp = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+	}
+	else{
+		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
+		value -= timestamp;
+		App::mApp->mSonic16->SonicFilter->Update(value / 5.8f);
+		App::mApp->mSonic16->Distance = App::mApp->mSonic16->SonicFilter->getAverage();
+	}
+}
+
+Sonic::Sonic(SonicConfiguration* conf) : Conf(conf), Distance(0){
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
 
-	RCC_AHB1PeriphClockCmd(conf->_echo->_rcc, ENABLE);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-	GPIO_InitStructure.GPIO_Pin = conf->_echo->_pin;
-	GPIO_Init(conf->_echo->_port, &GPIO_InitStructure);
-
-	GPIO_PinAFConfig(conf->_echo->_port, conf->_echoSource, GPIO_AF_TIM1);
-
-	TIM_TimeBaseStructure.TIM_Prescaler = 0;
-	TIM_TimeBaseStructure.TIM_Period = 10000 - 1;
-	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-	TIM_TimeBaseInit(TIM1, &TIM_TimeBaseStructure);
-
-	TIM_ICInitStructure.TIM_ICPolarity = TIM_ICPolarity_BothEdge;
-	TIM_ICInitStructure.TIM_ICSelection = TIM_ICSelection_DirectTI;
-	TIM_ICInitStructure.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-	TIM_ICInitStructure.TIM_ICFilter = 0xf;
-
-	TIM_ICInitStructure.TIM_Channel = TIM_Channel_1;
-	TIM_ICInit(TIM1, &TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_Channel = TIM_Channel_2;
-	TIM_ICInit(TIM1, &TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_Channel = TIM_Channel_3;
-	TIM_ICInit(TIM1, &TIM_ICInitStructure);
-	TIM_ICInitStructure.TIM_Channel = TIM_Channel_4;
-	TIM_ICInit(TIM1, &TIM_ICInitStructure);
-
-	NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannel = TIM6_DAC_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE ;
 	NVIC_Init(&NVIC_InitStructure);
 
-	NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_TIM10_IRQn;
-	NVIC_Init(&NVIC_InitStructure);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM6, ENABLE);
+	TIM_TimeBaseStructure.TIM_Prescaler = 83;
+	TIM_TimeBaseStructure.TIM_Period = 10000 - 1;
+	TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+	TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+	TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
+	TIM_TimeBaseInit(TIM6, &TIM_TimeBaseStructure);
+	TIM_ITConfig(TIM6, TIM_IT_Update, ENABLE);
+	TIM_Cmd(TIM6, ENABLE);
 
-	TIM_ITConfig(TIM1, TIM_IT_Update | TIM_IT_CC1 | TIM_IT_CC2 | TIM_IT_CC3 | TIM_IT_CC4, ENABLE);
-
-	RCC_AHB1PeriphClockCmd(conf->_trigger->_rcc, ENABLE);
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Pin = conf->_trigger->_pin;
-	GPIO_Init(conf->_trigger->_port, &GPIO_InitStructure);
-	GPIO_ResetBits(conf->_trigger->_port, conf->_trigger->_pin);
-
-	TIM_Cmd(TIM1, ENABLE);
-}
-
-void Sonic::Reset(){
-	OverFlowCount = 0;
-	TIM_SetCounter(TIM1, 0);
-}
-
-void Sonic::setDeltaUS(float value){
-	DeltaUS = value;
-}
-
-float Sonic::getDeltaUS(){
-	return DeltaUS;
+	switch(SonicNum){
+		case 0:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt1);
+			break;
+		case 1:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt2);
+			break;
+		case 2:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt3);
+			break;
+		case 3:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt4);
+			break;
+		case 4:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt5);
+			break;
+		case 5:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt6);
+			break;
+		case 6:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt7);
+			break;
+		case 7:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt8);
+			break;
+		case 8:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt9);
+			break;
+		case 9:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt10);
+			break;
+		case 10:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt11);
+			break;
+		case 11:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt12);
+			break;
+		case 12:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt13);
+			break;
+		case 13:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt14);
+			break;
+		case 14:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt15);
+			break;
+		case 15:
+			Echo = new ExternalInterrupt(conf->Echo, ExternalInterrupt::RISING_FALLING, SonicInterrupt16);
+			break;
+	}
+	App::mApp->mSonicTrigger[SonicNum] = Trigger = new Led(conf->Trigger);
+	App::mApp->mExti[SonicNum] = Echo;
+	SonicNum++;
+	SonicFilter = new MovingWindowAverageFilter(5);
 }
 
 void Sonic::Update(){
-	GPIO_SetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
-	Delay::DelayUS(10);
-	GPIO_ResetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
+	Trigger->LedControl(true);
+	Delay::DelayMS(10);
+	Trigger->LedControl(false);
 }
 
-void Sonic::TriggerSet(){
-	GPIO_SetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
-}
-
-void Sonic::TriggerReset(){
-	GPIO_ResetBits(Conf->_trigger->_port, Conf->_trigger->_pin);
-}
-
-void TIM1_CC_IRQHandler(){
-	if(TIM_GetITStatus(TIM1, TIM_IT_CC1) != RESET){
-		static float timestamp;
-		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf1->_echo->_port, App::mApp->mConfig->SonicConf1->_echo->_pin) == SET){
-			timestamp = TIM_GetCapture1(TIM1) + 10000 * Sonic::OverFlowCount;
-		}
-		else{
-			float value = TIM_GetCapture1(TIM1) + 10000 * Sonic::OverFlowCount;
-			value -= timestamp;
-//			value /= 168.0;
-			App::mApp->mSonic1->setDeltaUS(value);
-		}
-		TIM_ClearITPendingBit(TIM1, TIM_IT_CC1);
-	}
-
-	if(TIM_GetITStatus(TIM1, TIM_IT_CC2) != RESET){
-		static float timestamp;
-		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf2->_echo->_port, App::mApp->mConfig->SonicConf2->_echo->_pin) == SET){
-			timestamp = TIM_GetCapture2(TIM1) + 10000 * Sonic::OverFlowCount;
-		}
-		else{
-			float value = TIM_GetCapture2(TIM1) + 10000 * Sonic::OverFlowCount;
-			value -= timestamp;
-//			value /= 168.0;
-			App::mApp->mSonic2->setDeltaUS(value);
-		}
-		TIM_ClearITPendingBit(TIM1, TIM_IT_CC2);
-	}
-
-	if(TIM_GetITStatus(TIM1, TIM_IT_CC3) != RESET){
-		static float timestamp;
-		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf3->_echo->_port, App::mApp->mConfig->SonicConf3->_echo->_pin) == SET){
-			timestamp = TIM_GetCapture3(TIM1) + 10000 * Sonic::OverFlowCount;
-		}
-		else{
-			float value = TIM_GetCapture3(TIM1) + 10000 * Sonic::OverFlowCount;
-			value -= timestamp;
-			value /= 168.0;
-			App::mApp->mSonic3->setDeltaUS(value);
-		}
-		TIM_ClearITPendingBit(TIM1, TIM_IT_CC3);
-	}
-
-	if(TIM_GetITStatus(TIM1, TIM_IT_CC4) != RESET){
-		static float timestamp;
-		if(GPIO_ReadInputDataBit(App::mApp->mConfig->SonicConf4->_echo->_port, App::mApp->mConfig->SonicConf4->_echo->_pin) == SET){
-			timestamp = TIM_GetCapture4(TIM1) + 10000 * Sonic::OverFlowCount;
-		}
-		else{
-			float value = TIM_GetCapture4(TIM1) + 10000 * Sonic::OverFlowCount;
-			value -= timestamp;
-			value /= 168.0;
-			App::mApp->mSonic4->setDeltaUS(value);
-		}
-		TIM_ClearITPendingBit(TIM1, TIM_IT_CC4);
-	}
-}
-
-void TIM1_UP_TIM10_IRQHandler(){
-	if(TIM_GetITStatus(TIM1, TIM_IT_Update) != RESET){
-		Sonic::OverFlowCount++;
-		TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
-	}
-}
