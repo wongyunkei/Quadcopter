@@ -100,8 +100,8 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 	Motor3 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 	Motor4 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 
-	App::mApp->mTask->Attach(40, 0, StartingTask, true);
-	App::mApp->mTask->Attach(40, 0, StoppingTask, true);
+	App::mApp->mTask->Attach(4, 0, StartingTask, true);
+	App::mApp->mTask->Attach(4, 0, StoppingTask, true);
 }
 
 void Controlling::setStarting(bool value){

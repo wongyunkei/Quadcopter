@@ -266,6 +266,12 @@ Vector3f Quaternion::getEuler(){
 	return _Euler;
 }
 
+void Quaternion::setEuler(Vector3f angle){
+	_QuaternionKalman->Clear(angle);
+	_Quaternion = EulerToQuaternion(angle);
+	PrevT.setZero();
+}
+
 void Quaternion::Reset(){
 	Vector3f angle = _mAcceleration->getFilteredAngle();
 	if(IsUseCompass){

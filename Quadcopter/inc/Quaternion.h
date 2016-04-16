@@ -42,6 +42,7 @@ namespace Math{
 			Quaternion(Acceleration* mAcceleration, Omega* mOmega, EncoderYaw* mEncoderYaw);
 			bool Update();
 			Vector3f getEuler();
+			void setEuler(Vector3f angle);
 			void Reset();
 			Vector4f _Quaternion;
 
