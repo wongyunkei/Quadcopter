@@ -121,18 +121,20 @@ Config::Config(){
 
 	ADCConf1 = new ADConverter::ADCConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_3), ADC_Channel_3, ADC_SampleTime_480Cycles);
 
+
 	Configuration** CS = new Configuration*[0];
-	CS[0] = new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_12);
+	CS[0] = new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_10);
+	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER32, Spi::SpiConfiguration::SPIMODE0,
+										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_5),
+										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_6),
+										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_7), CS, false, 1);
 
-//	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER8, Spi::SpiConfiguration::SPIMODE0,
-//										  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_3),
-//										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_6),
-//										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_7), CS, false, 1);
-
+	Configuration** slaveCS = new Configuration*[0];
+	slaveCS[0] = new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_12);
 	Spi2Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf2, Spi::SpiConfiguration::PRESCALER16, Spi::SpiConfiguration::SPIMODE0,
 											  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_13),
 											  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_2),
-											  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), CS, true, 1);
+											  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), slaveCS, true, 1);
 
 //	I2C1Conf1 = new I2C::I2CConfiguration(I2C1, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_6), GPIO_PinSource6, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_7), GPIO_PinSource7, I2C::I2CConfiguration::SPEED_400K);
 	I2C1Conf2 = new I2C::I2CConfiguration(I2C1, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_8), GPIO_PinSource8, new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_9), GPIO_PinSource9, I2C::I2CConfiguration::SPEED_400K);

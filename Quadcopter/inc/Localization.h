@@ -28,6 +28,7 @@ namespace Math{
 		public:
 			Localization(Quaternion* quaternion, Encoder* encoderX, Encoder* encoderY, float encoderXTranslation, float encoderYTranslation);
 			Vector3f getPos();
+			void setPos(Vector3f value);
 			Vector3f getVel();
 			void setEncoderXTranslation(float value);
 			void setEncoderYTranslation(float value);

@@ -58,6 +58,7 @@ void EXTI0_IRQHandler();
 void I2C1_EV_IRQHandler();
 void I2C2_EV_IRQHandler();
 void SPI1_IRQHandler();
+void SPI2_IRQHandler();
 void DMA1_Stream0_IRQHandler();
 void DMA1_Stream1_IRQHandler();
 void DMA1_Stream2_IRQHandler();

@@ -154,6 +154,8 @@ namespace System{
 			EncoderYaw* mEncoderYaw;
 			App();
 			int PathState;
+			int PeriodicCmd;
+			float PeriodicData;
 		private:
 	};
 };

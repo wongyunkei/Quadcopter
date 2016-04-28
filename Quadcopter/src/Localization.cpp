@@ -22,6 +22,9 @@ Localization::Localization(Quaternion* quaternion,
 	PrevTick = App::mApp->mTicks->getTicks();
 
 }
+void Localization::setPos(Vector3f value){
+	Pos = value;
+}
 
 Vector3f Localization::getPos(){
 	return Pos;

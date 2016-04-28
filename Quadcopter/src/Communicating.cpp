@@ -24,7 +24,7 @@ Communicating::Com::Com(Interface interface, uint32_t addr, int index) : _interf
 	}
 }
 
-Communicating::Communicating(Com* com) : _com(com), WatchDog(0), Cmd(0), Data(0),isToken(false), BufferCount(0), PrintType(0), CmdData(0), txBufferCount(0){
+Communicating::Communicating(Com* com) : count(0), _com(com), WatchDog(0), Cmd(0), Data(0),isToken(false), BufferCount(0), PrintType(0), CmdData(0), txBufferCount(0){
 }
 
 int Communicating::getTxBufferCount(){
@@ -32,21 +32,20 @@ int Communicating::getTxBufferCount(){
 }
 
 void Communicating::ReceivePoll(){
-	int length;
 	switch(_com->_interface){
 		case Com::__UART:
-			length = _com->_UART->AvailableLength;
-			_com->_UART->Read(Buffer + BufferCount, length);
+			Length = _com->_UART->AvailableLength;
+			_com->_UART->Read(Buffer + BufferCount, Length);
 			break;
 		case Com::__SPI:
-			length = _com->_Spi->AvailableLength;
-			_com->_Spi->Read(Buffer + BufferCount, length);
+			Length = _com->_Spi->AvailableLength;
+			_com->_Spi->Read(Buffer + BufferCount, Length);
 			break;
 		case Com::__I2C:
 			break;
 	}
 
-	BufferCount += length;
+	BufferCount += Length;
 
 	for(int j = 0; j < 10; j++){
 		if(BufferCount > 0){
@@ -105,12 +104,7 @@ void Communicating::SendPoll(){
 			break;
 		case Com::__SPI:
 			if(txBufferCount >= 4){
-				if(_com->_Spi->Conf->IsSlave){
-					_com->_Spi->setSlaveTxBuffer(D, txBufferCount);
-				}
-				else{
-					_com->_Spi->Print(_com->Index, D, txBufferCount);
-				}
+				_com->_Spi->Print(_com->Index, "%s\n", D);
 			}
 			break;
 		case Com::__I2C:
@@ -120,7 +114,6 @@ void Communicating::SendPoll(){
 }
 
 void Communicating::Execute(int cmd, float data){
-
 	switch(cmd){
 
 		case CMD::WATCHDOG:
@@ -355,12 +348,66 @@ void Communicating::Execute(int cmd, float data){
 					App::mApp->PathState = 999;
 					Acknowledgement();
 					break;
+		case CMD::TEST:
+					App::mApp->mCommunicating2->Send(9, 689);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_STOP_ALL:
+					App::mApp->PeriodicCmd = 0;
+					App::mApp->PeriodicData = data;
+//					App::mApp->mCommunicating3->Send(0,0);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_RESET:
+					App::mApp->PeriodicCmd = 1;
+					App::mApp->PeriodicData = 0;
+//					App::mApp->mCommunicating3->Send(1,0);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_START:
+					App::mApp->PeriodicCmd = 2;
+					App::mApp->PeriodicData = 0;
+//					App::mApp->mCommunicating3->Send(2,0);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_SET_MOTOR1_TARGET:
+					App::mApp->PeriodicCmd = 3;
+					App::mApp->PeriodicData = data;
+//					App::mApp->mCommunicating3->Send(3,data);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_SET_MOTOR2_TARGET:
+					App::mApp->PeriodicCmd = 4;
+					App::mApp->PeriodicData = data;
+//					App::mApp->mCommunicating3->Send(4,data);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_SET_MOTOR3_TARGET:
+					App::mApp->PeriodicCmd = 5;
+					App::mApp->PeriodicData = data;
+//					App::mApp->mCommunicating3->Send(5,data);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_WATCHDOG:
+					App::mApp->PeriodicCmd = 6;
+					App::mApp->PeriodicData = data;
+//					App::mApp->mCommunicating3->Send(6,0);
+					break;
+		case CMD::SUCCESS:
+					App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
+					Acknowledgement();
+					break;
+		case CMD::CLAMPER_SET_HORIZONTAL:
+					App::mApp->PeriodicCmd = 7;
+					App::mApp->PeriodicData = data;
+					Acknowledgement();
+					break;
 	}
 
 }
 
 void Communicating::Acknowledgement(){
-	App::mApp->mLed1->Blink(true, 20, 2);
+	App::mApp->mLed1->Blink(true, 5, 2);
 }
 
 void Communicating::Send(int cmd, float data){

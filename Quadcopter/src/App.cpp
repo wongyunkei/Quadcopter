@@ -46,11 +46,13 @@ void CompassUpdate(){
 void ReceiveTask(){
 	App::mApp->mCommunicating1->ReceivePoll();
 	App::mApp->mCommunicating2->ReceivePoll();
+	App::mApp->mCommunicating3->ReceivePoll();
 }
 
 void SendTask(){
 	App::mApp->mCommunicating1->SendPoll();
-//	App::mApp->mCommunicating2->SendPoll();
+	App::mApp->mCommunicating2->SendPoll();
+	App::mApp->mCommunicating3->SendPoll();
 }
 
 void printElse(){
@@ -281,6 +283,10 @@ void SpiPoll(){
 	}
 }
 
+void SPITest(){
+	App::mApp->mCommunicating3->Send(0,0);
+}
+
 //App::App() : mTask(0), mQuaternion(0){
 //	Delay::DelayMS(100);
 //	mApp = this;
@@ -345,8 +351,8 @@ void SonicUpdate(){
 
 void PathTask(){
 
-	float Long = 240;
-	float Width = 150;
+	float Long = 0.240;
+	float Width = 0.150;
 
 	typedef struct Point{
 		float x;
@@ -360,16 +366,17 @@ void PathTask(){
 		float FR;
 		float L;
 		float R;
-		float CalFL;
-		float CalFR;
-		float CalL;
-		float CalR;
+		bool CalX;
+		bool CalY;
+		float CalXValue;
+		float CalYValue;
 	} PT;
 
 	PT points[10] = {{0.0, 1.0, 0, false, false, false, false},
-			{0.8, 1.0, -MathTools::PI / 2, false, false, false, false},
-			{1.6, 1.0, -MathTools::PI / 2, true, true, false, false, 600, 600, 0, 0},
-			{1.0, 0.0, 0, 0, false, false, false, false},
+			{0.7, 1.0, -MathTools::PI / 2, false, false, false, false},
+			{1.7 - Long - 0.3, 1.0, -MathTools::PI / 2, true, true, false, false, 0.3, 0.3, 0, 0, true, false, 1.135, 0},
+			{1.0, 0.5, -MathTools::PI, false, false, false, false},
+			{1.0, 0.0, -MathTools::PI, true, true, false, false, 0.3, 0.3, 0, 0, false, true, 0, -0.075f},
 			{0.0, 0.0, 0, 0, false, false, false, false},
 			{1.0, 1.0, 0, 0, false, false, false, false},
 			{1.0, 0.0, 0, 0, false, false, false, false},
@@ -377,12 +384,12 @@ void PathTask(){
 			{0.0, 0.0, 0, 0, false, false, false, false}
 			};
 
-	int index = 8;
+	int index = 6;
 
 	if(App::mApp->PathState == 999){
 		App::mApp->mControlling->MoveToTarget(0, 0, 0);
-		if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], 0, 0.015) &&
-				MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], 0, 0.015) &&
+		if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], 0, 0.03) &&
+				MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], 0, 0.03) &&
 				MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], 0, 0.0174)){
 			App::mApp->PathState = 0;
 			App::mApp->mControlling->Stopping();
@@ -390,7 +397,7 @@ void PathTask(){
 	}
 	else{
 		if(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR){
-			if(MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance, 0, 3)){
+			if(MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance, 0, 0.0025f)){
 				Vector3f angle = App::mApp->mQuaternion->getEuler();
 				if(MathTools::CheckWithInInterval(angle[2], 0, MathTools::PI / 4)){
 					angle[2] = 0;
@@ -408,24 +415,65 @@ void PathTask(){
 					angle[2] = -MathTools::PI / 2;
 				}
 				App::mApp->mQuaternion->setEuler(angle);
-				App::mApp->mCommunicating1->Acknowledgement();
 			}
 		}
 
 		if(points[App::mApp->PathState].SonicCalFL || points[App::mApp->PathState].SonicCalFR || points[App::mApp->PathState].SonicCalL || points[App::mApp->PathState].SonicCalR){
 			static float extraYaw = 0;
-			extraYaw += (points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR) ? (App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance) / fabs(App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance) * -MathTools::DegreeToRadian(0.1) : 0;
+			float extraX = 0;
+			float extraY = 0;
+			extraYaw += (points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR) ? (App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance) / fabs(App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance) * MathTools::DegreeToRadian(5) : 0;
+			extraYaw *= MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, 0, MathTools::PI / 4) ? 1 :
+						MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, -MathTools::PI / 2, MathTools::PI / 4) ? -1 :
+						MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, MathTools::PI / 2, MathTools::PI / 4) ? 1 :
+						MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, MathTools::PI, MathTools::PI / 4) ? -1 : -1;
 
-			App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].x, points[App::mApp->PathState].y, points[App::mApp->PathState].yaw + extraYaw);
-			if(((!points[App::mApp->PathState].SonicCalFL || MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, points[App::mApp->PathState].FL, 30.0f)) &&
-			   (!points[App::mApp->PathState].SonicCalFR || MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, points[App::mApp->PathState].FR, 30.0f)) &&
-			   (!points[App::mApp->PathState].SonicCalL || MathTools::CheckWithInInterval(App::mApp->mSonic3->Distance, points[App::mApp->PathState].L, 30.0f)) &&
-			   (!points[App::mApp->PathState].SonicCalR || MathTools::CheckWithInInterval(App::mApp->mSonic4->Distance, points[App::mApp->PathState].R, 30.0f)) &&
-			   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0261)) ||
-			   MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, 50, 30.0f) ||
-			   MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, 50, 30.0f)){
+			float value1 = 0;
+			float value2 = 0;
+			if(points[App::mApp->PathState].SonicCalFL || points[App::mApp->PathState].SonicCalFR){
+				if(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR){
+					value1 = App::mApp->mSonic1->Distance - points[App::mApp->PathState].FL + App::mApp->mSonic2->Distance - points[App::mApp->PathState].FR;
+					value1 /= 2;
+				}
+				else if(points[App::mApp->PathState].SonicCalFL){
+					value1 = App::mApp->mSonic1->Distance - points[App::mApp->PathState].FL;
+				}
+				else if(points[App::mApp->PathState].SonicCalFR){
+					value1 = App::mApp->mSonic2->Distance - points[App::mApp->PathState].FR;
+				}
+			}
+
+			if(points[App::mApp->PathState].SonicCalL || points[App::mApp->PathState].SonicCalR){
+				if(points[App::mApp->PathState].SonicCalL){
+					value2 = App::mApp->mSonic3->Distance - points[App::mApp->PathState].L;
+				}
+				else if(points[App::mApp->PathState].SonicCalFR){
+					value2 = App::mApp->mSonic4->Distance - points[App::mApp->PathState].R;
+				}
+			}
+
+			extraY = cosf(points[App::mApp->PathState].yaw) * value1 + sinf(points[App::mApp->PathState].yaw) * value2;
+			extraX = -sinf(points[App::mApp->PathState].yaw) * value1 + cosf(points[App::mApp->PathState].yaw) * value2;
+
+
+			App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].x + extraX, points[App::mApp->PathState].y + extraY, points[App::mApp->PathState].yaw + extraYaw);
+			if(((!points[App::mApp->PathState].SonicCalFL || MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, points[App::mApp->PathState].FL, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalFR || MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, points[App::mApp->PathState].FR, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalL || MathTools::CheckWithInInterval(App::mApp->mSonic3->Distance, points[App::mApp->PathState].L, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalR || MathTools::CheckWithInInterval(App::mApp->mSonic4->Distance, points[App::mApp->PathState].R, 0.01f))) ||
+//			   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)) ||
+//			   (!(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR) || MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174))) ||
+			   MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, 0.05f, 0.05f) ||
+			   MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, 0.05f, 0.05f)){
 				App::mApp->PathState++;
 				extraYaw = 0;
+				Vector3f value = App::mApp->mLocalization->getPos();
+				if(points[App::mApp->PathState].CalX){
+					value[0] = points[App::mApp->PathState].CalXValue;
+				}
+				if(points[App::mApp->PathState].CalY){
+					value[1] = points[App::mApp->PathState].CalYValue;
+				}
 				App::mApp->mCommunicating1->Acknowledgement();
 				if(App::mApp->PathState > index){
 					App::mApp->PathState = 0;
@@ -434,8 +482,8 @@ void PathTask(){
 		}
 		else{
 			App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].x, points[App::mApp->PathState].y, points[App::mApp->PathState].yaw);
-			if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], points[App::mApp->PathState].x, 0.015) &&
-			   MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], points[App::mApp->PathState].y, 0.015) &&
+			if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], points[App::mApp->PathState].x, 0.03) &&
+			   MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], points[App::mApp->PathState].y, 0.03) &&
 			   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)){
 				App::mApp->PathState++;
 				App::mApp->mCommunicating1->Acknowledgement();
@@ -447,7 +495,16 @@ void PathTask(){
 	}
 }
 
-App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+void SPISendTask(){
+	static int count = 0;
+	App::mApp->mCommunicating3->Send(App::mApp->PeriodicCmd, App::mApp->PeriodicData);
+	if(App::mApp->PeriodicCmd == 1 && count++ > 10){
+		count = 0;
+		App::mApp->PeriodicCmd = 0;
+	}
+}
+
+App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
@@ -469,10 +526,12 @@ App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0)
 	mGPIO8 = new Led(mConfig->GPIOConf8);
 
 	mUART4 = new UART(mConfig->UART4Conf1);
+	mSpi1 = new Spi(mConfig->Spi1Conf1);
 	mSpi2 = new Spi(mConfig->Spi2Conf1);
 
 	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
 	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
+	mCommunicating3 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
 
 	mSonic1 = new Sonic(mConfig->SonicConf1);
 	mSonic2 = new Sonic(mConfig->SonicConf2);
@@ -513,11 +572,12 @@ App::App() : mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0)
 	mTask->Attach(4, 0, EncoderUpdate, true);
 	mTask->Attach(4, 0, ControlTask, true);
 	mTask->Attach(4, 0, LocalizationUpdate, true);
-	mTask->Attach(20, 13, SonicUpdate, true);
-	mTask->Attach(20, 0, ReceiveTask, true);
-	mTask->Attach(5, 0, SendTask, true);
-	mTask->Attach(20, 7, print, true);
+	mTask->Attach(20, 0, SonicUpdate, true);
 	mTask->Attach(4, 0, PathTask, true);
+	mTask->Attach(5, 3, ReceiveTask, true);
+	mTask->Attach(5, 0, SendTask, true);
+	mTask->Attach(20, 13, print, true);
+	mTask->Attach(50, 7, SPISendTask, true);
 	mGPIO1->LedControl(true);
 	mGPIO2->LedControl(true);
 	mGPIO3->LedControl(true);

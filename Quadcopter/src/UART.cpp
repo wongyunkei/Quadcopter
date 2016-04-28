@@ -77,7 +77,7 @@ void DMA1_Stream1_IRQHandler(void)
 //			}
 			App::mApp->mUART3->Buffer[App::mApp->mUART3->BufferCount++] = App::mApp->mUART3->rxBuffer[i];
 			App::mApp->mUART3->AvailableLength++;
-			if(App::mApp->mUART3->BufferCount == 2047){
+			if(App::mApp->mUART3->BufferCount >= 2047){
 				App::mApp->mUART3->BufferCount = 0;
 			}
 		}
@@ -101,7 +101,7 @@ void DMA2_Stream2_IRQHandler(void)
 		for(int i = 0; i < 4; i++){
 			App::mApp->mUART1->Buffer[App::mApp->mUART1->BufferCount++] = App::mApp->mUART1->rxBuffer[i];
 			App::mApp->mUART1->AvailableLength++;
-			if(App::mApp->mUART1->BufferCount == 2047){
+			if(App::mApp->mUART1->BufferCount >= 2047){
 				App::mApp->mUART1->BufferCount = 0;
 			}
 		}
@@ -113,7 +113,7 @@ void DMA2_Stream2_IRQHandler(void)
 void USART1_IRQHandler(){
 	App::mApp->mUART1->Buffer[App::mApp->mUART1->BufferCount++] = USART_ReceiveData(USART1);
 	App::mApp->mUART1->AvailableLength++;
-	if(App::mApp->mUART1->BufferCount == 2047){
+	if(App::mApp->mUART1->BufferCount >= 2047){
 		App::mApp->mUART1->BufferCount = 0;
 	}
 }
@@ -121,7 +121,7 @@ void USART1_IRQHandler(){
 void USART3_IRQHandler(){
 	App::mApp->mUART3->Buffer[App::mApp->mUART3->BufferCount++] = USART_ReceiveData(USART3);
 	App::mApp->mUART3->AvailableLength++;
-	if(App::mApp->mUART3->BufferCount == 2047){
+	if(App::mApp->mUART3->BufferCount >= 2047){
 		App::mApp->mUART3->BufferCount = 0;
 	}
 }
@@ -129,7 +129,7 @@ void USART3_IRQHandler(){
 void UART4_IRQHandler(){
 	App::mApp->mUART4->Buffer[App::mApp->mUART4->BufferCount++] = USART_ReceiveData(UART4);
 	App::mApp->mUART4->AvailableLength++;
-	if(App::mApp->mUART4->BufferCount == 2047){
+	if(App::mApp->mUART4->BufferCount >= 2047){
 		App::mApp->mUART4->BufferCount = 0;
 	}
 }
@@ -137,7 +137,7 @@ void UART4_IRQHandler(){
 void UART5_IRQHandler(){
 	App::mApp->mUART5->Buffer[App::mApp->mUART5->BufferCount++] = USART_ReceiveData(UART5);
 	App::mApp->mUART5->AvailableLength++;
-	if(App::mApp->mUART5->BufferCount == 2047){
+	if(App::mApp->mUART5->BufferCount >= 2047){
 		App::mApp->mUART5->BufferCount = 0;
 	}
 }

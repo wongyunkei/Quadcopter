@@ -53,7 +53,7 @@ namespace Communication{
 			SpiConfiguration* Conf;
 			char Buffer[2048];
 			char SlaveTxBuffer[2048];
-			char SlaveTxBufferCount;
+			int SlaveTxBufferCount;
 			char* pSlaveTxBuffer;
 			int SlaveTxLength;
 			int BufferCount;

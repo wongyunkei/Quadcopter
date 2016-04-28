@@ -28,7 +28,7 @@ void SPI1_IRQHandler()
 	if(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == SET){
 		App::mApp->mSpi1->Buffer[App::mApp->mSpi1->BufferCount++] = (char)(0x00ff & SPI_I2S_ReceiveData(SPI1));
 		App::mApp->mSpi1->AvailableLength++;
-		if(App::mApp->mSpi1->BufferCount == 2047){
+		if(App::mApp->mSpi1->BufferCount >= 2047){
 			App::mApp->mSpi1->BufferCount = 0;
 		}
 		if(App::mApp->mSpi1->Conf->IsSlave){
@@ -44,18 +44,58 @@ void SPI1_IRQHandler()
 				}
 				SPI_I2S_SendData(SPI1, App::mApp->mSpi1->SlaveTxBuffer[App::mApp->mSpi1->SlaveTxBufferCount++]);
 				App::mApp->mSpi1->SlaveTxLength--;
-				if(App::mApp->mSpi1->SlaveTxBufferCount == 2047){
+				if(App::mApp->mSpi1->SlaveTxBufferCount >= 2047){
 					App::mApp->mSpi1->SlaveTxBufferCount = 0;
 				}
+//				App::mApp->mTicks->setTimeout(3);
+//				while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET){
+//					if(App::mApp->mTicks->Timeout()){
+//						if(!App::mApp->mSpi1->Conf->IsSlave){
+//							App::mApp->mSpi1->Reset();
+//						}
+//						return;
+//					}
+//				}
+			}
+		}
+	}
+
+}
+
+void SPI2_IRQHandler()
+{
+	App::mApp->mTicks->setTimeout(3);
+	if(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == SET){
+		App::mApp->mSpi2->Buffer[App::mApp->mSpi2->BufferCount++] = (char)(0x00ff & SPI_I2S_ReceiveData(SPI2));
+		App::mApp->mSpi2->AvailableLength++;
+		if(App::mApp->mSpi2->BufferCount >= 2047){
+			App::mApp->mSpi2->BufferCount = 0;
+		}
+		if(App::mApp->mSpi2->Conf->IsSlave){
+			if(App::mApp->mSpi2->SlaveTxLength > 0){
 				App::mApp->mTicks->setTimeout(3);
-				while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET){
+				while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET){
 					if(App::mApp->mTicks->Timeout()){
-						if(!App::mApp->mSpi1->Conf->IsSlave){
-							App::mApp->mSpi1->Reset();
+						if(!App::mApp->mSpi2->Conf->IsSlave){
+							App::mApp->mSpi2->Reset();
 						}
 						return;
 					}
 				}
+				SPI_I2S_SendData(SPI2, App::mApp->mSpi2->SlaveTxBuffer[App::mApp->mSpi2->SlaveTxBufferCount++]);
+				App::mApp->mSpi2->SlaveTxLength--;
+				if(App::mApp->mSpi2->SlaveTxBufferCount >= 2047){
+					App::mApp->mSpi2->SlaveTxBufferCount = 0;
+				}
+//				App::mApp->mTicks->setTimeout(3);
+//				while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET){
+//					if(App::mApp->mTicks->Timeout()){
+//						if(!App::mApp->mSpi2->Conf->IsSlave){
+//							App::mApp->mSpi2->Reset();
+//						}
+//						return;
+//					}
+//				}
 			}
 		}
 	}
@@ -85,15 +125,15 @@ void Spi::Reset(){
 }
 
 void Spi::setSlaveTxBuffer(char* data, int length){
-	if(SlaveTxBufferCount + SlaveTxLength > 2047){
+	if(SlaveTxBufferCount + SlaveTxLength >= 2047){
 		SlaveTxBufferCount = 0;
 	}
-	pSlaveTxBuffer = &SlaveTxBuffer[SlaveTxBufferCount + SlaveTxLength];
+	pSlaveTxBuffer = &SlaveTxBuffer[SlaveTxBufferCount];
 	for(int i = 0; i < length; i++){
-		if(pSlaveTxBuffer >= SlaveTxBuffer + 2047){
+		if(pSlaveTxBuffer + i >= SlaveTxBuffer + 2047){
 			pSlaveTxBuffer = SlaveTxBuffer;
 		}
-		App::mApp->mSpi1->pSlaveTxBuffer[i] = *(data++);
+		pSlaveTxBuffer[i] = *(data++);
 	}
 	SlaveTxLength += length;
 }
@@ -126,16 +166,19 @@ void Spi::Initialize(SpiConfiguration* conf){
 	SPI_InitTypeDef SPI_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	uint16_t prescaler;
+	uint8_t GPIO_AF_SPIx;
 
 	if(conf->SpiConfx == SpiConfiguration::SpiConf1){
 		Spix = SPI1;
 		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 		NVIC_InitStructure.NVIC_IRQChannel = SPI1_IRQn;
+		GPIO_AF_SPIx = GPIO_AF_SPI1;
 	}
 	else if(conf->SpiConfx == SpiConfiguration::SpiConf2){
 		Spix = SPI2;
 		RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);
 		NVIC_InitStructure.NVIC_IRQChannel = SPI2_IRQn;
+		GPIO_AF_SPIx = GPIO_AF_SPI2;
 	}
 
 	SPI_I2S_DeInit(Spix);
@@ -196,7 +239,7 @@ void Spi::Initialize(SpiConfiguration* conf){
 				csSource = i;
 			}
 		}
-		GPIO_PinAFConfig(conf->CS[0]->_port, csSource, GPIO_AF_SPI1);
+		GPIO_PinAFConfig(conf->CS[0]->_port, csSource, GPIO_AF_SPIx);
 	}
 	else{
 		SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
@@ -251,7 +294,7 @@ void Spi::Initialize(SpiConfiguration* conf){
 			clkSource = i;
 		}
 	}
-	GPIO_PinAFConfig(conf->SCLK->_port, clkSource, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(conf->SCLK->_port, clkSource, GPIO_AF_SPIx);
 
 	RCC_AHB1PeriphClockCmd(conf->MISO->_rcc, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = conf->MISO->_pin;
@@ -265,7 +308,7 @@ void Spi::Initialize(SpiConfiguration* conf){
 			misoSource = i;
 		}
 	}
-	GPIO_PinAFConfig(conf->MISO->_port, misoSource, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(conf->MISO->_port, misoSource, GPIO_AF_SPIx);
 
 
 	RCC_AHB1PeriphClockCmd(conf->MOSI->_rcc, ENABLE);
@@ -280,7 +323,7 @@ void Spi::Initialize(SpiConfiguration* conf){
 			mosiSource = i;
 		}
 	}
-	GPIO_PinAFConfig(conf->MOSI->_port, mosiSource, GPIO_AF_SPI1);
+	GPIO_PinAFConfig(conf->MOSI->_port, mosiSource, GPIO_AF_SPIx);
 
 
 	SPI_I2S_ITConfig(Spix, SPI_I2S_IT_RXNE, ENABLE);
@@ -289,7 +332,6 @@ void Spi::Initialize(SpiConfiguration* conf){
 }
 
 bool Spi::SendByte(uint8_t byte){
-
 	App::mApp->mTicks->setTimeout(3);
 	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
 		if(App::mApp->mTicks->Timeout()){
@@ -298,7 +340,7 @@ bool Spi::SendByte(uint8_t byte){
 	}
 	SPI_I2S_SendData(Spix, byte);
 	App::mApp->mTicks->setTimeout(3);
-	while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET){
+	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
 		if(App::mApp->mTicks->Timeout()){
 			return false;
 		}
@@ -371,14 +413,18 @@ void Spi::Print(int index, const char* pstr, ...)
 	while(*(fp++)){
 		length++;
 	}
-	for(int i = 0; i < length; i++){
-		Transfer(index, txBuffer[i]);
+	if(Conf->IsSlave){
+		setSlaveTxBuffer(txBuffer, length);
+	}
+	else{
+		for(int i = 0; i < length; i++){
+			Transfer(index, txBuffer[i]);
+		}
 	}
 }
 
 
 bool Spi::Transfer(int index, uint8_t data){
-
 	ChipSelect(index);
 	if(!SendByte(data)){
 		if(!Conf->IsSlave){
@@ -468,12 +514,12 @@ bool Spi::ReadNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 
 void Spi::ChipSelect(int index){
 	GPIO_ResetBits(Conf->CS[index]->_port, Conf->CS[index]->_pin);
-	Delay::DelayUS(1);
+	Delay::DelayUS(5);
 }
 
 void Spi::ChipDeSelect(int index){
+	Delay::DelayUS(5);
 	GPIO_SetBits(Conf->CS[index]->_port, Conf->CS[index]->_pin);
-	Delay::DelayUS(1);
 }
 
 int Spi::Read(char* buffer, int length){

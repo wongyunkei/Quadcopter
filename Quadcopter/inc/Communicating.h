@@ -88,7 +88,17 @@ namespace Communication{
 				CCW,
 				MOVE,
 				MANUAL_MODE,
-				RETURN_HOME
+				RETURN_HOME,
+				TEST,
+				CLAMPER_STOP_ALL,
+				CLAMPER_RESET,
+				CLAMPER_START,
+				CLAMPER_SET_MOTOR1_TARGET,
+				CLAMPER_SET_MOTOR2_TARGET,
+				CLAMPER_SET_MOTOR3_TARGET,
+				CLAMPER_WATCHDOG,
+				SUCCESS,
+				CLAMPER_SET_HORIZONTAL
 			};
 
 			Communicating(Com* com);
@@ -100,6 +110,8 @@ namespace Communication{
 			int getTxBufferCount();
 			void Acknowledgement();
 			int PrintType;
+			int Length;
+			int count;
 
 		private:
 			Com* _com;
@@ -113,6 +125,7 @@ namespace Communication{
 			float CmdData;
 			int Cmd;
 			float Data;
+			int index;
 	};
 };
 

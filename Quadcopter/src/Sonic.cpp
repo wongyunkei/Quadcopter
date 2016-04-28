@@ -39,7 +39,7 @@ void SonicInterrupt1(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic1->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic1->Distance = App::mApp->mSonic1->SonicFilter->getAverage();
+		App::mApp->mSonic1->Distance = App::mApp->mSonic1->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -52,7 +52,7 @@ void SonicInterrupt2(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic2->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic2->Distance = App::mApp->mSonic2->SonicFilter->getAverage();
+		App::mApp->mSonic2->Distance = App::mApp->mSonic2->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -65,7 +65,7 @@ void SonicInterrupt3(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic3->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic3->Distance = App::mApp->mSonic3->SonicFilter->getAverage();
+		App::mApp->mSonic3->Distance = App::mApp->mSonic3->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -78,7 +78,7 @@ void SonicInterrupt4(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic4->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic4->Distance = App::mApp->mSonic4->SonicFilter->getAverage();
+		App::mApp->mSonic4->Distance = App::mApp->mSonic4->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -91,7 +91,7 @@ void SonicInterrupt5(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic5->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic5->Distance = App::mApp->mSonic5->SonicFilter->getAverage();
+		App::mApp->mSonic5->Distance = App::mApp->mSonic5->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -104,7 +104,7 @@ void SonicInterrupt6(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic6->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic6->Distance = App::mApp->mSonic6->SonicFilter->getAverage();
+		App::mApp->mSonic6->Distance = App::mApp->mSonic6->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -117,7 +117,7 @@ void SonicInterrupt7(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic7->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic7->Distance = App::mApp->mSonic7->SonicFilter->getAverage();
+		App::mApp->mSonic7->Distance = App::mApp->mSonic7->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -130,7 +130,7 @@ void SonicInterrupt8(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic8->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic8->Distance = App::mApp->mSonic8->SonicFilter->getAverage();
+		App::mApp->mSonic8->Distance = App::mApp->mSonic8->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -143,7 +143,7 @@ void SonicInterrupt9(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic9->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic9->Distance = App::mApp->mSonic9->SonicFilter->getAverage();
+		App::mApp->mSonic9->Distance = App::mApp->mSonic9->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -156,7 +156,7 @@ void SonicInterrupt10(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic10->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic10->Distance = App::mApp->mSonic10->SonicFilter->getAverage();
+		App::mApp->mSonic10->Distance = App::mApp->mSonic10->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -169,7 +169,7 @@ void SonicInterrupt11(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic11->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic11->Distance = App::mApp->mSonic11->SonicFilter->getAverage();
+		App::mApp->mSonic11->Distance = App::mApp->mSonic11->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -182,7 +182,7 @@ void SonicInterrupt12(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic12->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic12->Distance = App::mApp->mSonic12->SonicFilter->getAverage();
+		App::mApp->mSonic12->Distance = App::mApp->mSonic12->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -195,7 +195,7 @@ void SonicInterrupt13(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic13->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic13->Distance = App::mApp->mSonic13->SonicFilter->getAverage();
+		App::mApp->mSonic13->Distance = App::mApp->mSonic13->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -208,7 +208,7 @@ void SonicInterrupt14(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic14->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic14->Distance = App::mApp->mSonic14->SonicFilter->getAverage();
+		App::mApp->mSonic14->Distance = App::mApp->mSonic14->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -221,7 +221,7 @@ void SonicInterrupt15(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic15->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic15->Distance = App::mApp->mSonic15->SonicFilter->getAverage();
+		App::mApp->mSonic15->Distance = App::mApp->mSonic15->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 
@@ -234,7 +234,7 @@ void SonicInterrupt16(){
 		float value = TIM_GetCounter(TIM6) + 10000 * Sonic::OverFlowCount;
 		value -= timestamp;
 		App::mApp->mSonic16->SonicFilter->Update(value / 5.8f);
-		App::mApp->mSonic16->Distance = App::mApp->mSonic16->SonicFilter->getAverage();
+		App::mApp->mSonic16->Distance = App::mApp->mSonic16->SonicFilter->getAverage() / 1000.0f;
 	}
 }
 

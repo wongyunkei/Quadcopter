@@ -82,11 +82,11 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 		PitchTarget(0), RollOffset(0),
 		PitchOffset(0), YawOffset(0), initLift(5000), startCount(0), StoppingDelayCount(0),
 		Speed(1.0f), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
-		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(false){
+		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(true){
 
-	YPosPid = new Pid(10,0,0.2,10000);
-	XPosPid = new Pid(10,0,0.2,10000);
-	YawPid = new Pid(4,0,0.2,10000);
+	YPosPid = new Pid(12,0,0.2,10000);
+	XPosPid = new Pid(12,0,0.2,10000);
+	YawPid = new Pid(4,0.5,0,10000);
 //	RollPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	PitchPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	YawPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
@@ -100,8 +100,8 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 	Motor3 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 	Motor4 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 
-	App::mApp->mTask->Attach(4, 0, StartingTask, true);
-	App::mApp->mTask->Attach(4, 0, StoppingTask, true);
+	App::mApp->mTask->Attach(40, 0, StartingTask, true);
+	App::mApp->mTask->Attach(40, 0, StoppingTask, true);
 }
 
 void Controlling::setStarting(bool value){
@@ -121,12 +121,19 @@ void Controlling::ControllingPoll(){
 
 
 		if(watchDogCount < WatchDogLimit){
-			watchDogCount++;
+			//watchDogCount++;
 		}
 
 		if(!ManualMode){
 			float errX = XPosPid->pid(XPosTarget, App::mApp->mLocalization->getPos()[0]);
 			float errY = YPosPid->pid(YPosTarget, App::mApp->mLocalization->getPos()[1]);
+			if(fabs(YawTarget - App::mApp->mQuaternion->getEuler()[2]) > 3 * MathTools::PI / 2){
+				if(YawTarget < 0){
+					YawTarget += 2*MathTools::PI;
+				}else{
+					YawTarget -= 2*MathTools::PI;
+				}
+			}
 			float errYaw = YawPid->pid(YawTarget, App::mApp->mQuaternion->getEuler()[2]);
 			float dirAngle;
 			dirAngle = atan2f(errY,errX) - App::mApp->mQuaternion->getEuler()[2];
@@ -154,10 +161,22 @@ void Controlling::ControllingPoll(){
 //			Motor3PWM = MathTools::Trim(minLift, Motor3PWM, maxLift);
 //			Motor4PWM = MathTools::Trim(minLift, Motor4PWM, maxLift);
 //		}
-		Motor1PWM += Motor1->pid(Motor1SpeedTarget, Encoder1->getVel());
-		Motor2PWM += Motor2->pid(Motor2SpeedTarget, Encoder2->getVel());
-		Motor3PWM += Motor3->pid(Motor3SpeedTarget, Encoder3->getVel());
-		Motor4PWM += Motor4->pid(Motor4SpeedTarget, Encoder4->getVel());
+		float pwm1 = Motor1->pid(Motor1SpeedTarget, Encoder1->getVel());
+		float pwm2 = Motor2->pid(Motor2SpeedTarget, Encoder2->getVel());
+		float pwm3 = Motor3->pid(Motor3SpeedTarget, Encoder3->getVel());
+		float pwm4 = Motor4->pid(Motor4SpeedTarget, Encoder4->getVel());
+		if(pwm1 == pwm1){
+			Motor1PWM += pwm1;
+		}
+		if(pwm2 == pwm2){
+			Motor2PWM += pwm2;
+		}
+		if(pwm3 == pwm3){
+			Motor3PWM += pwm3;
+		}
+		if(pwm4 == pwm4){
+			Motor4PWM += pwm4;
+		}
 		Motor1PWM = Motor1PWM < -10000.0f ? -10000.0f : Motor1PWM  > 10000.0f ? 10000.0f : Motor1PWM;
 		Motor2PWM = Motor2PWM < -10000.0f ? -10000.0f : Motor2PWM  > 10000.0f ? 10000.0f : Motor2PWM;
 		Motor3PWM = Motor3PWM < -10000.0f ? -10000.0f : Motor3PWM  > 10000.0f ? 10000.0f : Motor3PWM;
@@ -198,7 +217,6 @@ void Controlling::ControllingPoll(){
 		_mPWM->Control2(fabs(Motor2PWM));
 		_mPWM->Control3(fabs(Motor3PWM));
 		_mPWM->Control4(fabs(Motor4PWM));
-
 //		float integral1 = RollPid->getIntegral();
 //		float integral2 = PitchPid->getIntegral();
 //		float integral3 = YawPid->getIntegral();
