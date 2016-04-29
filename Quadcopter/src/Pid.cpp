@@ -50,7 +50,7 @@ float Pid::pid(float target, float current){
 	PrevTick = App::mApp->mTicks->getTicks();
 	Interval /= 1000.0f;
 	if(Interval <= 0){
-		return 0;
+		Interval = 1;
 	}
 	float err = target - current;
 	Integral += err;

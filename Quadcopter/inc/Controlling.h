@@ -68,7 +68,7 @@ namespace Control{
 			void CW();
 			void CCW();
 			void Move(float vel, float dirAngle, float orientationAngle);
-			void MoveToTarget(float x, float y, float yaw);
+			void MoveToTarget(float speed, float x, float y, float yaw);
 			PWM* _mPWM;
 			Encoder* Encoder1;
 			Encoder* Encoder2;

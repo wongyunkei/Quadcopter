@@ -26,7 +26,7 @@ void AdditionalTools::printfBuffer(int index, int length){
 	for(int i = 0; i < length; i++){
 		printf("%g", buffer[index][i]);
 		if(i == length - 1){
-			printf("\n");
+			printf("\r\n");
 		}
 		else{
 			printf(",");
@@ -35,12 +35,12 @@ void AdditionalTools::printfBuffer(int index, int length){
 }
 
 void AdditionalTools::printMatix(char* label, MatrixXf M,int rows, int cols){
-	printf("%s:\n", label);
+	printf("%s:\r\n", label);
 	for(int i = 0; i < rows; i++){
 		for(int j = 0; j < cols; j++){
 			printf("%g\t", M(i,j));
 		}
-		printf("\n");
+		printf("\r\n");
 	}
-	printf("\n");
+	printf("\r\n");
 }

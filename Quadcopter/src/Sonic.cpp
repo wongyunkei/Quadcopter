@@ -311,7 +311,7 @@ Sonic::Sonic(SonicConfiguration* conf) : Conf(conf), Distance(0){
 	App::mApp->mSonicTrigger[SonicNum] = Trigger = new Led(conf->Trigger);
 	App::mApp->mExti[SonicNum] = Echo;
 	SonicNum++;
-	SonicFilter = new MovingWindowAverageFilter(5);
+	SonicFilter = new MovingWindowAverageFilter(10);
 }
 
 void Sonic::Update(){

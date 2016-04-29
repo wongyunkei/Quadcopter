@@ -48,10 +48,14 @@ void Localization::LocalizationCalc(){
 	}
 	float ProjX = (cosyaw * x - sinyaw * y);
 	float ProjY = (sinyaw * x + cosyaw * y);
-	EncoderXFramePosX += 0.5f * (PrevProjX + ProjX) * Interval;
-	EncoderXFramePosY += 0.5f * (PrevProjY + ProjY) * Interval;
-	PrevProjX = ProjX;
-	PrevProjY = ProjY;
+	if(ProjX == ProjX){
+		EncoderXFramePosX += 0.5f * (PrevProjX + ProjX) * Interval;
+		PrevProjX = ProjX;
+	}
+	if(ProjY == ProjY){
+		EncoderXFramePosY += 0.5f * (PrevProjY + ProjY) * Interval;
+		PrevProjY = ProjY;
+	}
 	Vector3f t;
 	t << EncoderXFramePosX - cosyaw * EncoderXTranslation + sinyaw * EncoderYTranslation , EncoderXFramePosY - sinyaw * EncoderXTranslation - cosyaw * EncoderYTranslation, 0;
 	Vel = (t - Pos) / Interval;
