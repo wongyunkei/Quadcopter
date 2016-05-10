@@ -82,11 +82,12 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 		PitchTarget(0), RollOffset(0),
 		PitchOffset(0), YawOffset(0), initLift(5000), startCount(0), StoppingDelayCount(0),
 		Speed(1.0f), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
-		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(true){
+		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(true), IsSonicDriveYaw(false){
 
-	YPosPid = new Pid(6,0,0.2,10000);
-	XPosPid = new Pid(6,0,0.2,10000);
-	YawPid = new Pid(10,0.2,0,10000);
+	YPosPid = new Pid(20,0,0.2,10000);
+	XPosPid = new Pid(20,0,0.2,10000);
+	YawPid = new Pid(10,0.0,0.2,10000);
+	SonicPid = new Pid(1.5,0.0,0.2,10000);
 //	RollPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	PitchPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
 //	YawPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
@@ -138,14 +139,18 @@ void Controlling::ControllingPoll(){
 			float errYaw = YawPid->pid(YawTarget, App::mApp->mQuaternion->getEuler()[2]);
 			float dirAngle;
 			dirAngle = atan2f(1000*errY,1000*errX) - App::mApp->mQuaternion->getEuler()[2];
-
+			if(IsSonicDriveYaw){
+				errYaw = SonicPid->pid(0,App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance);
+				errYaw = errYaw > MathTools::PI / 6 ? MathTools::PI / 6 :
+						errYaw < -MathTools::PI / 6 ? -MathTools::PI / 6 : errYaw;
+			}
 			if(dirAngle == dirAngle && errYaw == errYaw){
 				Move(Speed, dirAngle, errYaw);
+			}
+			else{
 				XPosPid->clear();
 				YPosPid->clear();
 				YawPid->clear();
-			}
-			else{
 				return;
 			}
 		}
@@ -414,7 +419,15 @@ void Controlling::Move(float vel, float dirAngle, float orientationAngle){
 	Motor4SpeedTarget = v[3];
 }
 
+void Controlling::MoveToTargetWithSonicDriveYaw(float speed, float x, float y){
+	IsSonicDriveYaw = true;
+	Speed = speed;
+	YPosTarget = y;
+	XPosTarget = x;
+}
+
 void Controlling::MoveToTarget(float speed, float x, float y, float yaw){
+	IsSonicDriveYaw = false;
 	Speed = speed;
 	YPosTarget = y;
 	XPosTarget = x;

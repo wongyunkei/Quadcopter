@@ -69,6 +69,7 @@ namespace Control{
 			void CCW();
 			void Move(float vel, float dirAngle, float orientationAngle);
 			void MoveToTarget(float speed, float x, float y, float yaw);
+			void MoveToTargetWithSonicDriveYaw(float speed, float x, float y);
 			PWM* _mPWM;
 			Encoder* Encoder1;
 			Encoder* Encoder2;
@@ -82,6 +83,7 @@ namespace Control{
 			Pid* YPosPid;
 			Pid* XPosPid;
 			Pid* YawPid;
+			Pid* SonicPid;
 			Pid* Motor1;
 			Pid* Motor2;
 			Pid* Motor3;
@@ -110,6 +112,7 @@ namespace Control{
 			float YPosTarget;
 			float YawTarget;
 			bool ManualMode;
+			bool IsSonicDriveYaw;
 
 		private:
 			int WatchDogLimit;

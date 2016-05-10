@@ -153,7 +153,6 @@ namespace System{
 			Localization* mLocalization;
 			EncoderYaw* mEncoderYaw;
 			App();
-			Pid* SonicPid;
 			int PathState;
 			int PeriodicCmd;
 			float PeriodicData;

@@ -23,6 +23,10 @@ Localization::Localization(Quaternion* quaternion,
 
 }
 void Localization::setPos(Vector3f value){
+	EncoderXFramePosX = value[0];
+	EncoderXFramePosY = value[1];
+	PrevProjX = 0;
+	PrevProjY = 0;
 	Pos = value;
 }
 
