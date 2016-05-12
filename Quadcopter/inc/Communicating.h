@@ -112,6 +112,8 @@ namespace Communication{
 			int PrintType;
 			int Length;
 			int count;
+			int txBufferCount;
+			int BufferCount;
 
 		private:
 			Com* _com;
@@ -119,8 +121,6 @@ namespace Communication{
 			bool isToken;
 			char Buffer[2048];
 			char txBuffer[2048];
-			int txBufferCount;
-			int BufferCount;
 			char Bytes[7];
 			float CmdData;
 			int Cmd;

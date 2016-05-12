@@ -37,7 +37,7 @@ void SPI1_IRQHandler()
 				while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET){
 					if(App::mApp->mTicks->Timeout()){
 						if(!App::mApp->mSpi1->Conf->IsSlave){
-							App::mApp->mSpi1->Reset();
+							//App::mApp->mSpi1->Reset();
 						}
 						return;
 					}
@@ -77,7 +77,7 @@ void SPI2_IRQHandler()
 				while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET){
 					if(App::mApp->mTicks->Timeout()){
 						if(!App::mApp->mSpi2->Conf->IsSlave){
-							App::mApp->mSpi2->Reset();
+							//App::mApp->mSpi2->Reset();
 						}
 						return;
 					}
@@ -339,12 +339,12 @@ bool Spi::SendByte(uint8_t byte){
 		}
 	}
 	SPI_I2S_SendData(Spix, byte);
-	App::mApp->mTicks->setTimeout(3);
-	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
-		if(App::mApp->mTicks->Timeout()){
-			return false;
-		}
-	}
+//	App::mApp->mTicks->setTimeout(3);
+//	while(SPI_I2S_GetFlagStatus(Spix, SPI_I2S_FLAG_TXE) == RESET){
+//		if(App::mApp->mTicks->Timeout()){
+//			return false;
+//		}
+//	}
 	return true;
 }
 
@@ -428,7 +428,8 @@ bool Spi::Transfer(int index, uint8_t data){
 	ChipSelect(index);
 	if(!SendByte(data)){
 		if(!Conf->IsSlave){
-			Reset();
+			printf("SPIE ERROR\r\n");
+			//Reset();
 		}
 		return false;
 	}
@@ -514,11 +515,11 @@ bool Spi::ReadNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 
 void Spi::ChipSelect(int index){
 	GPIO_ResetBits(Conf->CS[index]->_port, Conf->CS[index]->_pin);
-	Delay::DelayUS(5);
+	Delay::DelayUS(20);
 }
 
 void Spi::ChipDeSelect(int index){
-	Delay::DelayUS(5);
+	Delay::DelayUS(20);
 	GPIO_SetBits(Conf->CS[index]->_port, Conf->CS[index]->_pin);
 }
 

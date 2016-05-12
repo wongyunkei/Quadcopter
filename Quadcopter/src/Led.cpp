@@ -125,10 +125,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	if(LedAddr == App::mApp->mLed1){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask1, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask1, "BlinkTask1", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask1, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask1, "BlinkTask1", true);
 			}
 		}
 		else{
@@ -138,10 +138,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mLed2){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask2, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask2, "BlinkTask2", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask2, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask2, "BlinkTask2", true);
 			}
 		}
 		else{
@@ -151,10 +151,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mLed3){
 			if(onState){
 				if(count >= 0){
-					App::mApp->mTask->Attach(period / 2, 0, BlinkTask3, false, 2 * count);
+					App::mApp->mTask->Attach(period / 2, 0, BlinkTask3, "BlinkTask3", false, 2 * count);
 				}
 				else{
-					App::mApp->mTask->Attach(period / 2, 0, BlinkTask3, true);
+					App::mApp->mTask->Attach(period / 2, 0, BlinkTask3, "BlinkTask3", true);
 				}
 			}
 			else{
@@ -164,10 +164,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mLed4){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask4, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask4, "BlinkTask4", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask4, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask4, "BlinkTask4", true);
 			}
 		}
 		else{
@@ -177,10 +177,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[0]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask5, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask5, "BlinkTask5", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask5, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask5, "BlinkTask5", true);
 			}
 		}
 		else{
@@ -190,10 +190,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[1]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask6, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask6, "BlinkTask6", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask6, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask6, "BlinkTask6", true);
 			}
 		}
 		else{
@@ -203,10 +203,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[2]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask7, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask7, "BlinkTask7", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask7, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask7, "BlinkTask7", true);
 			}
 		}
 		else{
@@ -216,10 +216,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[3]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask8, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask8, "BlinkTask8", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask8, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask8, "BlinkTask8", true);
 			}
 		}
 		else{
@@ -229,10 +229,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[4]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask9, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask9, "BlinkTask9", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask9, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask9, "BlinkTask9", true);
 			}
 		}
 		else{
@@ -242,10 +242,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[5]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask10, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask10, "BlinkTask10", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask10, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask10, "BlinkTask10", true);
 			}
 		}
 		else{
@@ -255,10 +255,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[6]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask11, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask11, "BlinkTask11", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask11, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask11, "BlinkTask11", true);
 			}
 		}
 		else{
@@ -268,10 +268,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[7]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask12, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask12, "BlinkTask12", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask12, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask12, "BlinkTask12", true);
 			}
 		}
 		else{
@@ -281,10 +281,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[8]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask13, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask13, "BlinkTask13", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask13, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask13, "BlinkTask13", true);
 			}
 		}
 		else{
@@ -294,10 +294,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[9]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask14, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask14, "BlinkTask14", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask14, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask14, "BlinkTask14", true);
 			}
 		}
 		else{
@@ -307,10 +307,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[10]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask15, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask15, "BlinkTask15", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask15, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask15, "BlinkTask15", true);
 			}
 		}
 		else{
@@ -320,10 +320,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[11]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask16, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask16, "BlinkTask16", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask16, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask16, "BlinkTask16", true);
 			}
 		}
 		else{
@@ -333,10 +333,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[12]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask17, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask17, "BlinkTask17", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask17, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask17, "BlinkTask17", true);
 			}
 		}
 		else{
@@ -346,10 +346,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[13]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask18, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask18, "BlinkTask18", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask18, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask18, "BlinkTask18", true);
 			}
 		}
 		else{
@@ -359,10 +359,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[14]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask19, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask19, "BlinkTask19", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask19, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask19, "BlinkTask19", true);
 			}
 		}
 		else{
@@ -372,10 +372,10 @@ void Led::Blink(bool onState, uint16_t period, int count){
 	else if(LedAddr == App::mApp->mSonicTrigger[15]){
 		if(onState){
 			if(count >= 0){
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask20, false, 2 * count);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask20, "BlinkTask20", false, 2 * count);
 			}
 			else{
-				App::mApp->mTask->Attach(period / 2, 0, BlinkTask20, true);
+				App::mApp->mTask->Attach(period / 2, 0, BlinkTask20, "BlinkTask20", true);
 			}
 		}
 		else{

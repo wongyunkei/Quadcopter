@@ -23,8 +23,8 @@ void SysTick_Handler(void){
 		App::mApp->mTicks->setTicks(0);
 	}
 	if(App::mApp->mTask != 0 && App::mApp->mTask->IsPrintTaskNum){
-		if(App::mApp->mTask->hangCount++ > 10){
-			printf("%d\n", App::mApp->mTask->currentTaskNum);
+		if(App::mApp->mTask->hangCount++ > App::mApp->mTask->TaskPeriod[App::mApp->mTask->currentTaskNum]){
+			printf("%s:%d\r\n", App::mApp->mTask->TaskName[App::mApp->mTask->currentTaskNum], App::mApp->mTask->duration[App::mApp->mTask->currentTaskNum][1] - App::mApp->mTask->duration[App::mApp->mTask->currentTaskNum][0]);
 		}
 	}
 }

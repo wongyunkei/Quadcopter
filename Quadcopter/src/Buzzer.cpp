@@ -65,8 +65,8 @@ void Buzzer::Toggle(){
 void Buzzer::Frequency(float freq, int d, bool onState){
 
 	if(onState){
-		App::mApp->mTask->Attach((int)(1000.0f / freq), 0, BuzzerOn, true, -1);
-		App::mApp->mTask->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, true, -1);
+		App::mApp->mTask->Attach((int)(1000.0f / freq), 0, BuzzerOn, "BuzzerOn", true, -1);
+		App::mApp->mTask->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, "BuzzerOff", true, -1);
 		if(d == -1){
 			setDuration(-1);
 		}

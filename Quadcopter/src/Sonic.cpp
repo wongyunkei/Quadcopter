@@ -316,7 +316,7 @@ Sonic::Sonic(SonicConfiguration* conf) : Conf(conf), Distance(0){
 
 void Sonic::Update(){
 	Trigger->LedControl(true);
-	Delay::DelayMS(10);
+	Delay::DelayUS(10);
 	Trigger->LedControl(false);
 }
 

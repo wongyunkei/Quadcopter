@@ -13,6 +13,7 @@
 #include <stm32f4xx_iwdg.h>
 #include <Communicating.h>
 #include <UART.h>
+#include <string>
 
 uint16_t Task::maxTaskNum = 1024;
 
@@ -22,6 +23,7 @@ Task::Task() : mTicks(App::mApp->mTicks), OnWatchDog(App::mApp->mTicks->OnWatchD
 		duration[i] = new int[2];
 	}
 	mTask = new pTask[maxTaskNum];
+	TaskName = new char*[maxTaskNum];
 	TaskPeriod = new float[maxTaskNum];
 	PhaseShift = new float[maxTaskNum];
 	IsPeriodic = new bool[maxTaskNum];
@@ -36,7 +38,7 @@ void Task::resetBreakCount(pTask fn){
 	}
 }
 
-void Task::Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout, bool keepLoopping){
+void Task::Attach(float period, float phaseShift, pTask fn, char* fnName, bool isPeriodic, int BreakCout, bool keepLoopping){
 
 	if(TasksNum == maxTaskNum){
 		printf("\nCannot attach any more tasks!\n");
@@ -46,6 +48,7 @@ void Task::Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int
 	mTask[TasksNum] = fn;
 
 	TaskPeriod[TasksNum] = period;
+	TaskName[TasksNum] = fnName;
 	PhaseShift[TasksNum] = phaseShift;
 	IsPeriodic[TasksNum] = isPeriodic;
 	_BreakCout[TasksNum] = BreakCout;

@@ -18,7 +18,7 @@ namespace Time{
 		public:
 			typedef void (*pTask)();
 			Task();
-			void Attach(float period, float phaseShift, pTask fn, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
+			void Attach(float period, float phaseShift, pTask fn, char* fnName, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
 			void DeAttach(pTask);
 			void Run(bool isPrintTaskNum = false);
 			void resetBreakCount(pTask fn);
@@ -32,9 +32,10 @@ namespace Time{
 			uint16_t TasksNum;
 			int** duration;
 			pTask* mTask;
+			float* TaskPeriod;
+			char** TaskName;
 
 		private:
-			float* TaskPeriod;
 			float* PhaseShift;
 			bool* IsPeriodic;
 			int* _BreakCout;

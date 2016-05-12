@@ -55,6 +55,9 @@ void SendTask(){
 	App::mApp->mCommunicating3->SendPoll();
 }
 
+void SendTaskSlow(){
+}
+
 void printElse(){
 	App::mApp->mCommunicating1->Send(0, AdditionalTools::getBuffer(0)[0]);
 }
@@ -531,11 +534,47 @@ void SPISendTask(){
 }
 
 void printTaskNum(){
-	printf("PathState:%d\r\n", App::mApp->PathState);
+	printf("PathState:%d\r\n", App::mApp->mCommunicating3->txBufferCount);
+}
+
+void printTaskName(){
+	printf("Update:%lx\r\n", Update);
+	printf("EncoderUpdate:%lx\r\n", EncoderUpdate);
+	printf("LocalizationUpdate:%lx\r\n", LocalizationUpdate);
+	printf("SonicUpdate:%lx\r\n", SonicUpdate);
+	printf("ControlTask:%lx\r\n", ControlTask);
+	printf("PathTask:%lx\r\n", PathTask);
+	printf("ReceiveTask:%lx\r\n", ReceiveTask);
+	printf("SendTask:%lx\r\n", SendTask);
+	printf("SendTaskSlow:%lx\r\n", SendTaskSlow);
+	printf("print:%lx\r\n", print);
+	printf("SPISendTask:%lx\r\n", SPISendTask);
+	for(int i = 0; i < App::mApp->mTask->TasksNum; i++){
+		App::mApp->mTask->printDeration(i);
+	}
 }
 
 void printfBufferTask(){
 	AdditionalTools::printfBuffer(0, 4);
+}
+
+void Task250Hz(){
+	Update();
+	EncoderUpdate();
+	LocalizationUpdate();
+	PathTask();
+}
+
+void Task200Hz(){
+	ReceiveTask();
+	SendTask();
+}
+
+void Task50Hz(){
+	SonicUpdate();
+	ControlTask();
+	SPISendTask();
+	print();
 }
 
 App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
@@ -591,7 +630,7 @@ App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass
 	mMPU6050 = new MPU6050(mI2C1);
 	mAcceleration = new Acceleration(mMPU6050);
 	mOmega = new Omega(mMPU6050);
-	mTask->Attach(4, 0, initUpdate, false, 100, false);
+	mTask->Attach(4, 0, initUpdate, "initUpdate", false, 100, false);
 
 	Delay::DelayMS(10);
 
@@ -602,17 +641,22 @@ App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass
 	mLocalization = new Localization(mQuaternion, mEncoder2, mEncoder1, -0.001f, 0.0f);
 
 
-	mTask->Attach(4, 0, Update, true);
-	mTask->Attach(4, 0, EncoderUpdate, true);
-	mTask->Attach(4, 0, LocalizationUpdate, true);
-	mTask->Attach(20, 0, SonicUpdate, true);
-	mTask->Attach(20, 0, ControlTask, true);
-	mTask->Attach(4, 0, PathTask, true);
-	mTask->Attach(5, 3, ReceiveTask, true);
-	mTask->Attach(5, 0, SendTask, true);
-	mTask->Attach(20, 7, print, true);
-//	mTask->Attach(100, 7, SPISendTask, true);
-//	mTask->Attach(100, 7, printTaskNum, true);
+
+	mTask->Attach(6, 0, Task250Hz, "Task250Hz", true);
+	mTask->Attach(10, 0, Task200Hz, "Task250Hz", true);
+	mTask->Attach(20, 0, Task50Hz, "Task50Hz", true);
+//	mTask->Attach(4, 0, Update, true);
+//	mTask->Attach(4, 0, EncoderUpdate, true);
+//	mTask->Attach(4, 0, LocalizationUpdate, true);
+//	mTask->Attach(20, 0, SonicUpdate, true);
+//	mTask->Attach(20, 0, ControlTask, true);
+//	mTask->Attach(4, 0, PathTask, true);
+//	mTask->Attach(5, 3, ReceiveTask, true);
+//	mTask->Attach(1, 0, SendTask, true);
+//	mTask->Attach(1, 0, SendTaskSlow, true);
+//	mTask->Attach(20, 7, print, true);
+//	mTask->Attach(100, 0, SPISendTask, true);
+//	mTask->Attach(1000, 0, printTaskName, "printTaskName", true);
 //	mTask->Attach(100, 7, printfBufferTask, true);
 	mGPIO1->LedControl(true);
 	mGPIO2->LedControl(true);
@@ -624,7 +668,7 @@ App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass
 	mGPIO8->LedControl(false);
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
-	mTask->Run();
+	mTask->Run(true);
 }
 
 void HardFault_Handler(){

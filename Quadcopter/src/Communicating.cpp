@@ -394,7 +394,8 @@ void Communicating::Execute(int cmd, float data){
 //					App::mApp->mCommunicating3->Send(6,0);
 					break;
 		case CMD::SUCCESS:
-					App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
+					printf("SUCCESS:%g\r\n", data);
+					//App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
 					Acknowledgement();
 					break;
 		case CMD::CLAMPER_SET_HORIZONTAL:
@@ -407,7 +408,7 @@ void Communicating::Execute(int cmd, float data){
 }
 
 void Communicating::Acknowledgement(){
-	App::mApp->mLed1->Blink(true, 5, 2);
+	App::mApp->mLed1->Blink(true, 100, 2);
 }
 
 void Communicating::Send(int cmd, float data){
