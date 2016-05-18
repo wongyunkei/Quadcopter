@@ -78,7 +78,7 @@ ExternalInterrupt::ExternalInterrupt(Configuration* pin, Mode mode, pInterruptTa
 
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_DOWN;
 	GPIO_InitStruct.GPIO_Pin = pin->_pin;
 	GPIO_Init(pin->_port, &GPIO_InitStruct);
 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIO, EXTI_PinSource);

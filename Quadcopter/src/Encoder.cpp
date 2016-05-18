@@ -146,6 +146,14 @@ float Encoder::getVel(){
 	return Vel;
 }
 
+void Encoder::setPos(float value){
+	RawVel = 0;
+	PrevRawVel = 0;
+	Vel = 0;
+	PrevVel = 0;
+	Pos = value;
+}
+
 void Encoder::Reset(){
 	RawVel = 0;
 	PrevRawVel = 0;

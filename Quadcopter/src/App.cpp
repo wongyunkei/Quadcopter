@@ -243,15 +243,6 @@ void EncoderUpdate(){
 	App::mApp->mEncoder6->Update(MathTools::DegreeToRadian(0));
 }
 
-void EncoderPrint(){
-
-	printf("%g,%g,%g,%g\n", AdditionalTools::getBuffer(0)[0], AdditionalTools::getBuffer(1)[0], AdditionalTools::getBuffer(2)[0], (float)(MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[0])));
-	printf("Q:%g,%g,%g,%g\n", App::mApp->mQuaternion->_Quaternion[0], App::mApp->mQuaternion->_Quaternion[1], App::mApp->mQuaternion->_Quaternion[2], App::mApp->mQuaternion->_Quaternion[3]);
-
-	//	App::mApp->mUART1->Print("x: %g\ty: %g\tyaw: %g\n", App::mApp->mLocalization->ReadPos()[0] * 1000, App::mApp->mLocalization->ReadPos()[1] * 1000, Math::MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2]));
-//	App::mApp->mUART1->Print("x: %g\ty: %g\tyaw: %g\n", App::mApp->mEncoder2->ReadPos(), App::mApp->mEncoder1->ReadPos(), Math::MathTools::RadianToDegree(App::mApp->mQuaternion->getEuler()[2]));
-}
-
 void LocalizationUpdate(){
 	App::mApp->mLocalization->LocalizationCalc();
 }
@@ -346,10 +337,27 @@ void SPITest(){
 //}
 
 void SonicUpdate(){
-	App::mApp->mSonic1->Update();
-	App::mApp->mSonic2->Update();
-	App::mApp->mSonic3->Update();
-	App::mApp->mSonic4->Update();
+	static int index = 0;
+	if(index == 0){
+		App::mApp->mSonic1->Update();
+		index++;
+	}
+	else if(index == 1){
+		App::mApp->mSonic2->Update();
+		index++;
+	}
+	else if(index == 2){
+		App::mApp->mSonic3->Update();
+		index++;
+	}
+	else if(index == 3){
+		App::mApp->mSonic4->Update();
+		index++;
+	}
+	if(index >= 4){
+		index = 0;
+	}
+
 }
 
 void PathTask(){
@@ -357,30 +365,11 @@ void PathTask(){
 	float Long = 0.240f;
 	float Width = 0.150f;
 
-	typedef struct Point{
-		float speed;
-		float x;
-		float y;
-		float yaw;
-		bool SonicCalFL;
-		bool SonicCalFR;
-		bool SonicCalL;
-		bool SonicCalR;
-		float FL;
-		float FR;
-		float L;
-		float R;
-		bool CalX;
-		bool CalY;
-		float CalXValue;
-		float CalYValue;
-	} PT;
-
 	PT points[20] = {{1.0,0.0, 1.0, 0, false, false, false, false},
 			{1.0,1.0, 1.0, -MathTools::PI / 2, false, false, false, false},
-			{0.1,1.5, 1.0, -MathTools::PI / 2, true, true, false, false, 0.3, 0.3, 0, 0, true, false, 1.2f, 0},
-			{1.0,1.0, 0.1, -MathTools::PI, false, false, false, false},
-			{0.1,1.0, -0.5, -MathTools::PI, true, true, false, false, 0.3, 0.3, 0, 0, false, true, 0, -0.08f},
+			{0.2,1.5, 1.0, -MathTools::PI / 2, true, true, false, false, 0.3, 0.3, 0, 0, true, false, 1.2f, 0},
+			{1.0,1.0, 0.3, -MathTools::PI, false, false, false, false},
+			{0.2,1.0, -0.5, -MathTools::PI, true, true, false, false, 0.3, 0.3, 0, 0, false, true, 0, -0.08f},
 			{1.0,0.0, 0.0, 0, 0, false, false, false, false},
 			{1.0,1.0, 1.0, 0, 0, false, false, false, false},
 			{1.0,1.0, 0.0, 0, 0, false, false, false, false},
@@ -487,8 +476,161 @@ void PathTask(){
 			   MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, 0.1f, 0.05f) ||
 			   MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, 0.1f, 0.05f)){
 
-					App::mApp->mControlling->StopAllMotors();
-					Delay::DelayMS(2000);
+					App::mApp->mControlling->Pause();
+					//Delay::DelayMS(2000);
+
+	//				extraYaw = 0;
+					Vector3f value = App::mApp->mLocalization->getPos();
+					if(points[App::mApp->PathState].CalX){
+						value[0] = points[App::mApp->PathState].CalXValue;
+						printf("X:%g\r\n", value[0]);
+					}
+					if(points[App::mApp->PathState].CalY){
+						value[1] = points[App::mApp->PathState].CalYValue;
+						printf("Y:%g\r\n", value[1]);
+					}
+					App::mApp->mLocalization->setPos(value);
+					App::mApp->PathState++;
+					App::mApp->mCommunicating1->Acknowledgement();
+					if(App::mApp->PathState > index){
+						App::mApp->PathState = 0;
+					}
+				}
+			}
+		}
+		else{
+			App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].speed, points[App::mApp->PathState].x, points[App::mApp->PathState].y, points[App::mApp->PathState].yaw);
+			if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], points[App::mApp->PathState].x, 0.05) &&
+			   MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], points[App::mApp->PathState].y, 0.05) &&
+			   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)){
+				App::mApp->PathState++;
+				App::mApp->mCommunicating1->Acknowledgement();
+				if(App::mApp->PathState > index){
+					App::mApp->PathState = 0;
+				}
+			}
+		}
+	}
+}
+
+void PathTaskWithMyRIO(){
+
+	float Long = 0.240f;
+	float Width = 0.150f;
+
+	PT points[20] = {{1.0,0.0, 1.0, 0, false, false, false, false},
+			{1.0,1.0, 1.0, -MathTools::PI / 2, false, false, false, false},
+			{0.2,1.5, 1.0, -MathTools::PI / 2, true, true, false, false, 0.3, 0.3, 0, 0, true, false, 1.2f, 0},
+			{1.0,1.0, 0.3, -MathTools::PI, false, false, false, false},
+			{0.2,1.0, -0.5, -MathTools::PI, true, true, false, false, 0.3, 0.3, 0, 0, false, true, 0, -0.08f},
+			{1.0,0.0, 0.0, 0, 0, false, false, false, false},
+			{1.0,1.0, 1.0, 0, 0, false, false, false, false},
+			{1.0,1.0, 0.0, 0, 0, false, false, false, false},
+			{1.0,0.0, 1.0, 0, 0, false, false, false, false},
+			{1.0,0.0, 0.0, 0, 0, false, false, false, false}
+			};
+
+	int index = 9;
+
+	if(App::mApp->PathState == 999){
+		App::mApp->mControlling->MoveToTarget(1.0, 0, 0, 0);
+		if(MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[0], 0, 0.05) &&
+				MathTools::CheckWithInInterval(App::mApp->mLocalization->getPos()[1], 0, 0.05) &&
+				MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], 0, 0.0174)){
+			App::mApp->PathState = 0;
+			App::mApp->mControlling->Stopping();
+		}
+	}
+	else{
+
+		if(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR){
+			if(MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance, 0, 0.005f)){
+				Vector3f angle = App::mApp->mQuaternion->getEuler();
+				if(MathTools::CheckWithInInterval(angle[2], 0, MathTools::PI / 4)){
+					angle[2] = 0;
+				}
+				else if(MathTools::CheckWithInInterval(angle[2], MathTools::PI / 2, MathTools::PI / 4)){
+					angle[2] = MathTools::PI / 2;
+				}
+				else if(MathTools::CheckWithInInterval(angle[2], MathTools::PI, MathTools::PI / 4)){
+					angle[2] = MathTools::PI;
+				}
+				else if(MathTools::CheckWithInInterval(angle[2], -MathTools::PI, MathTools::PI / 4)){
+					angle[2] = -MathTools::PI;
+				}
+				else if(MathTools::CheckWithInInterval(angle[2], -MathTools::PI / 2, MathTools::PI / 4)){
+					angle[2] = -MathTools::PI / 2;
+				}
+				App::mApp->mQuaternion->setEuler(angle);
+			}
+
+		if(points[App::mApp->PathState].SonicCalFL || points[App::mApp->PathState].SonicCalFR || points[App::mApp->PathState].SonicCalL || points[App::mApp->PathState].SonicCalR){
+//			float extraYaw = 0;
+			float extraX = 0;
+			float extraY = 0;
+//			float value = App::mApp->SonicPid->pid(0,App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance);//atan2f(App::mApp->mSonic1->Distance,2 * Width) - atan2f(App::mApp->mSonic2->Distance,2 * Width));
+//
+//			if(value != value){
+//				value = 0;
+//			}
+//			extraYaw = (points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR) ? value : 0;
+//			extraYaw *= MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, 0, MathTools::PI / 4) ? 1 :
+//			MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, -MathTools::PI / 2, MathTools::PI / 4) ? -1 :
+//			MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, MathTools::PI / 2, MathTools::PI / 4) ? 1 :
+//			MathTools::CheckWithInInterval(points[App::mApp->PathState].yaw, MathTools::PI, MathTools::PI / 4) ? -1 : -1;
+			//extraYaw = extraYaw > MathTools::PI / 24 ? MathTools::PI / 24 : extraYaw < -MathTools::PI / 24 ? -MathTools::PI / 24 : extraYaw;
+//			float f[3] = {App::mApp->mSonic1->Distance, App::mApp->mSonic2->Distance, MathTools::RadianToDegree(extraYaw)};
+//
+//			AdditionalTools::setBuffer(0, f, 3);
+
+//			if(extraYaw != extraYaw){
+//				extraYaw = 0;
+//			}
+//			extraYaw = MathTools::RadianToDegree(extraYaw) < 2 && MathTools::RadianToDegree(extraYaw) > 0 ? MathTools::DegreeToRadian(2) : MathTools::RadianToDegree(extraYaw) < 0 && MathTools::RadianToDegree(extraYaw) > -2 ? -MathTools::DegreeToRadian(2) : extraYaw;
+			float value1 = 0;
+			float value2 = 0;
+			if(points[App::mApp->PathState].SonicCalFL || points[App::mApp->PathState].SonicCalFR){
+				if(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR){
+					value1 = App::mApp->mSonic1->Distance - points[App::mApp->PathState].FL + App::mApp->mSonic2->Distance - points[App::mApp->PathState].FR;
+					value1 /= 2;
+				}
+				else if(points[App::mApp->PathState].SonicCalFL){
+					value1 = App::mApp->mSonic1->Distance - points[App::mApp->PathState].FL;
+				}
+				else if(points[App::mApp->PathState].SonicCalFR){
+					value1 = App::mApp->mSonic2->Distance - points[App::mApp->PathState].FR;
+				}
+			}
+
+			if(points[App::mApp->PathState].SonicCalL || points[App::mApp->PathState].SonicCalR){
+				if(points[App::mApp->PathState].SonicCalL){
+					value2 = App::mApp->mSonic3->Distance - points[App::mApp->PathState].L;
+				}
+				else if(points[App::mApp->PathState].SonicCalFR){
+					value2 = App::mApp->mSonic4->Distance - points[App::mApp->PathState].R;
+				}
+			}
+
+			extraY = cosf(points[App::mApp->PathState].yaw) * value1 + sinf(points[App::mApp->PathState].yaw) * value2;
+			extraX = -sinf(points[App::mApp->PathState].yaw) * value1 + cosf(points[App::mApp->PathState].yaw) * value2;
+
+			if(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR){
+				App::mApp->mControlling->MoveToTargetWithSonicDriveYaw(points[App::mApp->PathState].speed, points[App::mApp->PathState].x + extraX, points[App::mApp->PathState].y + extraY);
+			}
+			else{
+				App::mApp->mControlling->MoveToTarget(points[App::mApp->PathState].speed, points[App::mApp->PathState].x + extraX, points[App::mApp->PathState].y + extraY, points[App::mApp->PathState].yaw);
+			}
+			if(((!points[App::mApp->PathState].SonicCalFL || MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, points[App::mApp->PathState].FL, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalFR || MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, points[App::mApp->PathState].FR, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalL || MathTools::CheckWithInInterval(App::mApp->mSonic3->Distance, points[App::mApp->PathState].L, 0.01f)) &&
+			   (!points[App::mApp->PathState].SonicCalR || MathTools::CheckWithInInterval(App::mApp->mSonic4->Distance, points[App::mApp->PathState].R, 0.01f))) ||
+//			   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174)) ||
+//			   (!(points[App::mApp->PathState].SonicCalFL && points[App::mApp->PathState].SonicCalFR) || MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], points[App::mApp->PathState].yaw, 0.0174))) ||
+			   MathTools::CheckWithInInterval(App::mApp->mSonic1->Distance, 0.1f, 0.05f) ||
+			   MathTools::CheckWithInInterval(App::mApp->mSonic2->Distance, 0.1f, 0.05f)){
+
+					App::mApp->mControlling->Pause();
+					//Delay::DelayMS(2000);
 
 	//				extraYaw = 0;
 					Vector3f value = App::mApp->mLocalization->getPos();
@@ -527,9 +669,10 @@ void PathTask(){
 void SPISendTask(){
 	static int count = 0;
 	App::mApp->mCommunicating3->Send(App::mApp->PeriodicCmd, App::mApp->PeriodicData);
-	if(App::mApp->PeriodicCmd == 1 && count++ > 10){
+	if(App::mApp->PeriodicCmd == Communicating::CLAMPER_RESET_RUN && count++ > 10){
 		count = 0;
-		App::mApp->PeriodicCmd = 0;
+		printf("WatchDog\r\n");
+		App::mApp->PeriodicCmd = Communicating::CMD::CLAMPER_WATCHDOG;
 	}
 }
 
@@ -558,31 +701,202 @@ void printfBufferTask(){
 	AdditionalTools::printfBuffer(0, 4);
 }
 
-void Task250Hz(){
+void Task100Hz(){
 	Update();
 	EncoderUpdate();
 	LocalizationUpdate();
-	PathTask();
-}
-
-void Task200Hz(){
+	SonicUpdate();
+	ControlTask();
 	ReceiveTask();
 	SendTask();
 }
 
 void Task50Hz(){
-	SonicUpdate();
-	ControlTask();
+	PathTask();
 	SPISendTask();
+//	PathTaskWithMyRIO();
 	print();
 }
 
+void Task3Hz(){
+}
+
+void EncoderPrint(){
+	printf("M1:%g  M2:%g  M3:%g\r\n", App::mApp->mEncoder3->getPos(), App::mApp->mEncoder4->getPos(), App::mApp->mEncoder5->getPos());
+	printf("T1:%g  T2:%g  T3:%g\r\n", App::mApp->Motor1Target, App::mApp->Motor2Target, App::mApp->Motor3Target);
+}
+
+void App2Controlling(){
+	static int delayCount = 0;
+	if(App::mApp->ControlStart){
+		float pwm1 = App::mApp->Motor1PID->pid(App::mApp->Motor1Target, App::mApp->mEncoder3->getPos());
+		float pwm2 = App::mApp->Motor2PID->pid(App::mApp->Motor2Target, App::mApp->mEncoder4->getPos());
+		float pwm3 = App::mApp->Motor3PID->pid(App::mApp->Motor3Target, App::mApp->mEncoder5->getPos());
+		float Motor1PWM = 0;
+		float Motor2PWM = 0;
+		float Motor3PWM = 0;
+		if(pwm1 == pwm1 && pwm2 == pwm2 && pwm3 == pwm3){
+			Motor1PWM = pwm1;
+			Motor2PWM = pwm2;
+			Motor3PWM = pwm3;
+			Motor1PWM = Motor1PWM < -10000.0f ? -10000.0f : Motor1PWM  > 10000.0f ? 10000.0f : Motor1PWM;
+			Motor2PWM = Motor2PWM < -10000.0f ? -10000.0f : Motor2PWM  > 10000.0f ? 10000.0f : Motor2PWM;
+			Motor3PWM = Motor3PWM < -10000.0f ? -10000.0f : Motor3PWM  > 10000.0f ? 10000.0f : Motor3PWM;
+
+			if(App::mApp->IsCal1 >= 0){
+				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_RESET){
+//					printf("Limit1\r\n");
+					App::mApp->IsCal1++;
+					if(App::mApp->IsCal1 > 500){
+						App::mApp->IsCal1 = -100;
+					}
+					App::mApp->mPWM->Control1(0);
+					App::mApp->mEncoder3->setPos(-2.0);
+					App::mApp->Motor1Target = 0;
+					Motor1PWM = 0;
+				}
+			}
+			App::mApp->mPWM->Control1(fabs(Motor1PWM));
+			if(App::mApp->IsCal2 >= 0){
+				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_7) == Bit_RESET){
+					App::mApp->IsCal2++;
+					if(App::mApp->IsCal2 > 500){
+						App::mApp->IsCal2 = -100;
+					}
+//					printf("Limit2\r\n");
+					App::mApp->mPWM->Control2(0);
+					App::mApp->mEncoder4->setPos(0);
+					App::mApp->Motor2Target = 0;
+					Motor2PWM = 0 ;
+				}
+			}
+			App::mApp->mPWM->Control2(fabs(Motor2PWM));
+			if(App::mApp->IsCal3 >= 0){
+				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_8) == Bit_RESET){
+					App::mApp->IsCal3++;
+					if(App::mApp->IsCal3 > 500){
+						App::mApp->IsCal3 = -100;
+					}
+//					printf("Limit3\r\n");
+					App::mApp->mPWM->Control3(0);
+					App::mApp->mEncoder5->setPos(0);
+					App::mApp->Motor3Target = 0;
+					Motor3PWM = 0;
+				}
+			}
+			App::mApp->mPWM->Control3(fabs(Motor3PWM));
+		}
+
+		if(Motor1PWM < 0.0f){
+			App::mApp->mGPIO1->LedControl(false);
+			App::mApp->mGPIO5->LedControl(true);
+		}
+		else{
+			App::mApp->mGPIO1->LedControl(true);
+			App::mApp->mGPIO5->LedControl(false);
+		}
+		if(Motor2PWM < 0.0f){
+			App::mApp->mGPIO2->LedControl(false);
+			App::mApp->mGPIO6->LedControl(true);
+		}
+		else{
+			App::mApp->mGPIO2->LedControl(true);
+			App::mApp->mGPIO6->LedControl(false);
+		}
+		if(Motor3PWM < 0.0f){
+			App::mApp->mGPIO3->LedControl(false);
+			App::mApp->mGPIO7->LedControl(true);
+		}
+		else{
+			App::mApp->mGPIO3->LedControl(true);
+			App::mApp->mGPIO7->LedControl(false);
+		}
+	}
+	else{
+		App::mApp->mPWM->Control1(0);
+		App::mApp->mPWM->Control2(0);
+		App::mApp->mPWM->Control3(0);
+	}
+	if(delayCount % 100 == 0 && MathTools::CheckWithInInterval(fabs(App::mApp->Motor1Target - App::mApp->mEncoder3->getPos()), 0, 0.01f)){
+		App::mApp->PeriodicCmd = Communicating::SUCCESS;
+		App::mApp->PeriodicData = 1;
+	}
+	if(delayCount % 100 == 33 && MathTools::CheckWithInInterval(fabs(App::mApp->Motor2Target - App::mApp->mEncoder4->getPos()), 0, 0.01f)){
+		App::mApp->PeriodicCmd = Communicating::SUCCESS;
+		App::mApp->PeriodicData = 2;
+	}
+	if(delayCount % 100 == 66 && MathTools::CheckWithInInterval(fabs(App::mApp->Motor3Target - App::mApp->mEncoder5->getPos()), 0, 0.01f)){
+		App::mApp->PeriodicCmd = Communicating::SUCCESS;
+		App::mApp->PeriodicData = 3;
+	}
+	if(delayCount++ > 1000){
+		delayCount = 0;
+	}
+}
+
+void App2Task100Hz(){
+	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder5->Update(MathTools::DegreeToRadian(0));
+	App::mApp->mEncoder6->Update(MathTools::DegreeToRadian(0));
+
+	App::mApp->mCommunicating1->ReceivePoll();
+	App::mApp->mCommunicating2->ReceivePoll();
+
+	App::mApp->mCommunicating1->SendPoll();
+	App::mApp->mCommunicating2->SendPoll();
+	App2Controlling();
+}
+
+void App2Task50Hz(){
+}
+
+void App2Task3Hz(){
+	EncoderPrint();
+}
+
+/*
 App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
 		mExti[i] = 0;
 	}
+
+	currentPT.speed = 0;
+	currentPT.x = 0;
+	currentPT.y = 0;
+	currentPT.yaw = 0;
+	currentPT.SonicCalFL = false;
+	currentPT.SonicCalFR = false;
+	currentPT.SonicCalL = false;
+	currentPT.SonicCalR = false;
+	currentPT.FL = 0;
+	currentPT.FR = 0;
+	currentPT.L = 0;
+	currentPT.R = 0;
+	currentPT.CalX = false;
+	currentPT.CalY = false;
+	currentPT.CalXValue = 0;
+	currentPT.CalYValue = 0;
+
+	nextPT.speed = 0;
+	nextPT.x = 0;
+	nextPT.y = 0;
+	nextPT.yaw = 0;
+	nextPT.SonicCalFL = false;
+	nextPT.SonicCalFR = false;
+	nextPT.SonicCalL = false;
+	nextPT.SonicCalR = false;
+	nextPT.FL = 0;
+	nextPT.FR = 0;
+	nextPT.L = 0;
+	nextPT.R = 0;
+	nextPT.CalX = false;
+	nextPT.CalY = false;
+	nextPT.CalXValue = 0;
+	nextPT.CalYValue = 0;
+
 	mConfig = new Config();
 	mTicks = new Ticks(false);
 	mTask = new Task();
@@ -642,9 +956,9 @@ App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass
 
 
 
-	mTask->Attach(6, 0, Task250Hz, "Task250Hz", true);
-	mTask->Attach(10, 0, Task200Hz, "Task250Hz", true);
+	mTask->Attach(10, 0, Task100Hz, "Task100Hz", true);
 	mTask->Attach(20, 0, Task50Hz, "Task50Hz", true);
+	mTask->Attach(300, 0, Task3Hz, "Task3Hz", true);
 //	mTask->Attach(4, 0, Update, true);
 //	mTask->Attach(4, 0, EncoderUpdate, true);
 //	mTask->Attach(4, 0, LocalizationUpdate, true);
@@ -668,7 +982,92 @@ App::App() : PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass
 	mGPIO8->LedControl(false);
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
-	mTask->Run(true);
+	mTask->Run();
+}*/
+
+App::App() : ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+	Delay::DelayMS(10);
+	mApp = this;
+	for(int i = 0; i < 16; i++){
+		mExti[i] = 0;
+	}
+
+	mConfig = new Config();
+	mTicks = new Ticks(false);
+	mTask = new Task();
+
+	mLed1 = new Led(mConfig->LedConf1);
+
+	mGPIO1 = new Led(mConfig->GPIOConf1);
+	mGPIO2 = new Led(mConfig->GPIOConf2);
+	mGPIO3 = new Led(mConfig->GPIOConf3);
+	mGPIO4 = new Led(mConfig->GPIOConf4);
+	mGPIO5 = new Led(mConfig->GPIOConf5);
+	mGPIO6 = new Led(mConfig->GPIOConf6);
+	mGPIO7 = new Led(mConfig->GPIOConf7);
+	mGPIO8 = new Led(mConfig->GPIOConf8);
+
+	mUART4 = new UART(mConfig->UART4Conf1);
+	mSpi2 = new Spi(mConfig->Spi2Conf1);
+
+	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
+	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
+
+	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, -0.00933f / 1000.0f, 0);
+	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
+	mEncoder6 = new Encoder(mConfig->Encoder6Conf1, 0.00933f / 1000.0f, 0);
+
+	mPWM = new PWM(mConfig->mPWMConf1);
+	App::mApp->mPWM->Control1(0);
+	App::mApp->mPWM->Control2(0);
+	App::mApp->mPWM->Control3(0);
+	App::mApp->mPWM->Control4(0);
+	mGPIO1->LedControl(true);
+	mGPIO2->LedControl(true);
+	mGPIO3->LedControl(true);
+	mGPIO4->LedControl(true);
+	mGPIO5->LedControl(false);
+	mGPIO6->LedControl(false);
+	mGPIO7->LedControl(false);
+	mGPIO8->LedControl(false);
+	GPIO_InitTypeDef GPIO_InitStruct;
+
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7 | GPIO_Pin_8;
+	GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+//	mExti[0] = new ExternalInterrupt(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_6), ExternalInterrupt::RISING, Motor1Limit);
+//	mExti[1] = new ExternalInterrupt(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_7), ExternalInterrupt::RISING, Motor2Limit);
+//	mExti[2] = new ExternalInterrupt(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_8), ExternalInterrupt::RISING, Motor3Limit);
+
+	Motor1PID = new Pid(50000, 0, 0.01, 10000);
+	Motor2PID = new Pid(50000, 0, 0.01, 10000);
+	Motor3PID = new Pid(50000, 0, 0.01, 10000);
+
+	mTask->Attach(10, 0, App2Task100Hz, "App2Task100Hz", true);
+	mTask->Attach(20, 0, App2Task50Hz, "App2Task50Hz", true);
+	mTask->Attach(300, 0, App2Task3Hz, "App2Task3Hz", true);
+//	mTask->Attach(4, 0, Update, true);
+//	mTask->Attach(4, 0, EncoderUpdate, true);
+//	mTask->Attach(4, 0, LocalizationUpdate, true);
+//	mTask->Attach(20, 0, SonicUpdate, true);
+//	mTask->Attach(20, 0, ControlTask, true);
+//	mTask->Attach(4, 0, PathTask, true);
+//	mTask->Attach(5, 3, ReceiveTask, true);
+//	mTask->Attach(1, 0, SendTask, true);
+//	mTask->Attach(1, 0, SendTaskSlow, true);
+//	mTask->Attach(20, 7, print, true);
+//	mTask->Attach(100, 0, SPISendTask, true);
+//	mTask->Attach(1000, 0, printTaskName, "printTaskName", true);
+//	mTask->Attach(100, 7, printfBufferTask, true);
+
+//	mLed1->Blink(true, 100);
+	printf("Started\n");
+	mTask->Run();
 }
 
 void HardFault_Handler(){

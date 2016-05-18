@@ -124,7 +124,7 @@ Config::Config(){
 
 	Configuration** CS = new Configuration*[0];
 	CS[0] = new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_10);
-	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER32, Spi::SpiConfiguration::SPIMODE0,
+	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER16, Spi::SpiConfiguration::SPIMODE0,
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_5),
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_6),
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_7), CS, false, 1);

@@ -82,6 +82,26 @@ namespace Math{
 	class Localization;
 };
 
+
+typedef struct Point{
+	float speed;
+	float x;
+	float y;
+	float yaw;
+	bool SonicCalFL;
+	bool SonicCalFR;
+	bool SonicCalL;
+	bool SonicCalR;
+	float FL;
+	float FR;
+	float L;
+	float R;
+	bool CalX;
+	bool CalY;
+	float CalXValue;
+	float CalYValue;
+} PT;
+
 namespace System{
 	class App{
 		public:
@@ -156,6 +176,19 @@ namespace System{
 			int PathState;
 			int PeriodicCmd;
 			float PeriodicData;
+			PT currentPT;
+			PT nextPT;
+
+			Pid* Motor1PID;
+			Pid* Motor2PID;
+			Pid* Motor3PID;
+			float Motor1Target;
+			float Motor2Target;
+			float Motor3Target;
+			int IsCal1;
+			int IsCal2;
+			int IsCal3;
+			bool ControlStart;
 		private:
 	};
 };

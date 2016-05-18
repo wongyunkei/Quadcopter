@@ -38,6 +38,7 @@ namespace Sensors{
 			float getVel();
 			float getRawVel();
 			float getPos();
+			void setPos(float value);
 			void Reset();
 			float calcEncoderErrorCompensationFactor(float angle);
 		private:

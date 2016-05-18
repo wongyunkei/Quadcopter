@@ -114,6 +114,9 @@ void Communicating::SendPoll(){
 }
 
 void Communicating::Execute(int cmd, float data){
+//	if(App::mApp->mCommunicating3 == this){
+//		printf("CMD:%d  DATA:%g\r\n", cmd, data);
+//	}
 	switch(cmd){
 
 		case CMD::WATCHDOG:
@@ -287,122 +290,252 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::SET_X_TRANSLATION:
-				App::mApp->mLocalization->setEncoderXTranslation(data);
-				Acknowledgement();
-				break;
+			App::mApp->mLocalization->setEncoderXTranslation(data);
+			Acknowledgement();
+			break;
 		case CMD::SET_Y_TRANSLATION:
-				App::mApp->mLocalization->setEncoderYTranslation(data);
-				Acknowledgement();
-				break;
+			App::mApp->mLocalization->setEncoderYTranslation(data);
+			Acknowledgement();
+			break;
 		case CMD::MOTOR_KP:
-					App::mApp->mControlling->Motor1->setKp(data);
-					App::mApp->mControlling->Motor2->setKp(data);
-					App::mApp->mControlling->Motor3->setKp(data);
-					App::mApp->mControlling->Motor4->setKp(data);
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Motor1->setKp(data);
+			App::mApp->mControlling->Motor2->setKp(data);
+			App::mApp->mControlling->Motor3->setKp(data);
+			App::mApp->mControlling->Motor4->setKp(data);
+			Acknowledgement();
+			break;
 		case CMD::MOTOR_KI:
-					App::mApp->mControlling->Motor1->setKi(data);
-					App::mApp->mControlling->Motor2->setKi(data);
-					App::mApp->mControlling->Motor3->setKi(data);
-					App::mApp->mControlling->Motor4->setKi(data);
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Motor1->setKi(data);
+			App::mApp->mControlling->Motor2->setKi(data);
+			App::mApp->mControlling->Motor3->setKi(data);
+			App::mApp->mControlling->Motor4->setKi(data);
+			Acknowledgement();
+			break;
 		case CMD::FORWARD:
-					App::mApp->mControlling->Forward();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Forward();
+			Acknowledgement();
+			break;
 		case CMD::BACKWARD:
-					App::mApp->mControlling->Backward();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Backward();
+			Acknowledgement();
+			break;
 		case CMD::LEFT:
-					App::mApp->mControlling->Left();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Left();
+			Acknowledgement();
+			break;
 		case CMD::RIGHT:
-					App::mApp->mControlling->Right();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Right();
+			Acknowledgement();
+			break;
 		case CMD::PAUSE:
-					App::mApp->mControlling->Pause();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Pause();
+			Acknowledgement();
+			break;
 		case CMD::CW:
-					App::mApp->mControlling->CW();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->CW();
+			Acknowledgement();
+			break;
 		case CMD::CCW:
-					App::mApp->mControlling->CCW();
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->CCW();
+			Acknowledgement();
+			break;
 		case CMD::MOVE:
-					App::mApp->mControlling->Move(App::mApp->mControlling->Speed, data, 0);
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->Move(App::mApp->mControlling->Speed, data, 0);
+			Acknowledgement();
+			break;
 		case CMD::MANUAL_MODE:
-					App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
-					Acknowledgement();
-					break;
+			App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
+			Acknowledgement();
+			break;
 		case CMD::RETURN_HOME:
-					App::mApp->PathState = 999;
-					Acknowledgement();
-					break;
+			App::mApp->PathState = 999;
+			Acknowledgement();
+			break;
 		case CMD::TEST:
-					App::mApp->mCommunicating2->Send(9, 689);
-					Acknowledgement();
-					break;
+			App::mApp->mCommunicating2->Send(9, 689);
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_STOP_ALL:
-					App::mApp->PeriodicCmd = 0;
-					App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_STOP_ALL_RUN;
+			App::mApp->PeriodicData = data;
 //					App::mApp->mCommunicating3->Send(0,0);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_RESET:
-					App::mApp->PeriodicCmd = 1;
-					App::mApp->PeriodicData = 0;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_RESET_RUN;
+			App::mApp->PeriodicData = 0;
 //					App::mApp->mCommunicating3->Send(1,0);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_START:
-					App::mApp->PeriodicCmd = 2;
-					App::mApp->PeriodicData = 0;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_START_RUN;
+			App::mApp->PeriodicData = 0;
 //					App::mApp->mCommunicating3->Send(2,0);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_SET_MOTOR1_TARGET:
-					App::mApp->PeriodicCmd = 3;
-					App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR1_TARGET_RUN;
+			App::mApp->PeriodicData = data;
 //					App::mApp->mCommunicating3->Send(3,data);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_SET_MOTOR2_TARGET:
-					App::mApp->PeriodicCmd = 4;
-					App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR2_TARGET_RUN;
+			App::mApp->PeriodicData = data;
 //					App::mApp->mCommunicating3->Send(4,data);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_SET_MOTOR3_TARGET:
-					App::mApp->PeriodicCmd = 5;
-					App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR3_TARGET_RUN;
+			App::mApp->PeriodicData = data;
 //					App::mApp->mCommunicating3->Send(5,data);
-					Acknowledgement();
-					break;
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_WATCHDOG:
-					App::mApp->PeriodicCmd = 6;
-					App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_WATCHDOG_RUN;
+			App::mApp->PeriodicData = data;
 //					App::mApp->mCommunicating3->Send(6,0);
-					break;
+			break;
 		case CMD::SUCCESS:
-					printf("SUCCESS:%g\r\n", data);
-					//App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
-					Acknowledgement();
-					break;
+			App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
+			printf("SUCCESS:%g\r\n", data);
+			Acknowledgement();
+			break;
 		case CMD::CLAMPER_SET_HORIZONTAL:
-					App::mApp->PeriodicCmd = 7;
-					App::mApp->PeriodicData = data;
-					Acknowledgement();
-					break;
+				App::mApp->PeriodicCmd = CMD::CLAMPER_SET_HORIZONTAL_RUN;
+				App::mApp->PeriodicData = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SPEED:
+			App::mApp->nextPT.speed = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_X_POS:
+			App::mApp->nextPT.x = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_Y_POS:
+			App::mApp->nextPT.y = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_YAW:
+			App::mApp->nextPT.yaw = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_FL:
+			App::mApp->nextPT.SonicCalFL = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_FR:
+			App::mApp->nextPT.SonicCalFR = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_L:
+			App::mApp->nextPT.SonicCalL = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_R:
+			App::mApp->nextPT.SonicCalR = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_FL_VALUE:
+			App::mApp->nextPT.FL = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_FR_VALUE:
+			App::mApp->nextPT.FR = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_L_VALUE:
+			App::mApp->nextPT.L = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_SONIC_CAL_R_VALUE:
+			App::mApp->nextPT.R = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_X_CAL:
+			App::mApp->nextPT.CalX = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_Y_CAL:
+			App::mApp->nextPT.CalY = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_X_CAL_VALUE:
+			App::mApp->nextPT.CalXValue = data;
+			Acknowledgement();
+			break;
+		case CMD::SET_Y_CAL_VALUE:
+			App::mApp->nextPT.CalYValue = data;
+			Acknowledgement();
+			break;
+		case CMD::TRIGGER:
+			App::mApp->currentPT.speed = App::mApp->nextPT.speed;
+			App::mApp->currentPT.x = App::mApp->nextPT.x;
+			App::mApp->currentPT.y = App::mApp->nextPT.y;
+			App::mApp->currentPT.yaw = App::mApp->nextPT.yaw;
+			App::mApp->currentPT.SonicCalFL = App::mApp->nextPT.SonicCalFL;
+			App::mApp->currentPT.SonicCalFR = App::mApp->nextPT.SonicCalFR;
+			App::mApp->currentPT.SonicCalL = App::mApp->nextPT.SonicCalL;
+			App::mApp->currentPT.SonicCalR = App::mApp->nextPT.SonicCalR;
+			App::mApp->currentPT.FL = App::mApp->nextPT.FL;
+			App::mApp->currentPT.FR = App::mApp->nextPT.FR;
+			App::mApp->currentPT.L = App::mApp->nextPT.L;
+			App::mApp->currentPT.R = App::mApp->nextPT.R;
+			App::mApp->currentPT.CalX = App::mApp->nextPT.CalX;
+			App::mApp->currentPT.CalY = App::mApp->nextPT.CalY;
+			App::mApp->currentPT.CalXValue = App::mApp->nextPT.CalXValue;
+			App::mApp->currentPT.CalYValue = App::mApp->nextPT.CalYValue;
+			Acknowledgement();
+			break;
+		case CMD::CLAMPER_STOP_ALL_RUN:
+			App::mApp->ControlStart = false;
+//			printf("STOP\r\n");
+			break;
+		case CMD::CLAMPER_RESET_RUN:
+			//if(App::mApp->IsCal1 == -100){
+				App::mApp->Motor1Target = -5.0;
+			//}
+			//if(App::mApp->IsCal2 == -100){
+				App::mApp->Motor2Target = 5.0;
+			//}
+			//if(App::mApp->IsCal3 == -100){
+				App::mApp->Motor3Target = 5.0;
+			//}
+			App::mApp->IsCal1 = 0;
+			App::mApp->IsCal2 = 0;
+			App::mApp->IsCal3 = 0;
+			App::mApp->ControlStart = true;
+//			printf("RESET\r\n");
+			break;
+		case CMD::CLAMPER_START_RUN:
+			App::mApp->ControlStart = true;
+//			printf("START\r\n");
+			break;
+		case CMD::CLAMPER_SET_MOTOR1_TARGET_RUN:
+			App::mApp->Motor1Target = data;
+//			printf("MOTOR1\r\n");
+			break;
+		case CMD::CLAMPER_SET_MOTOR2_TARGET_RUN:
+			App::mApp->Motor2Target = data;
+//			printf("MOTOR2\r\n");
+			break;
+		case CMD::CLAMPER_SET_MOTOR3_TARGET_RUN:
+			App::mApp->Motor3Target = data;
+//			printf("MOTOR3\r\n");
+			break;
+		case CMD::CLAMPER_WATCHDOG_RUN:
+			break;
+		case CMD::CLAMPER_SET_HORIZONTAL_RUN:
+			App::mApp->Motor2Target = data;
+			App::mApp->Motor3Target = data;
+//			printf("HORIZONTAL\r\n");
+			break;
+		default:
+//			App::mApp->mUART4->Print("CMD:%d  DATA:%g\r\n", cmd, data);
+//			Acknowledgement();
+			break;
 	}
 
 }

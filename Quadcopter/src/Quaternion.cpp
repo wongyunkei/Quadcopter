@@ -30,6 +30,7 @@ Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega) : _mAccelerat
 	Matrix3f Q;
 	Q.setIdentity();
 	Q *= 1e-6f;
+	Q(2,2) = 1e-12f;
 	Matrix3f R;
 	R.setIdentity();
 	R *= 1e-2f;
