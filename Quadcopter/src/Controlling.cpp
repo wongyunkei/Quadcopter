@@ -82,7 +82,7 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 		PitchTarget(0), RollOffset(0),
 		PitchOffset(0), YawOffset(0), initLift(5000), startCount(0), StoppingDelayCount(0),
 		Speed(1.0f), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
-		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(true), IsSonicDriveYaw(false){
+		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(false), IsSonicDriveYaw(false){
 
 	YPosPid = new Pid(20,0,0.5,10000);
 	XPosPid = new Pid(20,0,0.5,10000);
@@ -125,7 +125,7 @@ void Controlling::ControllingPoll(){
 			//watchDogCount++;
 		}
 
-		if(!ManualMode){
+		if(!ManualMode && App::mApp->trigger){
 			float errX = XPosPid->pid(XPosTarget, App::mApp->mLocalization->getPos()[0]);
 			float errY = YPosPid->pid(YPosTarget, App::mApp->mLocalization->getPos()[1]);
 			if(fabs(YawTarget - App::mApp->mQuaternion->getEuler()[2]) > 3 * MathTools::PI / 2){
@@ -176,6 +176,9 @@ void Controlling::ControllingPoll(){
 //			Motor3PWM = MathTools::Trim(minLift, Motor3PWM, maxLift);
 //			Motor4PWM = MathTools::Trim(minLift, Motor4PWM, maxLift);
 //		}
+		if(!App::mApp->trigger){
+			Pause();
+		}
 		float pwm1 = Motor1->pid(Motor1SpeedTarget, Encoder1->getVel());
 		float pwm2 = Motor2->pid(Motor2SpeedTarget, Encoder2->getVel());
 		float pwm3 = Motor3->pid(Motor3SpeedTarget, Encoder3->getVel());

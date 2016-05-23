@@ -141,6 +141,8 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::START:
 			App::mApp->mControlling->Starting();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::START;
 			Acknowledgement();
 			break;
 		case CMD::ROLL_KP:
@@ -287,6 +289,8 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::TARGET_YAW:
 			App::mApp->mControlling->setYawTarget(data);
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::TARGET_YAW;
 			Acknowledgement();
 			break;
 		case CMD::SET_X_TRANSLATION:
@@ -313,38 +317,56 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::FORWARD:
 			App::mApp->mControlling->Forward();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::FORWARD;
 			Acknowledgement();
 			break;
 		case CMD::BACKWARD:
 			App::mApp->mControlling->Backward();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::BACKWARD;
 			Acknowledgement();
 			break;
 		case CMD::LEFT:
 			App::mApp->mControlling->Left();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::LEFT;
 			Acknowledgement();
 			break;
 		case CMD::RIGHT:
 			App::mApp->mControlling->Right();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::RIGHT;
 			Acknowledgement();
 			break;
 		case CMD::PAUSE:
 			App::mApp->mControlling->Pause();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::PAUSE;
 			Acknowledgement();
 			break;
 		case CMD::CW:
 			App::mApp->mControlling->CW();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CW;
 			Acknowledgement();
 			break;
 		case CMD::CCW:
 			App::mApp->mControlling->CCW();
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CCW;
 			Acknowledgement();
 			break;
 		case CMD::MOVE:
 			App::mApp->mControlling->Move(App::mApp->mControlling->Speed, data, 0);
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::MOVE;
 			Acknowledgement();
 			break;
 		case CMD::MANUAL_MODE:
 			App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::MANUAL_MODE;
 			Acknowledgement();
 			break;
 		case CMD::RETURN_HOME:
@@ -358,36 +380,48 @@ void Communicating::Execute(int cmd, float data){
 		case CMD::CLAMPER_STOP_ALL:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_STOP_ALL_RUN;
 			App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_STOP_ALL;
 //					App::mApp->mCommunicating3->Send(0,0);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_RESET:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_RESET_RUN;
 			App::mApp->PeriodicData = 0;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_RESET;
 //					App::mApp->mCommunicating3->Send(1,0);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_START:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_START_RUN;
 			App::mApp->PeriodicData = 0;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_START;
 //					App::mApp->mCommunicating3->Send(2,0);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_SET_MOTOR1_TARGET:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR1_TARGET_RUN;
 			App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_SET_MOTOR1_TARGET;
 //					App::mApp->mCommunicating3->Send(3,data);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_SET_MOTOR2_TARGET:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR2_TARGET_RUN;
 			App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_SET_MOTOR2_TARGET;
 //					App::mApp->mCommunicating3->Send(4,data);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_SET_MOTOR3_TARGET:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_MOTOR3_TARGET_RUN;
 			App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_SET_MOTOR3_TARGET;
 //					App::mApp->mCommunicating3->Send(5,data);
 			Acknowledgement();
 			break;
@@ -397,77 +431,111 @@ void Communicating::Execute(int cmd, float data){
 //					App::mApp->mCommunicating3->Send(6,0);
 			break;
 		case CMD::SUCCESS:
-			App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
-			printf("SUCCESS:%g\r\n", data);
+			App::mApp->PeriodicCmd2 = CMD::SUCCESS;
+			App::mApp->PeriodicData2 = data;
+//			App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
+//			printf("SUCCESS:%g\r\n", data);
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_SET_HORIZONTAL:
-				App::mApp->PeriodicCmd = CMD::CLAMPER_SET_HORIZONTAL_RUN;
-				App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_HORIZONTAL_RUN;
+			App::mApp->PeriodicData = data;
 			Acknowledgement();
 			break;
 		case CMD::SET_SPEED:
 			App::mApp->nextPT.speed = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SPEED;
 			Acknowledgement();
 			break;
 		case CMD::SET_X_POS:
 			App::mApp->nextPT.x = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_X_POS;
 			Acknowledgement();
 			break;
 		case CMD::SET_Y_POS:
 			App::mApp->nextPT.y = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_Y_POS;
 			Acknowledgement();
 			break;
 		case CMD::SET_YAW:
 			App::mApp->nextPT.yaw = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_YAW;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FL:
 			App::mApp->nextPT.SonicCalFL = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FL;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FR:
 			App::mApp->nextPT.SonicCalFR = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FR;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_L:
 			App::mApp->nextPT.SonicCalL = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_L;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_R:
 			App::mApp->nextPT.SonicCalR = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_R;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FL_VALUE:
 			App::mApp->nextPT.FL = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FL_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FR_VALUE:
 			App::mApp->nextPT.FR = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FR_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_L_VALUE:
 			App::mApp->nextPT.L = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_L_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_R_VALUE:
 			App::mApp->nextPT.R = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_R_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::SET_X_CAL:
 			App::mApp->nextPT.CalX = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_X_CAL;
 			Acknowledgement();
 			break;
 		case CMD::SET_Y_CAL:
 			App::mApp->nextPT.CalY = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_Y_CAL;
 			Acknowledgement();
 			break;
 		case CMD::SET_X_CAL_VALUE:
 			App::mApp->nextPT.CalXValue = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_X_CAL_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::SET_Y_CAL_VALUE:
 			App::mApp->nextPT.CalYValue = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::SET_Y_CAL_VALUE;
 			Acknowledgement();
 			break;
 		case CMD::TRIGGER:
@@ -487,6 +555,9 @@ void Communicating::Execute(int cmd, float data){
 			App::mApp->currentPT.CalY = App::mApp->nextPT.CalY;
 			App::mApp->currentPT.CalXValue = App::mApp->nextPT.CalXValue;
 			App::mApp->currentPT.CalYValue = App::mApp->nextPT.CalYValue;
+			App::mApp->trigger = true;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::TRIGGER;
 			Acknowledgement();
 			break;
 		case CMD::CLAMPER_STOP_ALL_RUN:
@@ -537,7 +608,10 @@ void Communicating::Execute(int cmd, float data){
 //			Acknowledgement();
 			break;
 	}
-
+//	if(App::mApp->mCommunicating2 == this){
+//		App::mApp->mUART4->Print("CMD:%d  DATA:%g\r\n", cmd, data);
+//		Acknowledgement();
+//	}
 }
 
 void Communicating::Acknowledgement(){

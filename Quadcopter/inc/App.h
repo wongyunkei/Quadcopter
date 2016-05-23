@@ -176,8 +176,11 @@ namespace System{
 			int PathState;
 			int PeriodicCmd;
 			float PeriodicData;
+			int PeriodicCmd2;
+			float PeriodicData2;
 			PT currentPT;
 			PT nextPT;
+			bool trigger;
 
 			Pid* Motor1PID;
 			Pid* Motor2PID;
