@@ -364,7 +364,7 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::MANUAL_MODE:
-			App::mApp->mControlling->ManualMode = !App::mApp->mControlling->ManualMode;
+			App::mApp->mControlling->ManualMode = true;
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::MANUAL_MODE;
 			Acknowledgement();
@@ -602,6 +602,12 @@ void Communicating::Execute(int cmd, float data){
 			App::mApp->Motor2Target = data;
 			App::mApp->Motor3Target = data;
 //			printf("HORIZONTAL\r\n");
+			break;
+		case CMD::AUTO_MODE:
+			App::mApp->mControlling->ManualMode = false;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::AUTO_MODE;
+			Acknowledgement();
 			break;
 		default:
 //			App::mApp->mUART4->Print("CMD:%d  DATA:%g\r\n", cmd, data);

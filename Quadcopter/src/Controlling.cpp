@@ -176,7 +176,7 @@ void Controlling::ControllingPoll(){
 //			Motor3PWM = MathTools::Trim(minLift, Motor3PWM, maxLift);
 //			Motor4PWM = MathTools::Trim(minLift, Motor4PWM, maxLift);
 //		}
-		if(!App::mApp->trigger){
+		if(!ManualMode && !App::mApp->trigger){
 			Pause();
 		}
 		float pwm1 = Motor1->pid(Motor1SpeedTarget, Encoder1->getVel());
