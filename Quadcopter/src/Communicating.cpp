@@ -535,13 +535,23 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::SET_X_CAL:
-			App::mApp->nextPT.CalX = data;
+			if(data > 10){
+				App::mApp->nextPT.CalX = true;
+			}
+			else{
+				App::mApp->nextPT.CalX = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_X_CAL;
 			Acknowledgement();
 			break;
 		case CMD::SET_Y_CAL:
-			App::mApp->nextPT.CalY = data;
+			if(data > 10){
+				App::mApp->nextPT.CalY = true;
+			}
+			else{
+				App::mApp->nextPT.CalY = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_Y_CAL;
 			Acknowledgement();
