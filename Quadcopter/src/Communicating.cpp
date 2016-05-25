@@ -467,31 +467,56 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FL:
-			App::mApp->nextPT.SonicCalFL = data;
+			if(data > 10){
+				App::mApp->nextPT.SonicCalFL = true;
+			}
+			else{
+				App::mApp->nextPT.SonicCalFL = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FL;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FR:
-			App::mApp->nextPT.SonicCalFR = data;
+			if(data > 10){
+				App::mApp->nextPT.SonicCalFR = true;
+			}
+			else{
+				App::mApp->nextPT.SonicCalFR = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FR;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_L:
-			App::mApp->nextPT.SonicCalL = data;
+			if(data > 10){
+				App::mApp->nextPT.SonicCalL = true;
+			}
+			else{
+				App::mApp->nextPT.SonicCalL = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_L;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_R:
-			App::mApp->nextPT.SonicCalR = data;
+			if(data > 10){
+				App::mApp->nextPT.SonicCalR = true;
+			}
+			else{
+				App::mApp->nextPT.SonicCalR = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_R;
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FL_VALUE:
-			App::mApp->nextPT.FL = data;
+			if(data > 10){
+				App::mApp->nextPT.FL = true;
+			}
+			else{
+				App::mApp->nextPT.FL = false;
+			}
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FL_VALUE;
 			Acknowledgement();
