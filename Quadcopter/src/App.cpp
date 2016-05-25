@@ -710,7 +710,9 @@ void Task60Hz(){
 void Task50Hz(){
 //	PathTask();
 	SPISlaveSendTask2();
-	PathTaskWithMyRIO();
+	if(!App::mApp->mControlling->ManualMode){
+		PathTaskWithMyRIO();
+	}
 	print();
 }
 
@@ -859,7 +861,7 @@ void App2Task10Hz(){
 void App2Task3Hz(){
 	EncoderPrint();
 }
-/*
+
 App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0),PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
@@ -987,9 +989,9 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0),P
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
 	mTask->Run(true);
-}*/
+}
 
-
+/*
 App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
@@ -1073,7 +1075,7 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), 
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
 	mTask->Run(true);
-}
+}*/
 
 void HardFault_Handler(){
 	while(true){
