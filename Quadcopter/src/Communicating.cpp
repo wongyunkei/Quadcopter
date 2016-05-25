@@ -511,12 +511,7 @@ void Communicating::Execute(int cmd, float data){
 			Acknowledgement();
 			break;
 		case CMD::SET_SONIC_CAL_FL_VALUE:
-			if(data > 10){
-				App::mApp->nextPT.FL = true;
-			}
-			else{
-				App::mApp->nextPT.FL = false;
-			}
+			App::mApp->nextPT.FL = data;
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::SET_SONIC_CAL_FL_VALUE;
 			Acknowledgement();
