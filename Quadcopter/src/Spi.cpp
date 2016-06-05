@@ -37,7 +37,7 @@ void SPI1_IRQHandler()
 				while(SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET){
 					if(App::mApp->mTicks->Timeout()){
 						if(!App::mApp->mSpi1->Conf->IsSlave){
-							//App::mApp->mSpi1->Reset();
+//							App::mApp->mSpi1->Reset();
 						}
 						return;
 					}
@@ -77,7 +77,7 @@ void SPI2_IRQHandler()
 				while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET){
 					if(App::mApp->mTicks->Timeout()){
 						if(!App::mApp->mSpi2->Conf->IsSlave){
-							//App::mApp->mSpi2->Reset();
+//							App::mApp->mSpi2->Reset();
 						}
 						return;
 					}
@@ -103,7 +103,6 @@ void SPI2_IRQHandler()
 }
 
 void Spi::Reset(){
-	App::mApp->mLed3->LedControl(true);
 	for(int i = 0; i < Conf->NumOfDevices; i++){
 		ChipDeSelect(i);
 		ChipSelect(i);
@@ -122,6 +121,7 @@ void Spi::Reset(){
 		ChipDeSelect(i);
 	}
 	Initialize(Conf);
+//	printf("SPI_RESET\r\n");
 }
 
 void Spi::setSlaveTxBuffer(char* data, int length){
@@ -382,13 +382,15 @@ bool Spi::WriteCmd(int index, uint8_t reg, uint8_t cmd){
 	ChipSelect(index);
 	if(!Byte(reg, &v)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
 	if(!Byte(cmd, &v)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
@@ -452,14 +454,16 @@ bool Spi::ReadData(int index, uint8_t reg, uint8_t* value){
 	ChipSelect(index);
 	if(!Byte(reg, &v)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
 
 	if(!Byte(0x00, value)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
@@ -474,14 +478,16 @@ bool Spi::WriteNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 	ChipSelect(index);
 	if(!Byte(reg, &v)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
 	for(i = 0; i < length; i++){
 		if(!Byte(*(pData + i), &v)){
 			if(!Conf->IsSlave){
-				Reset();
+				ChipDeSelect(index);
+//				Reset();
 			}
 			return false;
 		}
@@ -497,14 +503,16 @@ bool Spi::ReadNBytes(int index, uint8_t reg, uint8_t length, uint8_t* pData){
 	ChipSelect(index);
 	if(!Byte(reg, &v)){
 		if(!Conf->IsSlave){
-			Reset();
+			ChipDeSelect(index);
+//			Reset();
 		}
 		return false;
 	}
 	for(i = 0; i < length; i++){
 		if(!Byte(0x00, (pData + i))){
 			if(!Conf->IsSlave){
-				Reset();
+				ChipDeSelect(index);
+//				Reset();
 			}
 			return false;
 		}

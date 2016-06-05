@@ -29,12 +29,10 @@ Quaternion::Quaternion(Acceleration* mAcceleration, Omega* mOmega) : _mAccelerat
 	PrevT.setZero();
 	Matrix3f Q;
 	Q.setIdentity();
-	Q *= 1e-6f;
-	Q(2,2) = 1e-12f;
+	Q *= 1e-12f;
 	Matrix3f R;
 	R.setIdentity();
-	R *= 1e-2f;
-	R(2,2) *= 1e-6f;
+	R *= 1e-6f;
 	_QuaternionKalman = new Kalman(mAcceleration->getAngle(), Q, R);
 	PrevTick = App::mApp->mTicks->getTicks();
 }

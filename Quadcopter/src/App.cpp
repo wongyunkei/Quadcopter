@@ -626,9 +626,9 @@ void PathTaskWithMyRIO(){
 				App::mApp->mLocalization->setPos(value);
 
 				App::mApp->trigger = false;
+				App::mApp->arrived = true;
 				App::mApp->mControlling->Pause();
 				App::mApp->mCommunicating1->Acknowledgement();
-
 			}
 		}
 	}
@@ -644,6 +644,7 @@ void PathTaskWithMyRIO(){
 		   MathTools::CheckWithInInterval(App::mApp->mQuaternion->getEuler()[2], App::mApp->currentPT.yaw, 0.0174)){
 
 			App::mApp->trigger = false;
+			App::mApp->arrived = true;
 			App::mApp->mControlling->Pause();
 			App::mApp->mCommunicating1->Acknowledgement();
 		}
@@ -666,9 +667,11 @@ void SPISlaveSendTask2(){
 void SPISendTask(){
 	static int count = 0;
 	App::mApp->mCommunicating3->Send(App::mApp->PeriodicCmd, App::mApp->PeriodicData);
-	if(App::mApp->PeriodicCmd == Communicating::CLAMPER_RESET_RUN && count++ > 10){
-		count = 0;
-		App::mApp->PeriodicCmd = Communicating::CMD::CLAMPER_WATCHDOG;
+	if(App::mApp->PeriodicCmd == Communicating::CLAMPER_RESET_RUN){
+		if(count++ > 10){
+			count = 0;
+			App::mApp->PeriodicCmd = Communicating::CMD::CLAMPER_WATCHDOG;
+		}
 	}
 }
 
@@ -709,7 +712,6 @@ void Task60Hz(){
 
 void Task50Hz(){
 //	PathTask();
-	SPISlaveSendTask2();
 	if(!App::mApp->mControlling->ManualMode){
 		PathTaskWithMyRIO();
 	}
@@ -717,6 +719,7 @@ void Task50Hz(){
 }
 
 void Task10Hz(){
+	SPISlaveSendTask2();
 	SPISendTask();
 }
 
@@ -839,30 +842,41 @@ void App2Controlling(){
 	}
 }
 
+void App2Task100Hz(){
+
+//	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
+//	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
+//	App::mApp->mEncoder5->Update(MathTools::DegreeToRadian(0));
+//	App::mApp->mEncoder6->Update(MathTools::DegreeToRadian(0));
+
+}
+
 void App2Task30Hz(){
 	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
 	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
 	App::mApp->mEncoder5->Update(MathTools::DegreeToRadian(0));
 	App::mApp->mEncoder6->Update(MathTools::DegreeToRadian(0));
 
+//	printf("10Hz\r\n");
 	App::mApp->mCommunicating1->ReceivePoll();
 	App::mApp->mCommunicating2->ReceivePoll();
 
 	App::mApp->mCommunicating1->SendPoll();
-	App::mApp->mCommunicating2->SendPoll();
+	//App::mApp->mCommunicating2->SendPoll();
+
 	App2Controlling();
 }
 
 void App2Task10Hz(){
-	CheckPos();
-	SPISlaveSendTask();
+	//	CheckPos();
+//	SPISlaveSendTask();
 }
 
 void App2Task3Hz(){
 	EncoderPrint();
 }
-
-App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0),PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+/*
+App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
@@ -988,11 +1002,10 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0),P
 	mGPIO8->LedControl(false);
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
-	mTask->Run(true);
-}
+	mTask->Run();
+}*/
 
-/*
-App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), PeriodicCmd(0), PeriodicData(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
@@ -1021,8 +1034,13 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), 
 	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
 
 	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, 0.00933f / 1000.0f, 0);
-	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, -0.00933f / 1000.0f, 0);
-	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
+	//car1
+//	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, -0.00933f / 1000.0f, 0);
+//	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
+	//car2
+	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, 0.00933f / 1000.0f, 0);
+	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, 0.00933f / 1000.0f, 0);
+
 	mEncoder6 = new Encoder(mConfig->Encoder6Conf1, 0.00933f / 1000.0f, 0);
 
 	mPWM = new PWM(mConfig->mPWMConf1);
@@ -1055,9 +1073,10 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), 
 	Motor2PID = new Pid(50000, 0, 0.01, 10000);
 	Motor3PID = new Pid(50000, 0, 0.01, 10000);
 
-	mTask->Attach(33, 0, App2Task30Hz, "App2Task50Hz", true);
-	mTask->Attach(10, 0, App2Task10Hz, "App2Task10Hz", true);
-	mTask->Attach(300, 0, App2Task3Hz, "App2Task3Hz", true);
+//	mTask->Attach(10, 0, App2Task100Hz, "App2Task100Hz", true);
+	mTask->Attach(33, 0, App2Task30Hz, "App2Task30Hz", true);
+	mTask->Attach(100, 0, App2Task10Hz, "App2Task10Hz", true);
+//	mTask->Attach(300, 0, App2Task3Hz, "App2Task3Hz", true);
 //	mTask->Attach(4, 0, Update, true);
 //	mTask->Attach(4, 0, EncoderUpdate, true);
 //	mTask->Attach(4, 0, LocalizationUpdate, true);
@@ -1074,8 +1093,8 @@ App::App() : trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), 
 
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
-	mTask->Run(true);
-}*/
+	mTask->Run();
+}
 
 void HardFault_Handler(){
 	while(true){

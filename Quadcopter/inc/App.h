@@ -181,6 +181,7 @@ namespace System{
 			PT currentPT;
 			PT nextPT;
 			bool trigger;
+			bool arrived;
 
 			Pid* Motor1PID;
 			Pid* Motor2PID;

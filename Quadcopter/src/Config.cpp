@@ -112,6 +112,7 @@ Config::Config(){
 	GPIOConf8 = new Led::LedConfiguration(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_3), Bit_SET);
 
 	UART4Conf1 = new UART::UARTConfiguration(UART4, 115200, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_10), GPIO_PinSource10, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_11), GPIO_PinSource11);
+//	UART4Conf1 = new UART::UARTConfiguration(UART4, 9600, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_10), GPIO_PinSource10, new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_11), GPIO_PinSource11);
 
 	mPWMConf1 = new PWM::PWMConfiguration(new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_2),
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_3),
@@ -124,14 +125,14 @@ Config::Config(){
 
 	Configuration** CS = new Configuration*[0];
 	CS[0] = new Configuration(RCC_AHB1Periph_GPIOD, GPIOD, GPIO_Pin_10);
-	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER16, Spi::SpiConfiguration::SPIMODE0,
+	Spi1Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf1, Spi::SpiConfiguration::PRESCALER32, Spi::SpiConfiguration::SPIMODE0,
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_5),
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_6),
 										  new Configuration(RCC_AHB1Periph_GPIOA, GPIOA, GPIO_Pin_7), CS, false, 1);
 
 	Configuration** slaveCS = new Configuration*[0];
 	slaveCS[0] = new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_12);
-	Spi2Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf2, Spi::SpiConfiguration::PRESCALER16, Spi::SpiConfiguration::SPIMODE0,
+	Spi2Conf1 = new Spi::SpiConfiguration(Spi::SpiConfiguration::SpiConf2, Spi::SpiConfiguration::PRESCALER32, Spi::SpiConfiguration::SPIMODE0,
 											  new Configuration(RCC_AHB1Periph_GPIOB, GPIOB, GPIO_Pin_13),
 											  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_2),
 											  new Configuration(RCC_AHB1Periph_GPIOC, GPIOC, GPIO_Pin_3), slaveCS, true, 1);

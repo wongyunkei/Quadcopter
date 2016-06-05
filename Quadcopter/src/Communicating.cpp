@@ -114,13 +114,20 @@ void Communicating::SendPoll(){
 }
 
 void Communicating::Execute(int cmd, float data){
+	if(cmd < 0){
+//		if(!this->_com->_Spi->Conf->IsSlave){
+//			this->_com->_Spi->Reset();
+//		}
+		printf("CMD:%d  DATA:%g\r\n", cmd, data);
+		return;
+	}
 //	if(App::mApp->mCommunicating3 == this){
 //		printf("CMD:%d  DATA:%g\r\n", cmd, data);
 //	}
 	switch(cmd){
 
 		case CMD::WATCHDOG:
-			App::mApp->mControlling->clearWatchDogCount();
+			//App::mApp->mControlling->clearWatchDogCount();
 //			App::mApp->mCommunicating2->Send(0, data);
 //			Acknowledgement();
 			break;
@@ -431,8 +438,8 @@ void Communicating::Execute(int cmd, float data){
 //					App::mApp->mCommunicating3->Send(6,0);
 			break;
 		case CMD::SUCCESS:
-			App::mApp->PeriodicCmd2 = CMD::SUCCESS;
-			App::mApp->PeriodicData2 = data;
+//			App::mApp->PeriodicCmd2 = CMD::SUCCESS;
+//			App::mApp->PeriodicData2 = data;
 //			App::mApp->mCommunicating2->Send(CMD::SUCCESS, data);
 //			printf("SUCCESS:%g\r\n", data);
 			Acknowledgement();
@@ -440,6 +447,8 @@ void Communicating::Execute(int cmd, float data){
 		case CMD::CLAMPER_SET_HORIZONTAL:
 			App::mApp->PeriodicCmd = CMD::CLAMPER_SET_HORIZONTAL_RUN;
 			App::mApp->PeriodicData = data;
+			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+			App::mApp->PeriodicData2 = Communicating::CLAMPER_SET_HORIZONTAL;
 			Acknowledgement();
 			break;
 		case CMD::SET_SPEED:
@@ -586,6 +595,7 @@ void Communicating::Execute(int cmd, float data){
 			App::mApp->currentPT.CalXValue = App::mApp->nextPT.CalXValue;
 			App::mApp->currentPT.CalYValue = App::mApp->nextPT.CalYValue;
 			App::mApp->trigger = true;
+			App::mApp->arrived = false;
 			App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
 			App::mApp->PeriodicData2 = Communicating::TRIGGER;
 			Acknowledgement();
@@ -599,16 +609,16 @@ void Communicating::Execute(int cmd, float data){
 				App::mApp->Motor1Target = -5.0;
 			//}
 			//if(App::mApp->IsCal2 == -100){
-				App::mApp->Motor2Target = 5.0;
+				App::mApp->Motor2Target = 1.0;
 			//}
 			//if(App::mApp->IsCal3 == -100){
-				App::mApp->Motor3Target = 5.0;
+				App::mApp->Motor3Target = 1.0;
 			//}
 			App::mApp->IsCal1 = 0;
 			App::mApp->IsCal2 = 0;
 			App::mApp->IsCal3 = 0;
 			App::mApp->ControlStart = true;
-//			printf("RESET\r\n");
+			printf("RESET\r\n");
 			break;
 		case CMD::CLAMPER_START_RUN:
 			App::mApp->ControlStart = true;
@@ -616,7 +626,7 @@ void Communicating::Execute(int cmd, float data){
 			break;
 		case CMD::CLAMPER_SET_MOTOR1_TARGET_RUN:
 			App::mApp->Motor1Target = data;
-//			printf("MOTOR1\r\n");
+			printf("MOTOR1\r\n");
 			break;
 		case CMD::CLAMPER_SET_MOTOR2_TARGET_RUN:
 			App::mApp->Motor2Target = data;
@@ -627,11 +637,12 @@ void Communicating::Execute(int cmd, float data){
 //			printf("MOTOR3\r\n");
 			break;
 		case CMD::CLAMPER_WATCHDOG_RUN:
+			printf("WATCHDOG\r\n");
 			break;
 		case CMD::CLAMPER_SET_HORIZONTAL_RUN:
 			App::mApp->Motor2Target = data;
 			App::mApp->Motor3Target = data;
-//			printf("HORIZONTAL\r\n");
+			printf("HORIZONTAL\r\n");
 			break;
 		case CMD::AUTO_MODE:
 			App::mApp->mControlling->ManualMode = false;
@@ -639,9 +650,16 @@ void Communicating::Execute(int cmd, float data){
 			App::mApp->PeriodicData2 = Communicating::AUTO_MODE;
 			Acknowledgement();
 			break;
+		case CMD::NEXT:
+			if(App::mApp->arrived){
+				App::mApp->PeriodicCmd2 = Communicating::SUCCESS;
+				App::mApp->PeriodicData2 = Communicating::NEXT;
+			}
+			Acknowledgement();
+			break;
 		default:
-//			App::mApp->mUART4->Print("CMD:%d  DATA:%g\r\n", cmd, data);
-//			Acknowledgement();
+			App::mApp->mUART4->Print("CMD:%d  DATA:%g\r\n", cmd, data);
+			Acknowledgement();
 			break;
 	}
 //	if(App::mApp->mCommunicating2 == this){

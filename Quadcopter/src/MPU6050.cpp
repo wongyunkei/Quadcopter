@@ -44,15 +44,15 @@ MPU6050::MPU6050(Communication::I2C* i2c) : i2cx(i2c), isValided(false){
 
 	RawOmegaScale[0] = 1.0f;
 	RawOmegaScale[1] = 1.0f;
-	RawOmegaScale[2] = 1.0f;
+	RawOmegaScale[2] = 1.0297482837528604118993135011442f;//1.0f;
 	//car1
-//	RawOmegaOffset[0] = RawOmegaScale[0] * -3.12f;//1;//-2.9f;
-//	RawOmegaOffset[1] = RawOmegaScale[1] * -0.0f;//0.1f;
-//	RawOmegaOffset[2] = RawOmegaScale[2] * -0.98;//-0.8f;
+//	RawOmegaOffset[0] = RawOmegaScale[0] * -3.25f;//1;//-2.9f;
+//	RawOmegaOffset[1] = RawOmegaScale[1] * 0.6f;//0.1f;
+//	RawOmegaOffset[2] = RawOmegaScale[2] * -1.15f;//-0.8f;
 	//car2
-	RawOmegaOffset[0] = RawOmegaScale[0] * -1.35f;//1;//-2.9f;
-	RawOmegaOffset[1] = RawOmegaScale[1] * -0.0f;//0.1f;
-	RawOmegaOffset[2] = RawOmegaScale[2] * -0.62;//-0.8f;
+	RawOmegaOffset[0] = RawOmegaScale[0] * -1.33f;//-1.35f;//1;//-2.9f;
+	RawOmegaOffset[1] = RawOmegaScale[1] * 0.22f;//-0.0f;//0.1f;
+	RawOmegaOffset[2] = RawOmegaScale[2] * -0.7f;//-0.62;//-0.8f;
 	Update();
 }
 
@@ -79,7 +79,7 @@ void MPU6050::FastInitialization(){
 		}
 	}
 	App::mApp->mTicks->setTimeout(3);
-	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x00)){
+	while(!i2cx->Write(ADDRESS,RA_GYRO_CONFIG,0x10)){
 		if(App::mApp->mTicks->Timeout()){
 			return;
 		}
@@ -115,7 +115,7 @@ bool MPU6050::Update(){
 		}
 		else if(i >= 8 && i <= 13){
 			temp = data[i + 1] | (data[i] << 8);
-			RawOmega[(i - 8) / 2] = (float)temp * 0.00763359f;// * 0.015267f;
+			RawOmega[(i - 8) / 2] = (float)temp * 0.03048780487804878048780487804878f;//0.00763359f;// * 0.015267f;
 		}
 	}
 

@@ -124,7 +124,8 @@ namespace Communication{
 				CLAMPER_SET_MOTOR3_TARGET_RUN,
 				CLAMPER_WATCHDOG_RUN,
 				CLAMPER_SET_HORIZONTAL_RUN,
-				AUTO_MODE
+				AUTO_MODE,
+				NEXT
 			};
 
 			Communicating(Com* com);
