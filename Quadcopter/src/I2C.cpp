@@ -13,13 +13,13 @@
 #include <stm32f4xx_rcc.h>
 #include <stm32f4xx_dma.h>
 #include <stm32f4xx_it.h>
-#include <Ticks.h>
 #include <Delay.h>
 #include <AdditionalTools.h>
 #include <Buzzer.h>
-#include <Task.h>
 #include <App.h>
-#include <Led.h>
+#include <Led.h.bak>
+#include <Task.h.bak>
+#include <Ticks.h.bak>
 
 I2C::I2CConfiguration::I2CConfiguration(I2C_TypeDef* I2Cx, Configuration* scl, uint8_t sclSource, Configuration* sda, uint8_t sdaSource, CLOCK clock) : _I2Cx(I2Cx), _scl(scl), _sclSource(sclSource), _sda(sda), _sdaSource(sdaSource), _clock(clock){
 }

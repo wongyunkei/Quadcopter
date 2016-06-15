@@ -8,8 +8,8 @@
 #include <App.h>
 #include <Pid.h>
 #include <stdio.h>
-#include <Ticks.h>
 #include <MathTools.h>
+#include <Ticks.h.bak>
 
 Pid::Pid(float kp, float ki, float kd, float integralLimit) : Kp(kp), Ki(ki), Kd(kd), Integral(0), IntegralLimit(integralLimit), PreErr(0), Interval(0){
 	PrevTick = App::mApp->mTicks->getTicks();

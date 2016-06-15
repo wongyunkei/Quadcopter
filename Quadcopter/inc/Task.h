@@ -10,35 +10,47 @@
 
 #include <inttypes.h>
 #include <Ticks.h>
+#include <string>
+#include <Bundle.h>
+
+using namespace System;
+using namespace std;
+
+namespace System{
+	class Bundle;
+};
 
 namespace Time{
 
+	class TaskObj{
+		public:
+			typedef void (*pTask)(Bundle* bundle);
+			TaskObj(uint16_t period, pTask fn, string fnName, bool isPeriodic, int BreakCout = -1);
+			int duration[2];
+			pTask mTask;
+			uint16_t TaskPeriod;
+			string TaskName;
+			bool IsPeriodic;
+			int _BreakCout;
+			int hangCount;
+	};
 	class Task{
 
 		public:
-			typedef void (*pTask)();
+			typedef void (*pTask)(Bundle* bundle);
 			Task();
-			void Attach(float period, float phaseShift, pTask fn, char* fnName, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
-			void DeAttach(pTask);
+			void Attach(uint16_t period, pTask fn, string fnName, bool isPeriodic, int BreakCout = -1, bool keepLoopping = true);
+			void DeAttach(string fnName);
 			void Run(bool isPrintTaskNum = false);
-			void resetBreakCount(pTask fn);
-			void printDeration(int index);
+			void printDeration();
 			bool IsPrintTaskNum;
 			int currentTaskNum;
-			int hangCount;
 			int Count;
-
-			static uint16_t maxTaskNum;
 			uint16_t TasksNum;
-			int** duration;
-			pTask* mTask;
-			float* TaskPeriod;
-			char** TaskName;
+			static Bundle* mBundle;
+			TaskObj* mTaskObj[1024];
 
 		private:
-			float* PhaseShift;
-			bool* IsPeriodic;
-			int* _BreakCout;
 			bool KeepLoopping;
 			bool OnWatchDog;
 			Ticks* mTicks;

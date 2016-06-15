@@ -60,10 +60,9 @@ namespace Communication{
 			char* pBuffer;
 			int AvailableLength;
 			char txBuffer[2048];
-			SPI_TypeDef* Spix;
 
 		private:
-
+			SPI_TypeDef* Spix;
 			void ChipSelect(int index);
 			void ChipDeSelect(int index);
 	};

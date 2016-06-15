@@ -6,34 +6,25 @@
  */
 
 #include <App.h>
-#include <Ticks.h>
+#include <Communicating.h.bak>
 #include <stm32f4xx.h>
 #include <stm32f4xx_iwdg.h>
 #include <stdio.h>
-#include <Task.h>
-#include <Communicating.h>
 #include <Controlling.h>
 #include <Delay.h>
+#include <Task.h.bak>
+#include <Ticks.h.bak>
 
-uint16_t Ticks::maxTicks = 60000;
+uint16_t Ticks::maxTicks = 10000;
 
 void SysTick_Handler(void){
 	App::mApp->mTicks->TicksIncrement();
 	if(App::mApp->mTicks->getTicks() >= Ticks::maxTicks){
 		App::mApp->mTicks->setTicks(0);
 	}
-
-	if(App::mApp->mTicks->getTicks() % 1000 == 0){
-		App::mTicks->Sec++;
-	}
-
 	if(App::mApp->mTask != 0 && App::mApp->mTask->IsPrintTaskNum){
-		if(App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->hangCount++ > App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->TaskPeriod){
-			static int delayCount = 0;
-			if(delayCount++ > 10){
-				delayCount = 0;
-				printf("%s:%d\r\n", App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->TaskName.c_str(), App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->duration[1] - App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->duration[0]);
-			}
+		if(App::mApp->mTask->hangCount++ > App::mApp->mTask->TaskPeriod[App::mApp->mTask->currentTaskNum]){
+			printf("%s:%d\r\n", App::mApp->mTask->TaskName[App::mApp->mTask->currentTaskNum], App::mApp->mTask->duration[App::mApp->mTask->currentTaskNum][1] - App::mApp->mTask->duration[App::mApp->mTask->currentTaskNum][0]);
 		}
 	}
 }
@@ -48,7 +39,7 @@ uint16_t Ticks::getTimeout(){
 	}
 }
 
-Ticks::Ticks(bool onWatchDog) : Sec(0), ticks(0), timeoutCount(0), timeoutStartTimestamp(0), OnWatchDog(onWatchDog){
+Ticks::Ticks(bool onWatchDog) : ticks(0), timeoutCount(0), timeoutStartTimestamp(0), OnWatchDog(onWatchDog){
 
 	SysTick_Config(168000);
 	if(onWatchDog){
@@ -60,9 +51,9 @@ Ticks::Ticks(bool onWatchDog) : Sec(0), ticks(0), timeoutCount(0), timeoutStartT
 	}
 }
 
-bool Ticks::TicksComp(uint16_t period, uint16_t ticksImg){
+bool Ticks::TicksComp(uint16_t period, uint16_t phaseShift, uint16_t ticksImg){
 
-	if(ticksImg % period == 0){
+	if(ticksImg % period == phaseShift){
 		return true;
 	}
 	else{
@@ -89,11 +80,4 @@ bool Ticks::Timeout(){
 void Ticks::setTimeout(uint16_t value){
 	timeoutCount = value;
 	timeoutStartTimestamp = getTicks();
-}
-
-void Ticks::PrintTime(){
-	int hr = Sec / 3600;
-	int min = (Sec - hr * 3600) / 60;
-	int sec = (Sec - hr * 3600 - min * 60);
-	printf("Time Executed:%d:%d:%d\r\n", hr, min, sec);
 }

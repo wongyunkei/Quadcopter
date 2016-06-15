@@ -17,7 +17,7 @@
 #include <Communicating.h>
 #include <Ticks.h>
 #include <Task.h>
-#include <Led.h>
+#include <GPIO.h>
 #include <UART.h>
 #include <PWM.h>
 #include <ADConverter.h>
@@ -38,6 +38,7 @@
 #include <Localization.h>
 #include <EncoderYaw.h>
 #include <ExternalInterrupt.h>
+#include <Bundle.h>
 #include <Eigen/Eigen>
 
 using namespace Time;
@@ -46,14 +47,11 @@ using namespace Sensors;
 using namespace Inertia;
 using namespace Control;
 using namespace Communication;
-using namespace Debug;
-
-namespace Debug{
-	class Led;
-};
+using namespace System;
 
 namespace System{
 	class Config;
+	class GPIO;
 };
 
 namespace Control{
@@ -62,6 +60,7 @@ namespace Control{
 
 namespace Communication{
 	class Communicating;
+	class Com;
 };
 
 namespace Sensors{
@@ -106,34 +105,37 @@ namespace System{
 	class App{
 		public:
 			static App* mApp;
-			Ticks* mTicks;
-			Task* mTask;
+			static Ticks* mTicks;
+			static Task* mTask;
 			Config* mConfig;
 			ExternalInterrupt* mExti[16];
-			Led* mLed1;
-			Led* mLed2;
-			Led* mLed3;
-			Led* mLed4;
+			GPIO* mLed1;
+			GPIO* mLed2;
+			GPIO* mLed3;
+			GPIO* mLed4;
 
-			Led* mSonicTrigger[16];
+			GPIO* mSonicTrigger[16];
 
-			Led* mGPIO1;
-			Led* mGPIO2;
-			Led* mGPIO3;
-			Led* mGPIO4;
-			Led* mGPIO5;
-			Led* mGPIO6;
-			Led* mGPIO7;
-			Led* mGPIO8;
-			UART* mUART1;
-			UART* mUART2;
-			UART* mUART3;
-			UART* mUART4;
-			UART* mUART5;
-			Communicating* mCommunicating1;
-			Communicating* mCommunicating2;
-			Communicating* mCommunicating3;
-			Communicating* mCommunicating4;
+			GPIO* mGPIO1;
+			GPIO* mGPIO2;
+			GPIO* mGPIO3;
+			GPIO* mGPIO4;
+			GPIO* mGPIO5;
+			GPIO* mGPIO6;
+			GPIO* mGPIO7;
+			GPIO* mGPIO8;
+			static UART* mUART1;
+			static UART* mUART2;
+			static UART* mUART3;
+			static UART* mUART4;
+			static UART* mUART5;
+			static Com* Com1;
+			static Com* Com2;
+			static Com* Com3;
+			static Communicating* mCommunicating1;
+			static Communicating* mCommunicating2;
+			static Communicating* mCommunicating3;
+			static Communicating* mCommunicating4;
 			PWM* mPWM;
 			ADConverter* mADC;
 			Sonic* mSonic1;
@@ -152,8 +154,8 @@ namespace System{
 			Sonic* mSonic14;
 			Sonic* mSonic15;
 			Sonic* mSonic16;
-			Spi* mSpi1;
-			Spi* mSpi2;
+			static Spi* mSpi1;
+			static Spi* mSpi2;
 			I2C* mI2C1;
 			I2C* mI2C2;
 			MPU6050* mMPU6050;
@@ -192,6 +194,9 @@ namespace System{
 			int IsCal1;
 			int IsCal2;
 			int IsCal3;
+			float Motor1PWM;
+			float Motor2PWM;
+			float Motor3PWM;
 			bool ControlStart;
 		private:
 	};

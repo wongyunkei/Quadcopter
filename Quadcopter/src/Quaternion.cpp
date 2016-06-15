@@ -13,15 +13,15 @@
 #include <MPU6050.h>
 #include <stdio.h>
 #include <Pid.h>
-#include <Task.h>
 #include <HMC5883L.h>
 #include <Controlling.h>
 #include <Delay.h>
 #include <AdditionalTools.h>
-#include <Communicating.h>
-#include <Led.h>
-#include <UART.h>
+#include <Communicating.h.bak>
 #include <EncoderYaw.h>
+#include <Led.h.bak>
+#include <Task.h.bak>
+#include <UART.h.bak>
 
 using namespace Utility;
 

@@ -14,12 +14,26 @@ using namespace Sensors;
 using namespace Utility;
 
 App* App::mApp = 0;
+Ticks* App::mTicks = 0;
+Task* App::mTask = 0;
+UART* App::mUART1 = 0;
+UART* App::mUART3 = 0;
+UART* App::mUART4 = 0;
+UART* App::mUART5 = 0;
+Spi* App::mSpi1 = 0;
+Spi* App::mSpi2 = 0;
+Communicating* App::mCommunicating1 = 0;
+Communicating* App::mCommunicating2 = 0;
+Communicating* App::mCommunicating3 = 0;
+Com* App::Com1 = 0;
+Com* App::Com2 = 0;
+Com* App::Com3 = 0;
 
 void ControlTask(){
 	App::mApp->mControlling->ControllingPoll();
 }
 
-void initUpdate(){
+void initUpdate(Bundle* bundle){
 	App::mApp->mMPU6050->Update();
 	App::mApp->mAcceleration->Update();
 	App::mApp->mOmega->Update();
@@ -679,28 +693,11 @@ void printTaskNum(){
 	printf("PathState:%d\r\n", App::mApp->mCommunicating3->txBufferCount);
 }
 
-void printTaskName(){
-	printf("Update:%lx\r\n", Update);
-	printf("EncoderUpdate:%lx\r\n", EncoderUpdate);
-	printf("LocalizationUpdate:%lx\r\n", LocalizationUpdate);
-	printf("SonicUpdate:%lx\r\n", SonicUpdate);
-	printf("ControlTask:%lx\r\n", ControlTask);
-	printf("PathTask:%lx\r\n", PathTask);
-	printf("ReceiveTask:%lx\r\n", ReceiveTask);
-	printf("SendTask:%lx\r\n", SendTask);
-	printf("SendTaskSlow:%lx\r\n", SendTaskSlow);
-	printf("print:%lx\r\n", print);
-	printf("SPISendTask:%lx\r\n", SPISendTask);
-	for(int i = 0; i < App::mApp->mTask->TasksNum; i++){
-		App::mApp->mTask->printDeration(i);
-	}
-}
-
 void printfBufferTask(){
 	AdditionalTools::printfBuffer(0, 4);
 }
 
-void Task60Hz(){
+void Task60Hz(Bundle* bundle){
 	Update();
 	EncoderUpdate();
 	LocalizationUpdate();
@@ -710,7 +707,7 @@ void Task60Hz(){
 	SendTask();
 }
 
-void Task50Hz(){
+void Task50Hz(Bundle* bundle){
 //	PathTask();
 	if(!App::mApp->mControlling->ManualMode){
 		PathTaskWithMyRIO();
@@ -718,7 +715,7 @@ void Task50Hz(){
 	print();
 }
 
-void Task10Hz(){
+void Task10Hz(Bundle* bundle){
 	SPISlaveSendTask2();
 	SPISendTask();
 }
@@ -752,97 +749,127 @@ void CheckPos(){
 
 void App2Controlling(){
 	if(App::mApp->ControlStart){
-		float pwm1 = App::mApp->Motor1PID->pid(App::mApp->Motor1Target, App::mApp->mEncoder3->getPos());
-		float pwm2 = App::mApp->Motor2PID->pid(App::mApp->Motor2Target, App::mApp->mEncoder4->getPos());
-		float pwm3 = App::mApp->Motor3PID->pid(App::mApp->Motor3Target, App::mApp->mEncoder5->getPos());
-		float Motor1PWM = 0;
-		float Motor2PWM = 0;
-		float Motor3PWM = 0;
-		if(pwm1 == pwm1 && pwm2 == pwm2 && pwm3 == pwm3){
-			Motor1PWM = pwm1;
-			Motor2PWM = pwm2;
-			Motor3PWM = pwm3;
-			Motor1PWM = Motor1PWM < -10000.0f ? -10000.0f : Motor1PWM  > 10000.0f ? 10000.0f : Motor1PWM;
-			Motor2PWM = Motor2PWM < -10000.0f ? -10000.0f : Motor2PWM  > 10000.0f ? 10000.0f : Motor2PWM;
-			Motor3PWM = Motor3PWM < -10000.0f ? -10000.0f : Motor3PWM  > 10000.0f ? 10000.0f : Motor3PWM;
+		if(App::mApp->Motor1Target == App::mApp->Motor1Target &&
+				App::mApp->Motor2Target == App::mApp->Motor2Target &&
+				App::mApp->Motor3Target == App::mApp->Motor3Target &&
+				App::mApp->mEncoder3->getPos() == App::mApp->mEncoder3->getPos() &&
+				App::mApp->mEncoder4->getPos() == App::mApp->mEncoder4->getPos() &&
+				App::mApp->mEncoder5->getPos() == App::mApp->mEncoder5->getPos()){
+			float pwm1 = App::mApp->Motor1PID->pid(App::mApp->Motor1Target, App::mApp->mEncoder3->getPos());
+			float pwm2 = App::mApp->Motor2PID->pid(App::mApp->Motor2Target, App::mApp->mEncoder4->getPos());
+			float pwm3 = App::mApp->Motor3PID->pid(App::mApp->Motor3Target, App::mApp->mEncoder5->getPos());
 
-			if(App::mApp->IsCal1 >= 0){
-				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_RESET){
-//					printf("Limit1\r\n");
-					App::mApp->IsCal1++;
-					if(App::mApp->IsCal1 > 500){
-						App::mApp->IsCal1 = -100;
-					}
-					App::mApp->mPWM->Control1(0);
-					App::mApp->mEncoder3->setPos(-2.0);
-					App::mApp->Motor1Target = 0;
-					Motor1PWM = 0;
-				}
-			}
-			App::mApp->mPWM->Control1(fabs(Motor1PWM));
-			if(App::mApp->IsCal2 >= 0){
-				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_7) == Bit_RESET){
-					App::mApp->IsCal2++;
-					if(App::mApp->IsCal2 > 500){
-						App::mApp->IsCal2 = -100;
-					}
-//					printf("Limit2\r\n");
-					App::mApp->mPWM->Control2(0);
-					App::mApp->mEncoder4->setPos(0);
-					App::mApp->Motor2Target = 0;
-					Motor2PWM = 0 ;
-				}
-			}
-			App::mApp->mPWM->Control2(fabs(Motor2PWM));
-			if(App::mApp->IsCal3 >= 0){
-				if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_8) == Bit_RESET){
-					App::mApp->IsCal3++;
-					if(App::mApp->IsCal3 > 500){
-						App::mApp->IsCal3 = -100;
-					}
-//					printf("Limit3\r\n");
-					App::mApp->mPWM->Control3(0);
-					App::mApp->mEncoder5->setPos(0);
-					App::mApp->Motor3Target = 0;
-					Motor3PWM = 0;
-				}
-			}
-			App::mApp->mPWM->Control3(fabs(Motor3PWM));
-		}
+			if(pwm1 == pwm1 && pwm2 == pwm2 && pwm3 == pwm3){
+	//			if(MathTools::CheckWithInInterval(pwm1, 0, 20)){
+	//				pwm1 = 0;
+	//			}
+	//			if(MathTools::CheckWithInInterval(pwm2, 0, 20)){
+	//				pwm2 = 0;
+	//			}
+	//			if(MathTools::CheckWithInInterval(pwm3, 0, 20)){
+	//				pwm3 = 0;
+	//			}
 
-		if(Motor1PWM < 0.0f){
-			App::mApp->mGPIO1->LedControl(false);
-			App::mApp->mGPIO5->LedControl(true);
+				App::mApp->Motor1PWM = pwm1;
+				App::mApp->Motor2PWM = pwm2;
+				App::mApp->Motor3PWM = pwm3;
+				App::mApp->Motor1PWM = App::mApp->Motor1PWM < -10000.0f ? -10000.0f : App::mApp->Motor1PWM  > 10000.0f ? 10000.0f : App::mApp->Motor1PWM;
+				App::mApp->Motor2PWM = App::mApp->Motor2PWM < -10000.0f ? -10000.0f : App::mApp->Motor2PWM  > 10000.0f ? 10000.0f : App::mApp->Motor2PWM;
+				App::mApp->Motor3PWM = App::mApp->Motor3PWM < -10000.0f ? -10000.0f : App::mApp->Motor3PWM  > 10000.0f ? 10000.0f : App::mApp->Motor3PWM;
+
+	//			if(App::mApp->IsCal1 < 0 && MathTools::CheckWithInInterval(App::mApp->mEncoder3->getPos(), 0, 0.1) && MathTools::CheckWithInInterval(App::mApp->Motor1Target, 0, 0.01)){
+	//				App::mApp->Motor1PWM = 0;
+	//			}
+	//			if(App::mApp->IsCal2 < 0 && MathTools::CheckWithInInterval(App::mApp->mEncoder4->getPos(), 0, 0.1) && MathTools::CheckWithInInterval(App::mApp->Motor2Target, 0, 0.01)){
+	//				App::mApp->Motor2PWM = 0;
+	//			}
+	//			if(App::mApp->IsCal3 < 0 && MathTools::CheckWithInInterval(App::mApp->mEncoder5->getPos(), 0, 0.1) && MathTools::CheckWithInInterval(App::mApp->Motor3Target, 0, 0.01)){
+	//				App::mApp->Motor3PWM = 0;
+	//			}
+
+				if(App::mApp->IsCal1 >= 0){
+					if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_RESET){
+	//					printf("Limit1\r\n");
+						App::mApp->IsCal1++;
+						if(App::mApp->IsCal1 > 500){
+							App::mApp->IsCal1 = -100;
+						}
+						App::mApp->mPWM->Control1(0);
+						App::mApp->mEncoder3->setPos(-2.0);
+						App::mApp->Motor1Target = 0;
+						App::mApp->Motor1PWM = 0;
+					}
+				}
+				App::mApp->mPWM->Control1(fabs(App::mApp->Motor1PWM));
+				if(App::mApp->IsCal2 >= 0){
+					if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_7) == Bit_RESET){
+						App::mApp->IsCal2++;
+						if(App::mApp->IsCal2 > 500){
+							App::mApp->IsCal2 = -100;
+						}
+	//					printf("Limit2\r\n");
+						App::mApp->mPWM->Control2(0);
+						App::mApp->mEncoder4->setPos(0);
+						App::mApp->Motor2Target = 0;
+						App::mApp->Motor2PWM = 0 ;
+					}
+				}
+				App::mApp->mPWM->Control2(fabs(App::mApp->Motor2PWM));
+				if(App::mApp->IsCal3 >= 0){
+					if(GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_8) == Bit_RESET){
+						App::mApp->IsCal3++;
+						if(App::mApp->IsCal3 > 500){
+							App::mApp->IsCal3 = -100;
+						}
+	//					printf("Limit3\r\n");
+						App::mApp->mPWM->Control3(0);
+						App::mApp->mEncoder5->setPos(0);
+						App::mApp->Motor3Target = 0;
+						App::mApp->Motor3PWM = 0;
+					}
+				}
+				App::mApp->mPWM->Control3(fabs(App::mApp->Motor3PWM));
+			}
+
+			if(App::mApp->Motor1PWM < 0.0f){
+				App::mApp->mGPIO1->GPIOControl(false);
+				App::mApp->mGPIO5->GPIOControl(true);
+			}
+			else{
+				App::mApp->mGPIO1->GPIOControl(true);
+				App::mApp->mGPIO5->GPIOControl(false);
+			}
+			if(App::mApp->Motor2PWM < 0.0f){
+				App::mApp->mGPIO2->GPIOControl(false);
+				App::mApp->mGPIO6->GPIOControl(true);
+			}
+			else{
+				App::mApp->mGPIO2->GPIOControl(true);
+				App::mApp->mGPIO6->GPIOControl(false);
+			}
+			if(App::mApp->Motor3PWM < 0.0f){
+				App::mApp->mGPIO3->GPIOControl(false);
+				App::mApp->mGPIO7->GPIOControl(true);
+			}
+			else{
+				App::mApp->mGPIO3->GPIOControl(true);
+				App::mApp->mGPIO7->GPIOControl(false);
+			}
+			printf("%g,%g,%g\r\n", pwm1, pwm2, pwm3);
+
 		}
 		else{
-			App::mApp->mGPIO1->LedControl(true);
-			App::mApp->mGPIO5->LedControl(false);
-		}
-		if(Motor2PWM < 0.0f){
-			App::mApp->mGPIO2->LedControl(false);
-			App::mApp->mGPIO6->LedControl(true);
-		}
-		else{
-			App::mApp->mGPIO2->LedControl(true);
-			App::mApp->mGPIO6->LedControl(false);
-		}
-		if(Motor3PWM < 0.0f){
-			App::mApp->mGPIO3->LedControl(false);
-			App::mApp->mGPIO7->LedControl(true);
-		}
-		else{
-			App::mApp->mGPIO3->LedControl(true);
-			App::mApp->mGPIO7->LedControl(false);
+			App::mApp->mPWM->Control1(0);
+			App::mApp->mPWM->Control2(0);
+			App::mApp->mPWM->Control3(0);
+			printf("%g,%g,%g\r\n", 0, 0, 0);
 		}
 	}
-	else{
-		App::mApp->mPWM->Control1(0);
-		App::mApp->mPWM->Control2(0);
-		App::mApp->mPWM->Control3(0);
-	}
+	//	printf("%d,%d,%d\r\n", App::mApp->IsCal1, App::mApp->IsCal2, App::mApp->IsCal3);
+//	printf("%g,%g,%g\r\n", App::mApp->Motor1PWM, App::mApp->Motor2PWM, App::mApp->Motor3PWM);
 }
 
-void App2Task100Hz(){
+void App2Task100Hz(Bundle* bundle){
 
 //	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
 //	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
@@ -851,7 +878,7 @@ void App2Task100Hz(){
 
 }
 
-void App2Task30Hz(){
+void App2Task30Hz(Bundle* bundle){
 	App::mApp->mEncoder3->Update(MathTools::DegreeToRadian(0));
 	App::mApp->mEncoder4->Update(MathTools::DegreeToRadian(0));
 	App::mApp->mEncoder5->Update(MathTools::DegreeToRadian(0));
@@ -867,16 +894,16 @@ void App2Task30Hz(){
 	App2Controlling();
 }
 
-void App2Task10Hz(){
+void App2Task10Hz(Bundle* bundle){
 	//	CheckPos();
 //	SPISlaveSendTask();
 }
 
-void App2Task3Hz(){
+void App2Task3Hz(Bundle* bundle){
 	EncoderPrint();
 }
-/*
-App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+
+App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0),  mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
@@ -921,24 +948,30 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 	mTicks = new Ticks(false);
 	mTask = new Task();
 
-	mLed1 = new Led(mConfig->LedConf1);
+	mLed1 = new GPIO(mConfig->LedConf1);
 
-	mGPIO1 = new Led(mConfig->GPIOConf1);
-	mGPIO2 = new Led(mConfig->GPIOConf2);
-	mGPIO3 = new Led(mConfig->GPIOConf3);
-	mGPIO4 = new Led(mConfig->GPIOConf4);
-	mGPIO5 = new Led(mConfig->GPIOConf5);
-	mGPIO6 = new Led(mConfig->GPIOConf6);
-	mGPIO7 = new Led(mConfig->GPIOConf7);
-	mGPIO8 = new Led(mConfig->GPIOConf8);
+	mGPIO1 = new GPIO(mConfig->GPIOConf1);
+	mGPIO2 = new GPIO(mConfig->GPIOConf2);
+	mGPIO3 = new GPIO(mConfig->GPIOConf3);
+	mGPIO4 = new GPIO(mConfig->GPIOConf4);
+	mGPIO5 = new GPIO(mConfig->GPIOConf5);
+	mGPIO6 = new GPIO(mConfig->GPIOConf6);
+	mGPIO7 = new GPIO(mConfig->GPIOConf7);
+	mGPIO8 = new GPIO(mConfig->GPIOConf8);
 
 	mUART4 = new UART(mConfig->UART4Conf1);
 	mSpi1 = new Spi(mConfig->Spi1Conf1);
 	mSpi2 = new Spi(mConfig->Spi2Conf1);
 
-	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
-	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
-	mCommunicating3 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
+	Com1 = new Com(Com::__UART, (uint32_t)mUART4);
+	Com2 = new Com(Com::__SPI, (uint32_t)mSpi2, 0);
+	Com3 = new Com(Com::__SPI, (uint32_t)mSpi1, 0);
+	mCommunicating1 = new Communicating(Com1);
+	mCommunicating2 = new Communicating(Com2);
+	mCommunicating3 = new Communicating(Com3);
+//	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
+//	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
+//	mCommunicating3 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi1));
 
 	mSonic1 = new Sonic(mConfig->SonicConf1);
 	mSonic2 = new Sonic(mConfig->SonicConf2);
@@ -951,6 +984,9 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, -0.00933f / 1000.0f, 0);
 	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, -0.00933f / 1000.0f, 0);
 	mEncoder6 = new Encoder(mConfig->Encoder6Conf1, 0.00933f / 1000.0f, 0);
+//	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, 0.00933f / 1000.0f, 0);
+//	mEncoder4 = new Encoder(mConfig->Encoder4Conf1, 0.00933f / 1000.0f, 0);
+//	mEncoder5 = new Encoder(mConfig->Encoder5Conf1, 0.00933f / 1000.0f, 0);
 
 	mPWM = new PWM(mConfig->mPWMConf1);
 	App::mApp->mPWM->Control1(0);
@@ -964,7 +1000,7 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 	mMPU6050 = new MPU6050(mI2C1);
 	mAcceleration = new Acceleration(mMPU6050);
 	mOmega = new Omega(mMPU6050);
-	mTask->Attach(4, 0, initUpdate, "initUpdate", false, 100, false);
+	mTask->Attach(4, initUpdate, "initUpdate", false, 100, false);
 
 	Delay::DelayMS(10);
 
@@ -976,9 +1012,9 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 
 
 
-	mTask->Attach(16, 0, Task60Hz, "Task60Hz", true);
-	mTask->Attach(20, 0, Task50Hz, "Task50Hz", true);
-	mTask->Attach(100, 0, Task10Hz, "Task10Hz", true);
+	mTask->Attach(16, Task60Hz, "Task60Hz", true);
+	mTask->Attach(20, Task50Hz, "Task50Hz", true);
+	mTask->Attach(100, Task10Hz, "Task10Hz", true);
 //	mTask->Attach(4, 0, Update, true);
 //	mTask->Attach(4, 0, EncoderUpdate, true);
 //	mTask->Attach(4, 0, LocalizationUpdate, true);
@@ -992,20 +1028,20 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 //	mTask->Attach(100, 0, SPISendTask, true);
 //	mTask->Attach(1000, 0, printTaskName, "printTaskName", true);
 //	mTask->Attach(100, 7, printfBufferTask, true);
-	mGPIO1->LedControl(true);
-	mGPIO2->LedControl(true);
-	mGPIO3->LedControl(true);
-	mGPIO4->LedControl(true);
-	mGPIO5->LedControl(false);
-	mGPIO6->LedControl(false);
-	mGPIO7->LedControl(false);
-	mGPIO8->LedControl(false);
-//	mLed1->Blink(true, 100);
+	mGPIO1->GPIOControl(true);
+	mGPIO2->GPIOControl(true);
+	mGPIO3->GPIOControl(true);
+	mGPIO4->GPIOControl(true);
+	mGPIO5->GPIOControl(false);
+	mGPIO6->GPIOControl(false);
+	mGPIO7->GPIOControl(false);
+	mGPIO8->GPIOControl(false);
+	mLed1->Blink(mLed1, true, 100);
 	printf("Started\n");
 	mTask->Run();
-}*/
-
-App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), mTask(0), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
+}
+/*
+App::App() : Motor1PWM(0), Motor2PWM(0), Motor3PWM(0), arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), PeriodicCmd2(0), trigger(false), Motor1Target(0), Motor2Target(0), Motor3Target(0), ControlStart(false), IsCal1(-100), IsCal2(-100), IsCal3(-100), mQuaternion(0), mCompass(0), mEncoderYaw(0), PathState(0){
 	Delay::DelayMS(10);
 	mApp = this;
 	for(int i = 0; i < 16; i++){
@@ -1016,22 +1052,26 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 	mTicks = new Ticks(false);
 	mTask = new Task();
 
-	mLed1 = new Led(mConfig->LedConf1);
+	mLed1 = new GPIO(mConfig->LedConf1);
 
-	mGPIO1 = new Led(mConfig->GPIOConf1);
-	mGPIO2 = new Led(mConfig->GPIOConf2);
-	mGPIO3 = new Led(mConfig->GPIOConf3);
-	mGPIO4 = new Led(mConfig->GPIOConf4);
-	mGPIO5 = new Led(mConfig->GPIOConf5);
-	mGPIO6 = new Led(mConfig->GPIOConf6);
-	mGPIO7 = new Led(mConfig->GPIOConf7);
-	mGPIO8 = new Led(mConfig->GPIOConf8);
+	mGPIO1 = new GPIO(mConfig->GPIOConf1);
+	mGPIO2 = new GPIO(mConfig->GPIOConf2);
+	mGPIO3 = new GPIO(mConfig->GPIOConf3);
+	mGPIO4 = new GPIO(mConfig->GPIOConf4);
+	mGPIO5 = new GPIO(mConfig->GPIOConf5);
+	mGPIO6 = new GPIO(mConfig->GPIOConf6);
+	mGPIO7 = new GPIO(mConfig->GPIOConf7);
+	mGPIO8 = new GPIO(mConfig->GPIOConf8);
 
 	mUART4 = new UART(mConfig->UART4Conf1);
 	mSpi2 = new Spi(mConfig->Spi2Conf1);
 
-	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
-	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
+	Com1 = new Com(Com::__UART, (uint32_t)mUART4);
+	Com2 = new Com(Com::__SPI, (uint32_t)mSpi2, 0);
+	mCommunicating1 = new Communicating(Com1);
+	mCommunicating2 = new Communicating(Com2);
+//	mCommunicating1 = new Communicating(new Communicating::Com(Communicating::Com::__UART, (uint32_t)mUART4));
+//	mCommunicating2 = new Communicating(new Communicating::Com(Communicating::Com::__SPI, (uint32_t)mSpi2));
 
 	mEncoder3 = new Encoder(mConfig->Encoder3Conf1, 0.00933f / 1000.0f, 0);
 	//car1
@@ -1048,14 +1088,14 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 	App::mApp->mPWM->Control2(0);
 	App::mApp->mPWM->Control3(0);
 	App::mApp->mPWM->Control4(0);
-	mGPIO1->LedControl(true);
-	mGPIO2->LedControl(true);
-	mGPIO3->LedControl(true);
-	mGPIO4->LedControl(true);
-	mGPIO5->LedControl(false);
-	mGPIO6->LedControl(false);
-	mGPIO7->LedControl(false);
-	mGPIO8->LedControl(false);
+	mGPIO1->GPIOControl(true);
+	mGPIO2->GPIOControl(true);
+	mGPIO3->GPIOControl(true);
+	mGPIO4->GPIOControl(true);
+	mGPIO5->GPIOControl(false);
+	mGPIO6->GPIOControl(false);
+	mGPIO7->GPIOControl(false);
+	mGPIO8->GPIOControl(false);
 	GPIO_InitTypeDef GPIO_InitStruct;
 
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
@@ -1069,14 +1109,14 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 //	mExti[1] = new ExternalInterrupt(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_7), ExternalInterrupt::RISING, Motor2Limit);
 //	mExti[2] = new ExternalInterrupt(new Configuration(RCC_AHB1Periph_GPIOE, GPIOE, GPIO_Pin_8), ExternalInterrupt::RISING, Motor3Limit);
 
-	Motor1PID = new Pid(50000, 0, 0.01, 10000);
-	Motor2PID = new Pid(50000, 0, 0.01, 10000);
-	Motor3PID = new Pid(50000, 0, 0.01, 10000);
+	Motor1PID = new Pid(20000, 0, 0.0, 10000);
+	Motor2PID = new Pid(20000, 0, 0.0, 10000);
+	Motor3PID = new Pid(20000, 0, 0.0, 10000);
 
 //	mTask->Attach(10, 0, App2Task100Hz, "App2Task100Hz", true);
-	mTask->Attach(33, 0, App2Task30Hz, "App2Task30Hz", true);
-	mTask->Attach(100, 0, App2Task10Hz, "App2Task10Hz", true);
-//	mTask->Attach(300, 0, App2Task3Hz, "App2Task3Hz", true);
+	mTask->Attach(20, App2Task30Hz, "App2Task30Hz", true);
+	mTask->Attach(100, App2Task10Hz, "App2Task10Hz", true);
+	mTask->Attach(300, App2Task3Hz, "App2Task3Hz", true);
 //	mTask->Attach(4, 0, Update, true);
 //	mTask->Attach(4, 0, EncoderUpdate, true);
 //	mTask->Attach(4, 0, LocalizationUpdate, true);
@@ -1094,11 +1134,10 @@ App::App() : arrived(false), PeriodicData(0), PeriodicCmd(0), PeriodicData2(0), 
 //	mLed1->Blink(true, 100);
 	printf("Started\n");
 	mTask->Run();
-}
+}*/
 
 void HardFault_Handler(){
-	while(true){
-		printf("HardFault:%d\n", App::mApp->mTask->currentTaskNum);
-		Delay::DelayMS(100);
-	}
+	printf("HF:%s:%d\r\n", App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->TaskName.c_str(), App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->duration[1] - App::mApp->mTask->mTaskObj[App::mApp->mTask->currentTaskNum]->duration[0]);
+	App::mTicks->PrintTime();
+	while(true);
 }

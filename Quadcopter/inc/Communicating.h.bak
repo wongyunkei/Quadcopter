@@ -24,7 +24,7 @@
 #include <Task.h>
 #include <inttypes.h>
 #include <Delay.h>
-#include <GPIO.h>
+#include <Led.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
 #include <MPU6050.h>
@@ -32,22 +32,20 @@
 
 namespace Communication{
 
-	class Com{
-		public:
-			enum Interface{__UART, __SPI, __I2C};
-			Com(Interface interface, uint32_t addr, int index = 0);
-			Interface _interface;
-			UART* _UART;
-			Spi* _Spi;
-			int Index;
-//				I2C* _I2C;
-		private:
-	};
-
 	class Communicating{
 
 		public:
-
+			class Com{
+				public:
+					enum Interface{__UART, __SPI, __I2C};
+					Com(Interface interface, uint32_t addr, int index = 0);
+					Interface _interface;
+					UART* _UART;
+					Spi* _Spi;
+					int Index;
+	//				I2C* _I2C;
+				private:
+			};
 			enum COM{COM1,COM2,COM3,COM4,COM5,COM6};
 
 			enum CMD{
@@ -143,12 +141,9 @@ namespace Communication{
 			int count;
 			int txBufferCount;
 			int BufferCount;
-			int PeriodicCmd;
-			float PeriodicData;
-			bool readyToSend;
-			Com* _com;
 
 		private:
+			Com* _com;
 			int WatchDog;
 			bool isToken;
 			char Buffer[2048];

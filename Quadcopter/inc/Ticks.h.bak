@@ -19,7 +19,7 @@ namespace Time{
 
 			Ticks(bool onWatchDog);
 			void TicksIncrement();
-			bool TicksComp(uint16_t, uint16_t);
+			bool TicksComp(uint16_t, uint16_t, uint16_t);
 			void setTicks(uint16_t);
 			void setMaxTicks(uint16_t);
 			uint16_t getTicks();
@@ -27,13 +27,11 @@ namespace Time{
 			void setTimeout(uint16_t);
 			bool Timeout();
 			uint16_t getTimeout();
-			uint16_t getSec();
-			void PrintTime();
 			static uint16_t maxTicks;
 			bool OnWatchDog;
-			uint32_t Sec;
 
 		private:
+
 			uint16_t ticks;
 			uint16_t timeoutCount;
 			uint16_t timeoutStartTimestamp;

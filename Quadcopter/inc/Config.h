@@ -9,7 +9,7 @@
 #define CONFIG_H_
 
 #include <Configuration.h>
-#include <Led.h>
+#include <GPIO.h>
 #include <UART.h>
 #include <Communicating.h>
 #include <PWM.h>
@@ -19,7 +19,7 @@
 #include <Sonic.h>
 #include <Encoder.h>
 
-using namespace Debug;
+using namespace System;
 using namespace Communication;
 using namespace Control;
 using namespace Sensors;
@@ -35,34 +35,22 @@ namespace System{
 			Encoder::EncoderConfiguration* Encoder4Conf1;
 			Encoder::EncoderConfiguration* Encoder5Conf1;
 			Encoder::EncoderConfiguration* Encoder6Conf1;
-			Led::LedConfiguration* LedConf1;
-			Led::LedConfiguration* LedConf2;
-			Led::LedConfiguration* LedConf3;
-			Led::LedConfiguration* LedConf4;
-			Led::LedConfiguration* LedConf5;
-			Led::LedConfiguration* LedConf6;
-			Led::LedConfiguration* LedConf7;
-			Led::LedConfiguration* LedConf8;
-			Led::LedConfiguration* LedConf9;
-			Led::LedConfiguration* LedConf10;
-			Led::LedConfiguration* LedConf11;
-			Led::LedConfiguration* LedConf12;
-			Led::LedConfiguration* LedConf13;
-			Led::LedConfiguration* LedConf14;
-			Led::LedConfiguration* LedConf15;
-			Led::LedConfiguration* LedConf16;
-			Led::LedConfiguration* LedConf17;
-			Led::LedConfiguration* LedConf18;
-			Led::LedConfiguration* LedConf19;
-			Led::LedConfiguration* LedConf20;
-			Led::LedConfiguration* GPIOConf1;
-			Led::LedConfiguration* GPIOConf2;
-			Led::LedConfiguration* GPIOConf3;
-			Led::LedConfiguration* GPIOConf4;
-			Led::LedConfiguration* GPIOConf5;
-			Led::LedConfiguration* GPIOConf6;
-			Led::LedConfiguration* GPIOConf7;
-			Led::LedConfiguration* GPIOConf8;
+			GPIO::GPIOConfiguration* LedConf1;
+			GPIO::GPIOConfiguration* LedConf2;
+			GPIO::GPIOConfiguration* LedConf3;
+			GPIO::GPIOConfiguration* LedConf4;
+			GPIO::GPIOConfiguration* LedConf5;
+			GPIO::GPIOConfiguration* LedConf6;
+			GPIO::GPIOConfiguration* LedConf7;
+			GPIO::GPIOConfiguration* LedConf8;
+			GPIO::GPIOConfiguration* GPIOConf1;
+			GPIO::GPIOConfiguration* GPIOConf2;
+			GPIO::GPIOConfiguration* GPIOConf3;
+			GPIO::GPIOConfiguration* GPIOConf4;
+			GPIO::GPIOConfiguration* GPIOConf5;
+			GPIO::GPIOConfiguration* GPIOConf6;
+			GPIO::GPIOConfiguration* GPIOConf7;
+			GPIO::GPIOConfiguration* GPIOConf8;
 			UART::UARTConfiguration* UART1Conf1;
 			UART::UARTConfiguration* UART1Conf2;
 			UART::UARTConfiguration* UART2Conf1;

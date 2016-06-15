@@ -14,62 +14,49 @@
 #include <Communicating.h>
 #include <UART.h>
 #include <string>
+#include <Bundle.h>
 
-uint16_t Task::maxTaskNum = 1024;
+using namespace std;
 
-Task::Task() : mTicks(App::mApp->mTicks), OnWatchDog(App::mApp->mTicks->OnWatchDog), TasksNum(0), hangCount(0), currentTaskNum(0), IsPrintTaskNum(false), KeepLoopping(true), Count(-1){
-	duration = new int*[maxTaskNum];
-	for(int i = 0; i < maxTaskNum; i++){
-		duration[i] = new int[2];
-	}
-	mTask = new pTask[maxTaskNum];
-	TaskName = new char*[maxTaskNum];
-	TaskPeriod = new float[maxTaskNum];
-	PhaseShift = new float[maxTaskNum];
-	IsPeriodic = new bool[maxTaskNum];
-	_BreakCout = new int[maxTaskNum];
+Bundle* Task::mBundle = 0;
+
+TaskObj::TaskObj(uint16_t period, pTask fn, string fnName, bool isPeriodic, int BreakCout){
+	mTask = fn;
+	TaskPeriod = period;
+	TaskName = fnName;
+	IsPeriodic = isPeriodic;
+	_BreakCout = BreakCout;
+	hangCount = 0;
+//	printf("mTask[TasksNum]:%lx\r\n", mTask);
+//	printf("TaskPeriod[TasksNum]:%d\r\n", TaskPeriod);
+//	printf("TaskName[TasksNum]:%s\r\n", TaskName.c_str());
+//	printf("IsPeriodic[TasksNum]:%d\r\n", IsPeriodic);
+//	printf("_BreakCout[TasksNum]:%d\r\n", _BreakCout);
 }
 
-void Task::resetBreakCount(pTask fn){
-	for(int i = 0; i < TasksNum; i++){
-		if(mTask[TasksNum] == fn){
-			_BreakCout[i] = -1;
-		}
-	}
+Task::Task() : mTicks(App::mApp->mTicks), OnWatchDog(App::mApp->mTicks->OnWatchDog), TasksNum(0), currentTaskNum(0), IsPrintTaskNum(false), KeepLoopping(true), Count(-1){
+	mBundle = new Bundle();
 }
 
-void Task::Attach(float period, float phaseShift, pTask fn, char* fnName, bool isPeriodic, int BreakCout, bool keepLoopping){
-
-	if(TasksNum == maxTaskNum){
-		printf("\nCannot attach any more tasks!\n");
+void Task::Attach(uint16_t period, pTask fn, string fnName, bool isPeriodic, int BreakCout, bool keepLoopping){
+	if(TasksNum >= 1023){
+		printf("Cannot attach task any more!\r\n");
 		return;
 	}
 
-	mTask[TasksNum] = fn;
-
-	TaskPeriod[TasksNum] = period;
-	TaskName[TasksNum] = fnName;
-	PhaseShift[TasksNum] = phaseShift;
-	IsPeriodic[TasksNum] = isPeriodic;
-	_BreakCout[TasksNum] = BreakCout;
-
+	mTaskObj[TasksNum] = new TaskObj(period, fn, fnName, isPeriodic, BreakCout);
 	TasksNum++;
 	KeepLoopping = keepLoopping;
+//	printf("TasksNum:%d\r\n\n", TasksNum);
 }
 
-void Task::DeAttach(pTask fn){
+void Task::DeAttach(string fnName){
 
 	for(int i = 0; i < TasksNum; i++){
-
-		if(mTask[i] == fn){
-
+		if(mTaskObj[i]->TaskName.compare(fnName) == 0){
+			delete mTaskObj[i];
 			for(int j = i; j < TasksNum - 1; j++){
-
-				mTask[j] = mTask[j + 1];
-				TaskPeriod[j] = TaskPeriod[j + 1];
-				PhaseShift[j] = PhaseShift[j + 1];
-				_BreakCout[j] = _BreakCout[j + 1];
-				IsPeriodic[j] = IsPeriodic[j + 1];
+				mTaskObj[j] = mTaskObj[j + 1];
 			}
 			TasksNum--;
 			return;
@@ -77,8 +64,10 @@ void Task::DeAttach(pTask fn){
 	}
 }
 
-void Task::printDeration(int index){
-	printf("Task %d Duration: %d\n", index, duration[index][1] - duration[index][0]);
+void Task::printDeration(){
+	for(int i = 0; i < TasksNum; i++){
+		printf("%s:t:%d\r\n", mTaskObj[i]->TaskName.c_str(), mTaskObj[i]->duration[1] - mTaskObj[i]->duration[0]);
+	}
 }
 
 void Task::Run(bool isPrintTaskNum){
@@ -87,35 +76,33 @@ void Task::Run(bool isPrintTaskNum){
 
 	uint16_t ticksImg = 0;
 	bool isBreak = false;
-
 	do{
 		if(mTicks->getTicks() != ticksImg){
 			ticksImg = mTicks->getTicks();
 			if(OnWatchDog){
 				IWDG_ReloadCounter();
 			}
-
 			for(int i = 0; i < TasksNum; i++){
-				if(mTicks->TicksComp(TaskPeriod[i], PhaseShift[i], ticksImg)){
-					duration[i][0] = mTicks->getTicks();
-					hangCount = 0;
+				if(mTicks->TicksComp(mTaskObj[i]->TaskPeriod, ticksImg)){
+					mTaskObj[i]->hangCount = 0;
 					currentTaskNum = i;
-					if(_BreakCout[i] != 0){
-						mTask[i]();
-						duration[i][1] = mTicks->getTicks();
-						if(!IsPeriodic[i]){
-							if(_BreakCout[i] > 0){
-								_BreakCout[i]--;
+					if(mTaskObj[i]->_BreakCout != 0){
+						mBundle->mTaskObj = mTaskObj[i];
+						mTaskObj[i]->duration[0] = mTicks->getTicks();
+						mTaskObj[i]->mTask(mBundle);
+						mTaskObj[i]->duration[1] = mTicks->getTicks();
+						if(!(mTaskObj[i]->IsPeriodic)){
+							if(mTaskObj[i]->_BreakCout > 0){
+								mTaskObj[i]->_BreakCout--;
 							}
 						}
 					}
 				}
 			}
-
 			for(int i = 0; i < TasksNum; i++){
-				if(!IsPeriodic[i]){
-					if(_BreakCout[i] == 0){
-						DeAttach(mTask[i]);
+				if(!mTaskObj[i]->IsPeriodic){
+					if(mTaskObj[i]->_BreakCout == 0){
+						DeAttach(mTaskObj[i]->TaskName);
 						if(!KeepLoopping){
 							isBreak = true;
 						}

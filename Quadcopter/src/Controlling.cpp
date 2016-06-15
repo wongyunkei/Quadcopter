@@ -15,7 +15,7 @@ using Eigen::Vector3f;
 using namespace Math;
 using namespace Utility;
 
-void StartingTask(){
+void StartingTask(Bundle* bundle){
 
 	if(App::mApp->mControlling->getStarting()){
 
@@ -36,7 +36,7 @@ void StartingTask(){
 	}
 }
 
-void StoppingTask(){
+void StoppingTask(Bundle* bundle){
 	if(App::mApp->mControlling->getStopping()){
 //		if(App::mApp->mControlling->Lift > App::mApp->mControlling->leadingLift){
 //			App::mApp->mControlling->Lift = App::mApp->mControlling->Lift - 500;
@@ -101,8 +101,8 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 	Motor3 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 	Motor4 = new Pid(8000.0f,0.0f,0.0,10000.0f);
 
-	App::mApp->mTask->Attach(40, 0, StartingTask, "StartingTask", true);
-	App::mApp->mTask->Attach(40, 0, StoppingTask, "StoppingTask", true);
+	App::mApp->mTask->Attach(40, StartingTask, "StartingTask", true);
+	App::mApp->mTask->Attach(40, StoppingTask, "StoppingTask", true);
 }
 
 void Controlling::setStarting(bool value){
@@ -193,36 +193,36 @@ void Controlling::ControllingPoll(){
 			Motor3PWM = Motor3PWM < -10000.0f ? -10000.0f : Motor3PWM  > 10000.0f ? 10000.0f : Motor3PWM;
 			Motor4PWM = Motor4PWM < -10000.0f ? -10000.0f : Motor4PWM  > 10000.0f ? 10000.0f : Motor4PWM;
 			if(Motor1PWM < 0.0f){
-				App::mApp->mGPIO1->LedControl(false);
-				App::mApp->mGPIO5->LedControl(true);
+				App::mApp->mGPIO1->GPIOControl(false);
+				App::mApp->mGPIO5->GPIOControl(true);
 			}
 			else{
-				App::mApp->mGPIO1->LedControl(true);
-				App::mApp->mGPIO5->LedControl(false);
+				App::mApp->mGPIO1->GPIOControl(true);
+				App::mApp->mGPIO5->GPIOControl(false);
 			}
 			if(Motor2PWM < 0.0f){
-				App::mApp->mGPIO2->LedControl(false);
-				App::mApp->mGPIO6->LedControl(true);
+				App::mApp->mGPIO2->GPIOControl(false);
+				App::mApp->mGPIO6->GPIOControl(true);
 			}
 			else{
-				App::mApp->mGPIO2->LedControl(true);
-				App::mApp->mGPIO6->LedControl(false);
+				App::mApp->mGPIO2->GPIOControl(true);
+				App::mApp->mGPIO6->GPIOControl(false);
 			}
 			if(Motor3PWM < 0.0f){
-				App::mApp->mGPIO3->LedControl(false);
-				App::mApp->mGPIO7->LedControl(true);
+				App::mApp->mGPIO3->GPIOControl(false);
+				App::mApp->mGPIO7->GPIOControl(true);
 			}
 			else{
-				App::mApp->mGPIO3->LedControl(true);
-				App::mApp->mGPIO7->LedControl(false);
+				App::mApp->mGPIO3->GPIOControl(true);
+				App::mApp->mGPIO7->GPIOControl(false);
 			}
 			if(Motor4PWM < 0.0f){
-				App::mApp->mGPIO4->LedControl(false);
-				App::mApp->mGPIO8->LedControl(true);
+				App::mApp->mGPIO4->GPIOControl(false);
+				App::mApp->mGPIO8->GPIOControl(true);
 			}
 			else{
-				App::mApp->mGPIO4->LedControl(true);
-				App::mApp->mGPIO8->LedControl(false);
+				App::mApp->mGPIO4->GPIOControl(true);
+				App::mApp->mGPIO8->GPIOControl(false);
 			}
 
 
@@ -421,6 +421,22 @@ void Controlling::Move(float vel, float dirAngle, float orientationAngle){
 	Motor3SpeedTarget = v[2];
 	Motor4SpeedTarget = v[3];
 }
+
+//void Controlling::Move(float vel, float dirAngle, float orientationAngle){
+//	float y = vel*sinf(dirAngle);
+//	float x = vel*cosf(dirAngle);
+//	Matrix3f A;
+//	A <<   0.000,  0.586, -0.414,
+//			-0.707, -0.293, -0.293,
+//			 0.707, -0.293, -0.293;
+//	Vector3f u;
+//	u << 1.4142f*y,1.4142f*x,orientationAngle;
+//	Vector3f v = A * u;
+//	Motor1SpeedTarget = v[0];
+//	Motor2SpeedTarget = v[1];
+//	Motor3SpeedTarget = v[2];
+//	Motor4SpeedTarget = 0;//v[3];
+//}
 
 void Controlling::MoveToTargetWithSonicDriveYaw(float speed, float x, float y){
 	IsSonicDriveYaw = true;

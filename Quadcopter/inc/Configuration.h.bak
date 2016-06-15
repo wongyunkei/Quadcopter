@@ -16,7 +16,7 @@
 namespace System{
 	class Configuration{
 		public:
-			Configuration(GPIO_TypeDef* port, uint16_t pin);
+			Configuration(uint32_t rcc, GPIO_TypeDef* port, uint16_t pin);
 			uint32_t _rcc;
 			GPIO_TypeDef* _port;
 			uint16_t _pin;

@@ -7,10 +7,12 @@
 
 #include <App.h>
 #include <Buzzer.h>
-#include <Task.h>
 #include <stm32f4xx.h>
 #include <stm32f4xx_gpio.h>
 #include <stm32f4xx_rcc.h>
+#include <Task.h>
+
+using namespace Debug;
 
 Buzzer* _mBuzzer;
 
@@ -53,8 +55,8 @@ void BuzzerOff(){
 		Buzzer::getInstance()->setDuration(Buzzer::getInstance()->getDuration() - 1);
 	}
 	else if(Buzzer::getInstance()->getDuration() == 0){
-		App::mApp->mTask->DeAttach(BuzzerOn);
-		App::mApp->mTask->DeAttach(BuzzerOff);
+//		App::mApp->mTask->DeAttach(BuzzerOn);
+//		App::mApp->mTask->DeAttach(BuzzerOff);
 	}
 }
 
@@ -65,8 +67,8 @@ void Buzzer::Toggle(){
 void Buzzer::Frequency(float freq, int d, bool onState){
 
 	if(onState){
-		App::mApp->mTask->Attach((int)(1000.0f / freq), 0, BuzzerOn, "BuzzerOn", true, -1);
-		App::mApp->mTask->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, "BuzzerOff", true, -1);
+//		App::mApp->mTask->Attach((int)(1000.0f / freq), 0, BuzzerOn, "BuzzerOn", true, -1);
+//		App::mApp->mTask->Attach((int)(1000.0f / freq), (int)(800.0f / freq), BuzzerOff, "BuzzerOff", true, -1);
 		if(d == -1){
 			setDuration(-1);
 		}
@@ -76,7 +78,7 @@ void Buzzer::Frequency(float freq, int d, bool onState){
 	}
 	else{
 		GPIO_WriteBit(BUZZER_PORT, BUZZER_PIN, Bit_RESET);
-		App::mApp->mTask->DeAttach(BuzzerOn);
-		App::mApp->mTask->DeAttach(BuzzerOff);
+//		App::mApp->mTask->DeAttach(BuzzerOn);
+//		App::mApp->mTask->DeAttach(BuzzerOff);
 	}
 }
