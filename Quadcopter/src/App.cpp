@@ -164,6 +164,14 @@ void print(){
 				App::mApp->mCommunicating1->Send(3, App::mApp->mSonic4->Distance);
 			}
 			break;
+		case 9:
+			if(index == 0){
+				App::mApp->mCommunicating1->Send(0, App::mApp->mControlling->XPosTarget);
+			}
+			else if(index == 1){
+				App::mApp->mCommunicating1->Send(1, App::mApp->mControlling->YPosTarget);
+			}
+			break;
 	}
 	if(index == 4){
 		index = 0;

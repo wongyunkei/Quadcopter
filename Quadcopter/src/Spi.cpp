@@ -22,6 +22,47 @@
 using namespace Communication;
 using namespace Utility;
 
+void Spi::Reset(){
+
+	printf("SPI_RESET\r\n");
+	GPIO_InitTypeDef GPIO_InitStructure;
+	RCC_AHB1PeriphClockCmd(Conf->SCLK->_rcc, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = Conf->SCLK->_pin;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+	GPIO_Init(Conf->SCLK->_port, &GPIO_InitStructure);
+	GPIO_ResetBits(Conf->SCLK->_port, Conf->SCLK->_pin);
+
+	RCC_AHB1PeriphClockCmd(Conf->MISO->_rcc, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = Conf->MISO->_pin;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+	GPIO_Init(Conf->MISO->_port, &GPIO_InitStructure);
+	GPIO_ResetBits(Conf->MISO->_port, Conf->MISO->_pin);
+
+	RCC_AHB1PeriphClockCmd(Conf->MOSI->_rcc, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = Conf->MOSI->_pin;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+	GPIO_Init(Conf->MOSI->_port, &GPIO_InitStructure);
+	GPIO_ResetBits(Conf->MOSI->_port, Conf->MOSI->_pin);
+
+	for(int i = 0; i < Conf->NumOfDevices; i++){
+		RCC_AHB1PeriphClockCmd(Conf->CS[i]->_rcc, ENABLE);
+		GPIO_InitStructure.GPIO_Pin = Conf->CS[i]->_pin;
+		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+		GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN;
+		GPIO_Init(Conf->CS[i]->_port, &GPIO_InitStructure);
+		GPIO_ResetBits(Conf->CS[i]->_port, Conf->CS[i]->_pin);
+	}
+	Delay::DelayUS(100);
+	Initialize(Conf);
+}
+
 void SPI1_IRQHandler()
 {
 	App::mApp->mTicks->setTimeout(3);

@@ -84,8 +84,8 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 		Speed(1.0f), Motor1SpeedTarget(0), Motor2SpeedTarget(0), Motor3SpeedTarget(0), Motor4SpeedTarget(0),
 		XPosTarget(0), YPosTarget(0), YawTarget(0), ManualMode(false), IsSonicDriveYaw(false){
 
-	YPosPid = new Pid(20,0,0.5,10000);
-	XPosPid = new Pid(20,0,0.5,10000);
+	YPosPid = new Pid(10,0,0.8,10000);
+	XPosPid = new Pid(10,0,0.8,10000);
 	YawPid = new Pid(10,0.0,0.2,10000);
 	SonicPid = new Pid(1.5,0.0,0.2,10000);
 //	RollPid = new Pid(60000.0f,500000.0f,0.0,500.0f,0.002f);
@@ -96,10 +96,10 @@ Controlling::Controlling(PWM* mPWM, Encoder* encoder1, Encoder* encoder2, Encode
 //	KdPitchPid = new Pid(4000.0f,0.0f,0.0,10000.0f,0.002f);
 //	KdYawPid = new Pid(4000.0f,0.0f,0.0,10000.0f,0.002f);
 
-	Motor1 = new Pid(8000.0f,0.0f,0.0,10000.0f);
-	Motor2 = new Pid(8000.0f,0.0f,0.0,10000.0f);
-	Motor3 = new Pid(8000.0f,0.0f,0.0,10000.0f);
-	Motor4 = new Pid(8000.0f,0.0f,0.0,10000.0f);
+	Motor1 = new Pid(2000.0f,0.0f,0.0,10000.0f);
+	Motor2 = new Pid(2000.0f,0.0f,0.0,10000.0f);
+	Motor3 = new Pid(2000.0f,0.0f,0.0,10000.0f);
+	Motor4 = new Pid(2000.0f,0.0f,0.0,10000.0f);
 
 	App::mApp->mTask->Attach(40, StartingTask, "StartingTask", true);
 	App::mApp->mTask->Attach(40, StoppingTask, "StoppingTask", true);
@@ -126,32 +126,36 @@ void Controlling::ControllingPoll(){
 		}
 
 		if(!ManualMode && App::mApp->trigger){
-			float errX = XPosPid->pid(XPosTarget, App::mApp->mLocalization->getPos()[0]);
-			float errY = YPosPid->pid(YPosTarget, App::mApp->mLocalization->getPos()[1]);
-			if(fabs(YawTarget - App::mApp->mQuaternion->getEuler()[2]) > 3 * MathTools::PI / 2){
-				if(YawTarget < 0){
-					YawTarget += 2*MathTools::PI;
-				}else{
-					YawTarget -= 2*MathTools::PI;
+			if(XPosTarget == XPosTarget && YPosTarget == YPosTarget &&
+					App::mApp->mLocalization->getPos()[0] == App::mApp->mLocalization->getPos()[0] &&
+					App::mApp->mLocalization->getPos()[1] == App::mApp->mLocalization->getPos()[1]){
+				float errX = XPosPid->pid(XPosTarget, App::mApp->mLocalization->getPos()[0]);
+				float errY = YPosPid->pid(YPosTarget, App::mApp->mLocalization->getPos()[1]);
+				if(fabs(YawTarget - App::mApp->mQuaternion->getEuler()[2]) > 3 * MathTools::PI / 2){
+					if(YawTarget < 0){
+						YawTarget += 2*MathTools::PI;
+					}else{
+						YawTarget -= 2*MathTools::PI;
+					}
 				}
-			}
 
-			float errYaw = YawPid->pid(YawTarget, App::mApp->mQuaternion->getEuler()[2]);
-			float dirAngle;
-			dirAngle = atan2f(1000*errY,1000*errX) - App::mApp->mQuaternion->getEuler()[2];
-			if(IsSonicDriveYaw){
-				errYaw = SonicPid->pid(0,App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance);
-				errYaw = errYaw > MathTools::PI / 6 ? MathTools::PI / 6 :
-						errYaw < -MathTools::PI / 6 ? -MathTools::PI / 6 : errYaw;
-			}
-			if(dirAngle == dirAngle && errYaw == errYaw){
-				Move(Speed, dirAngle, errYaw);
-			}
-			else{
-				XPosPid->clear();
-				YPosPid->clear();
-				YawPid->clear();
-				return;
+				float errYaw = YawPid->pid(YawTarget, App::mApp->mQuaternion->getEuler()[2]);
+				float dirAngle;
+				dirAngle = atan2f(1000*errY,1000*errX) - App::mApp->mQuaternion->getEuler()[2];
+				if(IsSonicDriveYaw){
+					errYaw = SonicPid->pid(0,App::mApp->mSonic1->Distance - App::mApp->mSonic2->Distance);
+					errYaw = errYaw > MathTools::PI / 6 ? MathTools::PI / 6 :
+							errYaw < -MathTools::PI / 6 ? -MathTools::PI / 6 : errYaw;
+				}
+				if(dirAngle == dirAngle && errYaw == errYaw){
+					Move(Speed, dirAngle, errYaw);
+				}
+				else{
+					XPosPid->clear();
+					YPosPid->clear();
+					YawPid->clear();
+					return;
+				}
 			}
 		}
 //		float errRoll = RollPid->pid(MathTools::DegreeToRadian(RollTarget), App::mApp->mQuaternion->getEuler()[0] - MathTools::DegreeToRadian(RollOffset)) + KdRollPid->pid(0, App::mApp->mOmega->getOmega()[0]);

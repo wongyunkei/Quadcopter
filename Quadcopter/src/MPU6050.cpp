@@ -44,7 +44,7 @@ MPU6050::MPU6050(Communication::I2C* i2c) : i2cx(i2c), isValided(false){
 
 	RawOmegaScale[0] = 1.0f;
 	RawOmegaScale[1] = 1.0f;
-	RawOmegaScale[2] = 1.0297482837528604118993135011442f;//1.0f;
+	RawOmegaScale[2] = 1.0f;//1.0297482837528604118993135011442f;//1.0f;
 	//car1
 //	RawOmegaOffset[0] = RawOmegaScale[0] * -3.25f;//1;//-2.9f;
 //	RawOmegaOffset[1] = RawOmegaScale[1] * 0.6f;//0.1f;

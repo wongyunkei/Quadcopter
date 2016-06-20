@@ -106,9 +106,17 @@ void Communicating::SendPoll(){
 }
 
 void Communicating::Execute(int cmd, float data){
-//	if(App::mApp->mCommunicating3 == this){
-//		printf("CMD:%d  DATA:%g\r\n", cmd, data);
-//	}
+	if(App::mApp->mCommunicating2 == this){
+		printf("CMD:%d  DATA:%g\r\n", cmd, data);
+	}
+	if(!(Cmd >= 0 && Data == Data)){
+		if(_com->_interface == Com::__SPI){
+			_com->_Spi->Reset();
+		}
+		Cmd = 0;
+		Data = 0;
+		return;
+	}
 	switch(cmd){
 
 		case CMD::WATCHDOG:
